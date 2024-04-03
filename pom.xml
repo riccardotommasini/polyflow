@@ -19,8 +19,7 @@
         <module>operatorapi</module>
         <module>io</module>
         <module>web</module>
-        <!--<module>csparql-rsp4j</module>
-        <module>cqels-rsp4j</module>-->
+        <module>polyflow</module>
     </modules>
 
     <dependencyManagement>
