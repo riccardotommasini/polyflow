@@ -1,9 +1,9 @@
-package org.streamreasoning.rsp4j.operatorapi;
+package org.streamreasoning.rsp4j.api.querying;
 
-import org.streamreasoning.rsp4j.operatorapi.containers.AggregationContainer;
-import org.streamreasoning.rsp4j.operatorapi.containers.R2RContainer;
-import org.streamreasoning.rsp4j.operatorapi.containers.R2SContainer;
-import org.streamreasoning.rsp4j.operatorapi.containers.S2RContainer;
+import org.streamreasoning.rsp4j.api.containers.AggregationContainer;
+import org.streamreasoning.rsp4j.api.containers.R2RContainer;
+import org.streamreasoning.rsp4j.api.containers.R2SContainer;
+import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.api.sds.DataSet;
 import org.streamreasoning.rsp4j.api.operators.r2r.Var;
 

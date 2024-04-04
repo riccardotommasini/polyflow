@@ -2,10 +2,11 @@ package org.streamreasoning.rsp4j.operatorapi;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.log4j.Logger;
-import org.streamreasoning.rsp4j.operatorapi.containers.AggregationContainer;
-import org.streamreasoning.rsp4j.operatorapi.containers.R2RContainer;
-import org.streamreasoning.rsp4j.operatorapi.containers.R2SContainer;
-import org.streamreasoning.rsp4j.operatorapi.containers.S2RContainer;
+import org.streamreasoning.rsp4j.api.querying.Task;
+import org.streamreasoning.rsp4j.api.containers.AggregationContainer;
+import org.streamreasoning.rsp4j.api.containers.R2RContainer;
+import org.streamreasoning.rsp4j.api.containers.R2SContainer;
+import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.operatorapi.functions.AggregationFunction;
 import org.streamreasoning.rsp4j.operatorapi.functions.AggregationFunctionRegistry;
 import org.streamreasoning.rsp4j.operatorapi.projection.BindingProjection;

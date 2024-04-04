@@ -1,4 +1,4 @@
-package org.streamreasoning.rsp4j.operatorapi.containers;
+package org.streamreasoning.rsp4j.api.containers;
 
 public  class AggregationContainer<R> {
         private String tvgName;

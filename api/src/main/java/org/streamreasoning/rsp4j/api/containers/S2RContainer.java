@@ -1,4 +1,4 @@
-package org.streamreasoning.rsp4j.operatorapi.containers;
+package org.streamreasoning.rsp4j.api.containers;
 
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 
