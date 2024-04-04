@@ -1,5 +1,7 @@
 package org.streamreasoning.rsp4j.api.secret.time;
 
+import java.util.Optional;
+
 public interface Time {
 
     long getScope();
@@ -15,5 +17,10 @@ public interface Time {
     ET getEvaluationTimeInstants();
 
     void addEvaluationTimeInstants(TimeInstant i);
+
+    /**
+     * Returns the next time instant to evaluate in a computation
+     */
+    public Optional<TimeInstant> getEvaluationTime();
 
 }

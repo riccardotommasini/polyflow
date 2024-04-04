@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <version>${rsp4j.version}</version>
-    <artifactId>operatorapi</artifactId>
+    <artifactId>operatorapi_old</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.streamreasoning.rsp4j</groupId>

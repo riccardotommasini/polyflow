@@ -4,17 +4,15 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 
 public class ContinuousProgram<I, W, R, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
 
     List<Task<I, W, R, O>> taskList;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
+    Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap;
 
-    Map<Task<I, W, R, O>, DataStream<O>> taskToOutMap;
 
     @Override
     public void buildTask(String query) {
@@ -27,10 +25,14 @@ public class ContinuousProgram<I, W, R, O> implements ContinuousProgramInterface
      * @param task Task that consumes from InputStream
      */
     private void addInputStream(DataStream<I> inputStream, Task<I, W, R, O> task) {
+
         if(!registeredTasks.containsKey(inputStream)){
             registeredTasks.put(inputStream, new ArrayList<>());
         }
-        registeredTasks.get(inputStream).add(task);
+        if(!registeredTasks.get(inputStream).contains(task)){
+            registeredTasks.get(inputStream).add(task);
+        }
+
     }
 
     /**
@@ -41,11 +43,10 @@ public class ContinuousProgram<I, W, R, O> implements ContinuousProgramInterface
     private void addOutputStream(DataStream<O> outputStream, Task<I, W, R, O> task){
 
         if(!taskToOutMap.containsKey(task)){
-            taskToOutMap.put(task, outputStream);
+            taskToOutMap.put(task, new ArrayList<>());
         }
-        else{
-            throw new RuntimeException("Task already has an output stream registered");
-        }
+        taskToOutMap.get(task).add(outputStream);
+
     }
 
     @Override
@@ -53,12 +54,14 @@ public class ContinuousProgram<I, W, R, O> implements ContinuousProgramInterface
 
         for(Task<I, W, R, O> t : registeredTasks.get(inputStream)){
             //elaborateElement will transform R to Collection<O> using the task's r2s operators
-            Collection<O> result = t.elaborateElement(inputStream, element, timestamp);
+           Collection<O> result = t.elaborateElement(inputStream, element, timestamp);
             if(!taskToOutMap.containsKey(t)){
                 throw new RuntimeException("Task has no associated output stream");
             }
             else{
-                result.forEach(out -> taskToOutMap.get(t).put(out, timestamp);
+                //If the element triggered a computation and a result is available, insert it in every interested output stream
+                result.forEach(o -> taskToOutMap.get(t).forEach(out->out.put(o, timestamp)));
+
             }
         }
 

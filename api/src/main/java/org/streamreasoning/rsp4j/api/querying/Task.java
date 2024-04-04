@@ -6,8 +6,12 @@ import org.streamreasoning.rsp4j.api.containers.R2SContainer;
 import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.api.sds.DataSet;
 import org.streamreasoning.rsp4j.api.operators.r2r.Var;
+import org.streamreasoning.rsp4j.api.secret.time.Time;
+import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface Task<I, W, R, O> {
@@ -17,9 +21,35 @@ public interface Task<I, W, R, O> {
 
     Set<R2SContainer<R, O>> getR2Ss();
 
-    List<AggregationContainer> getAggregations();
+    /**
+     * Adds an S2R container to the task and registers it as consumer of the input stream it's interest in
+     * @param s2rContainer Container that needs to be added to the Task
+     * @param inputStream Stream which the operator inside the container is interested in
+     * @return The task itself
+     */
+    public Task<I, W, R, O> addS2RContainer(S2RContainer<I, W> s2rContainer, DataStream<I> inputStream);
 
-    DataSet<W> getDefaultGraph();
+    /**
+     * Adds an R2R container to the task
+     * @return The task itself
+     */
+    public Task<I, W, R, O> addR2RContainer(R2RContainer<W, R> r2rContainer);
 
-    List<Var> getProjection();
+    /**
+     * Adds a R2S container to the task
+     * @return The task itself
+     */
+    public Task<I, W, R, O> addR2SContainer(R2SContainer<R, O> r2sContainer);
+
+    public Task<I, W, R, O> addTime(Time time);
+
+
+    /**
+     * This method passes an input element that just arrived from an input stream to the task in order to elaborate it
+     * @param inputStream InputStream that generated the element
+     * @param element Element that arrived from the stream
+     * @param timestamp Event time
+     * @return Optional Collection of O, which is the output of the task after the computation. Empty if the element did not trigger a computation
+     */
+    Collection<O> elaborateElement(DataStream<I> inputStream, I element, long timestamp);
 }

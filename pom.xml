@@ -16,10 +16,11 @@
     <modules>
         <module>api</module>
         <module>yasper</module>
-        <module>operatorapi</module>
+        <module>operatorapi_old</module>
         <module>io</module>
         <module>web</module>
         <module>polyflow</module>
+        <module>operatorapi</module>
     </modules>
 
     <dependencyManagement>

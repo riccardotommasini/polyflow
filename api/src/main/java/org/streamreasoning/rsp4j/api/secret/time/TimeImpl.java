@@ -2,6 +2,7 @@ package org.streamreasoning.rsp4j.api.secret.time;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Central control time. This implementation of time, represents
@@ -13,6 +14,8 @@ public class TimeImpl implements Time {
     List<Long> et = new ArrayList<>();
     private Long app_time = 0L;
     ET timeInstants = new ET();
+
+    ET computedTimeInstants = new ET();
 
     public TimeImpl(long tc0) {
         this.tc0 = tc0;
@@ -41,7 +44,20 @@ public class TimeImpl implements Time {
 
     @Override
     public void addEvaluationTimeInstants(TimeInstant et) {
-        timeInstants.add(et);
+        //If we already inserted a 'computation time' bigger or equal than the one we want to insert, we avoid inserting the new one
+        if(timeInstants.isEmpty() || timeInstants.getLast().t < et.t)
+            timeInstants.add(et);
+    }
+
+    public Optional<TimeInstant> getEvaluationTime(){
+        if(!timeInstants.isEmpty()) {
+            TimeInstant t = timeInstants.poll();
+            computedTimeInstants.add(t);
+            return Optional.of(t);
+        }
+        else{
+            return Optional.empty();
+        }
     }
 
     public static Time forStartTime(long startTime){
