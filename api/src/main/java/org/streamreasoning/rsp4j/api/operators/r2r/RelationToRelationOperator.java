@@ -10,15 +10,16 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public interface RelationToRelationOperator<W, R> {
+public interface RelationToRelationOperator<R extends Iterable<?>> {
 
-    Stream<R> eval(Stream<W> sds);
+    R evalUnary(R dataset);
+    R evalBinary(R dataset1, R dataset2);
 
-    TimeVarying<Collection<R>> apply(SDS<W> sds);
+    TimeVarying<Collection<R>> apply(SDS<R> sds);
 
     SolutionMapping<R> createSolutionMapping(R result);
 
-    default Map<String, RelationToRelationOperator<W, R>> getR2RComponents(){
+    default Map<String, RelationToRelationOperator<R>> getR2RComponents(){
         return Collections.emptyMap();
     }
 

@@ -1,5 +1,6 @@
 package org.streamreasoning.rsp4j.api.coordinators;
 
+import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
@@ -7,7 +8,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.*;
 
 
-public class ContinuousProgram<I, W, R, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
+public class ContinuousProgram<I, W extends Convertible<R>, R extends Iterable<?>, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
 
     List<Task<I, W, R, O>> taskList;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
@@ -54,13 +55,13 @@ public class ContinuousProgram<I, W, R, O> implements ContinuousProgramInterface
 
         for(Task<I, W, R, O> t : registeredTasks.get(inputStream)){
             //elaborateElement will transform R to Collection<O> using the task's r2s operators
-           Collection<O> result = t.elaborateElement(inputStream, element, timestamp);
+           Collection<Collection<O>> result = t.elaborateElement(inputStream, element, timestamp);
             if(!taskToOutMap.containsKey(t)){
                 throw new RuntimeException("Task has no associated output stream");
             }
             else{
                 //If the element triggered a computation and a result is available, insert it in every interested output stream
-                result.forEach(o -> taskToOutMap.get(t).forEach(out->out.put(o, timestamp)));
+                result.forEach(coll -> coll.forEach(o -> taskToOutMap.get(t).forEach(out->out.put(o, timestamp))));
 
             }
         }

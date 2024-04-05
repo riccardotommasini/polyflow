@@ -49,15 +49,16 @@ public class TimeImpl implements Time {
             timeInstants.add(et);
     }
 
-    public Optional<TimeInstant> getEvaluationTime(){
-        if(!timeInstants.isEmpty()) {
-            TimeInstant t = timeInstants.poll();
-            computedTimeInstants.add(t);
-            return Optional.of(t);
-        }
-        else{
-            return Optional.empty();
-        }
+    public TimeInstant getEvaluationTime(){
+
+        TimeInstant t = timeInstants.poll();
+        computedTimeInstants.add(t);
+        return t;
+
+    }
+
+    public boolean hasEvaluationInstant(){
+        return !timeInstants.isEmpty();
     }
 
     public static Time forStartTime(long startTime){

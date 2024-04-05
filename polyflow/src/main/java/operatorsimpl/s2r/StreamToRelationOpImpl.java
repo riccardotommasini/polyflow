@@ -17,6 +17,7 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
+import sds.TimeVaryingObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
-    protected final String name;
+    protected final IRI name;
     protected final ContentFactory<I, W> cf;
     protected ReportGrain grain;
     protected Report report;
@@ -37,7 +38,7 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
     private long t0;
     private long toi;
 
-    public StreamToRelationOpImpl(Ticker ticker, Tick tick, Time time, String name, ContentFactory<I, W> cf, ReportGrain grain, Report report,
+    public StreamToRelationOpImpl(Tick tick, Time time, IRI name, ContentFactory<I, W> cf, ReportGrain grain, Report report,
                                   long width, long slide){
 
 
@@ -79,7 +80,7 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
     }
 
     @Override
-    public String getName() {
+    public IRI getName() {
         return name;
     }
 
@@ -158,34 +159,23 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
                     }
                 });
 
-
+        //TODO: here if no window matches the report clause, the app time does not advance since it's set in method tick -> compute
         active_windows.keySet().stream()
                 .filter(w -> report.report(w, getWindowContent(w), t_e, System.currentTimeMillis()))
                 .max(Comparator.comparingLong(Window::getC))
                 .ifPresent(window -> ticker.tick(t_e, window));
 
-        //TODO: move this somewhere else, otherwise it removes a window that closed before using it for computation
-        to_evict.forEach(w -> {
-            log.debug("Evicting [" + w.getO() + "," + w.getC() + ")");
-            active_windows.remove(w);
-            if (toi < w.getC())
-                toi = w.getC() + slide;
-        });
-        to_evict.clear();
 
-    }
-
-
-    @Override
-    public TimeVarying<W> get() {
-        return null;
     }
 
 
 
     @Override
     public Content<I, W> compute(long t_e, Window w) {
-        return null;
+        Content<I, W> content = getWindowContent(w);
+        time.setAppTime(t_e);
+        log.debug("Report [" + w.getO() + "," + w.getC() + ") with Content " + content + "");
+        return content;
     }
 
     @Override
@@ -193,9 +183,15 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
         return null;
     }
 
+    //TODO: Get and apply do the same thing
     @Override
-    public TimeVarying<W> apply(DataStream<I> s) {
-        return null;
+    public TimeVarying<W> apply() {
+        return new TimeVaryingObject(this, name);
+    }
+
+    @Override
+    public TimeVarying<W> get() {
+        return new TimeVaryingObject(this, name);
     }
 
     private Content<I, W> getWindowContent(Window w) {
@@ -206,6 +202,16 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
         to_evict.add(w);
     }
 
+    @Override
+    public void evict(){
+        to_evict.forEach(w -> {
+            log.debug("Evicting [" + w.getO() + "," + w.getC() + ")");
+            active_windows.remove(w);
+            if (toi < w.getC())
+                toi = w.getC() + slide;
+        });
+        to_evict.clear();
+    }
 
 
 

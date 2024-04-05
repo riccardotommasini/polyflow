@@ -3,7 +3,7 @@ package org.streamreasoning.rsp4j.api.containers;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 
 
-public  class R2SContainer<R, O> {
+public  class R2SContainer<R extends Iterable<?>, O> {
         private String sinkURI;
         private RelationToStreamOperator<R, O> r2sOperator;
 

@@ -21,6 +21,8 @@ public interface Time {
     /**
      * Returns the next time instant to evaluate in a computation
      */
-    public Optional<TimeInstant> getEvaluationTime();
+    public TimeInstant getEvaluationTime();
+
+    public boolean hasEvaluationInstant();
 
 }
