@@ -1,3 +1,4 @@
+/*
 package org.streamreasoning.rsp4j.api.engine.config;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -6,7 +7,6 @@ import org.streamreasoning.rsp4j.api.enums.ContentFormat;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.T0;
 import org.streamreasoning.rsp4j.api.enums.Tick;
-import org.streamreasoning.rsp4j.api.querying.ContinuousQuery;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.NonEmptyContent;
@@ -19,9 +19,11 @@ import org.streamreasoning.rsp4j.api.stream.metadata.StreamSchema;
 import java.net.URL;
 import java.time.Instant;
 
+*/
 /**
  * Created by riccardo on 10/07/2017.
- */
+ *//*
+
 public class EngineConfiguration extends PropertiesConfiguration {
 
     private static EngineConfiguration config;
@@ -168,3 +170,4 @@ public class EngineConfiguration extends PropertiesConfiguration {
         return ContentFormat.valueOf(this.getString("rsp_engine.content_format"));
     }
 }
+*/

@@ -1,19 +1,15 @@
 package org.streamreasoning.rsp4j.api.querying;
 
-import org.streamreasoning.rsp4j.api.containers.AggregationContainer;
 import org.streamreasoning.rsp4j.api.containers.R2RContainer;
 import org.streamreasoning.rsp4j.api.containers.R2SContainer;
 import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
-import org.streamreasoning.rsp4j.api.sds.DataSet;
-import org.streamreasoning.rsp4j.api.operators.r2r.Var;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {

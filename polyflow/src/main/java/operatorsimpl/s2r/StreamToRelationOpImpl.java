@@ -5,10 +5,10 @@ import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.exceptions.OutOfOrderElementException;
+import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.WindowImpl;
-import org.streamreasoning.rsp4j.api.querying.ContinuousQueryExecution;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
@@ -16,13 +16,12 @@ import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
-import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import sds.TimeVaryingObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
+public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements StreamToRelationOp<I, W> {
 
     private static final Logger log = Logger.getLogger(StreamToRelationOpImpl.class);
     protected final Ticker ticker;
@@ -43,7 +42,6 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
 
 
         this.tick = tick;
-        this.ticker = TickerFactory.tick(tick, this);
         this.time = time;
         this.name = name;
         this.cf = cf;
@@ -55,6 +53,7 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
         this.to_evict = new HashSet<>();
         this.t0 = time.getScope();
         this.toi = 0;
+        this.ticker = TickerFactory.tick(tick, this);
 
     }
 
@@ -178,10 +177,10 @@ public class StreamToRelationOpImpl<I, W> implements StreamToRelationOp<I, W> {
         return content;
     }
 
-    @Override
+    /*@Override
     public StreamToRelationOp<I, W> link(ContinuousQueryExecution<I, W, ?, ?> context) {
         return null;
-    }
+    }*/
 
     //TODO: Get and apply do the same thing
     @Override

@@ -15,17 +15,32 @@ public class ContinuousProgram<I, W extends Convertible<R>, R extends Iterable<?
     Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap;
 
 
+    public ContinuousProgram(){
+        this.taskList = new ArrayList<>();
+        this.registeredTasks = new HashMap<>();
+        this.taskToOutMap = new HashMap<>();
+    }
+
     @Override
     public void buildTask(String query) {
         //Parse query and extract operators and streams; add them to a new Task
+
+
+    }
+    public void buildTask(Task<I, W, R, O> task, DataStream<I> inputStream, DataStream<O> outputStream){
+        this.taskList.add(task);
+        addInputStream(inputStream, task);
+        addOutputStream(outputStream, task);
     }
 
     /**
-     * Maps a task to the inputStream it's interested in
+     * Maps a task to the inputStream it's interested in and adds the Continuous program as a consumer of the input stream
      * @param inputStream Input stream that the task is interested in
      * @param task Task that consumes from InputStream
      */
     private void addInputStream(DataStream<I> inputStream, Task<I, W, R, O> task) {
+
+        inputStream.addConsumer(this);
 
         if(!registeredTasks.containsKey(inputStream)){
             registeredTasks.put(inputStream, new ArrayList<>());

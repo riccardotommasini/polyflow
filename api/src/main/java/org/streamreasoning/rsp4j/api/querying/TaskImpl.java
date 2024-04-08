@@ -1,5 +1,6 @@
 package org.streamreasoning.rsp4j.api.querying;
 
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.containers.R2RContainer;
 import org.streamreasoning.rsp4j.api.containers.R2SContainer;
 import org.streamreasoning.rsp4j.api.containers.S2RContainer;
@@ -84,7 +85,11 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
     public void initialize(){
         for(S2RContainer<I, W> container: s2rContainers){
+            TimeVarying<W> tvg = container.getS2rOperator().apply();
             this.sds.add(container.getS2rOperator().apply());
+            if(tvg.named()){
+                this.sds.add(RDFUtils.createIRI(tvg.iri()), tvg);
+            }
         }
     }
 

@@ -1,10 +1,11 @@
 package sds;
 
 import org.apache.commons.rdf.api.IRI;
+import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
-public class TimeVaryingObject<W> implements TimeVarying<W> {
+public class TimeVaryingObject<W extends Convertible<?>> implements TimeVarying<W> {
 
     private final StreamToRelationOp<?, W> op;
     private final IRI name;
