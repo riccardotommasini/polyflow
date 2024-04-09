@@ -94,7 +94,8 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     @Override
     public Content<I, W> content(long t_e) {
         Optional<Window> max = active_windows.keySet().stream()
-                .filter(w -> w.getO() < t_e && w.getC() <= t_e)
+                //TODO: 09/04/24 qui c'era w.getC()<= t_e, ma è incoerente col report perché nel report se t_e == w.getC() la window non conta come chiusa, qui invece veniva reportata. Mettendo solo < è più coerente, prende la window che ha triggerato un report
+                .filter(w -> w.getO() < t_e && w.getC() < t_e)
                 .max(Comparator.comparingLong(Window::getC));
 
         if (max.isPresent())
