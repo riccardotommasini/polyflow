@@ -19,7 +19,7 @@ public interface Time {
     void addEvaluationTimeInstants(TimeInstant i);
 
     /**
-     * Returns the next time instant to evaluate in a computation
+     * Returns the next time instant to evaluate in a computation, removes it from the list of evaluation times and adds it to the list of evaluated times
      */
     public TimeInstant getEvaluationTime();
 

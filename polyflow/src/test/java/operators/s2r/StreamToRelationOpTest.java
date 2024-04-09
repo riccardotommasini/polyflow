@@ -54,6 +54,7 @@ public class StreamToRelationOpTest {
                         1000);
 
         TimeVarying<ValidatedGraph> tvg = s2rOp.get();
+
         //CRAFT A GRAPH TO SIMULATE THE INPUT
         Graph graph1 = GraphMemFactory.createGraphMem();
         Node p = NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
@@ -68,6 +69,14 @@ public class StreamToRelationOpTest {
         graph2.add(NodeFactory.createURI("http://test/S3"), p, NodeFactory.createURI("http://test/Black"));
 
         s2rOp.windowing(graph2, 4000);
+
+        //A WINDOW IS READY TO REPORT, CHECK IF THE TIME OBJECT STORED THE TIME AT WHICH THE COMPUTATION MUST OCCUR
+        assertTrue(s2rOp.time().getEvaluationTimeInstants().size() == 1);
+        assertTrue(s2rOp.time().getEvaluationTime().t == 4000);
+
+        //CHECK THAT AFTER POLLING AN EVALUATION TIME INSTANT (getEvaluationTime()), THE ELEMENT IS REMOVED FROM THE LIST
+        assertTrue(s2rOp.time().getEvaluationTimeInstants().isEmpty());
+
 
         //WHEN THE EVENT WITH TS=4000 ARRIVES, THE WINDOW [3000, 4000) DOES NOT CLOSE, BUT THE WINDOW [2000, 3000) CLOSES AND IT'S REPORTED WITH ITS CONTENT (GRAPH 1)
 
@@ -85,12 +94,34 @@ public class StreamToRelationOpTest {
 
         s2rOp.windowing(graph3, 5000);
 
+
         //BY ADDING AN EVENT AT TIME 5000, THE WINDOW [4000, 5000) WHICH CONTAINS GRAPH 2 DOES NOT CLOSE, BUT THE WINDOW [3000, 4000) CLOSES, SHOULD REPORT EMPTY CONTENT
 
         tvg.materialize(5000);
 
         assertTrue(tvg.get().content.isEmpty());
-        
+
+
+        //ADD ANOTHER GRAPH IN THE WINDOW [5000, 6000) TO SEE IF THE APP REPORTS ALL THE CONTENT CORRECTLY
+        Graph graph4 = GraphMemFactory.createGraphMem();
+        graph4.add(NodeFactory.createURI("http://test/S4"), p, NodeFactory.createURI("http://test/Purple"));
+        graph4.add(NodeFactory.createURI("http://test/S5"), p, NodeFactory.createURI("http://test/Black"));
+
+        s2rOp.windowing(graph4, 5500);
+
+        //ADD EVENT AT TIME 7000 SO THAT WINDOW [5000, 6000) IS REPORTED
+        s2rOp.windowing(Graph.emptyGraph, 7000);
+
+        content = validatedGraphContentFactory.create();
+        content.add(graph3);
+        content.add(graph4);
+        expected = content.coalesce();
+
+        expected.getContent().stream().map(Triple.class::cast).forEach(triple ->
+                assertTrue(tvg.get().content.contains(triple)));
+
+        //CHECK THAT ALL THE TIME INSTANTS ADDED ARE IN THE TIME INSTANTS LIST
+        assertTrue(s2rOp.time().getEvaluationTimeInstants().size() == 3);
 
     }
 }
