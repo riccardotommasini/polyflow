@@ -123,5 +123,10 @@ public class StreamToRelationOpTest {
         //CHECK THAT ALL THE TIME INSTANTS ADDED ARE IN THE TIME INSTANTS LIST
         assertTrue(s2rOp.time().getEvaluationTimeInstants().size() == 3);
 
+        //ADD ANOTHER EVENT AT TIME 7000 AND CHECK THAT THE TIME OBJECT ONLY CONTAINS THE INSTANT 7000 ONCE
+        s2rOp.windowing(Graph.emptyGraph, 7000);
+        assertTrue(s2rOp.time().getEvaluationTimeInstants().size() == 3);
+        s2rOp.time().getEvaluationTimeInstants().stream().forEach(t->System.out.println(t.t));
+
     }
 }

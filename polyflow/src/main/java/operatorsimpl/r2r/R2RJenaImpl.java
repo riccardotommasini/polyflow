@@ -17,26 +17,30 @@ import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class R2RJenaImpl implements RelationToRelationOperator<JenaOperandWrapper> {
 
 
-    private Query query;
+    private String query;
 
     public R2RJenaImpl(String query) {
-        this.query = QueryFactory.create(query);
-        this.query.getProjectVars();
+        this.query = query;
 
     }
 
     @Override
     public JenaOperandWrapper evalUnary(JenaOperandWrapper dataset) {
 
+
+        Query q = QueryFactory.create(query);
+        q.getProjectVars();
         Node aDefault = NodeFactory.createURI("default");
         DatasetGraph dg = new DatasetGraphInMemory();
         dg.addGraph(aDefault, dataset.getContent().content);
 
-        QueryExecution queryExecution = QueryExecutionFactory.create(query, DatasetImpl.wrap(dg));
+        QueryExecution queryExecution = QueryExecutionFactory.create(q, DatasetImpl.wrap(dg));
         ResultSet resultSet = queryExecution.execSelect();
 
         List<Binding> res = new ArrayList<>();
@@ -54,7 +58,12 @@ public class R2RJenaImpl implements RelationToRelationOperator<JenaOperandWrappe
 
     @Override
     public JenaOperandWrapper evalBinary(JenaOperandWrapper dataset1, JenaOperandWrapper dataset2) {
-        return null;
+
+        JenaOperandWrapper result = new JenaOperandWrapper();
+        result.setResult(Stream.concat(dataset1.getResult().stream(), dataset2.getResult().stream()).collect(Collectors.toList()));
+
+        return result;
+
     }
 
     @Override
