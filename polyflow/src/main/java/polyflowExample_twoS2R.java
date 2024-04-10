@@ -101,7 +101,15 @@ public class polyflowExample_twoS2R {
                 .addTime(instance);
         task.initialize();
 
-        cp.buildTask(task, inputStream, outStream);
+
+        List<DataStream<Graph>> inputStreams = new ArrayList<>();
+        inputStreams.add(inputStream);
+
+
+        List<DataStream<Binding>> outputStreams = new ArrayList<>();
+        outputStreams.add(outStream);
+
+        cp.buildTask(task, inputStreams, outputStreams);
 
         outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
 

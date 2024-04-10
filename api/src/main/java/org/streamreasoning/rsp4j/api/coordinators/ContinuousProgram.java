@@ -27,10 +27,10 @@ public class ContinuousProgram<I, W extends Convertible<R>, R extends Iterable<?
 
 
     }
-    public void buildTask(Task<I, W, R, O> task, DataStream<I> inputStream, DataStream<O> outputStream){
+    public void buildTask(Task<I, W, R, O> task, List<DataStream<I>> inputStreams, List<DataStream<O>> outputStreams){
         this.taskList.add(task);
-        addInputStream(inputStream, task);
-        addOutputStream(outputStream, task);
+        inputStreams.forEach(input -> addInputStream(input, task));
+        outputStreams.forEach(output -> addOutputStream(output, task));
     }
 
     /**
