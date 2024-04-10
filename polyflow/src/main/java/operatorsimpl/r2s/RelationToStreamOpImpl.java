@@ -1,6 +1,6 @@
 package operatorsimpl.r2s;
 
-import datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 

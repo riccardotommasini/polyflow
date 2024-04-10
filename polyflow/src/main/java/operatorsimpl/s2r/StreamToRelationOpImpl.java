@@ -2,6 +2,7 @@ package operatorsimpl.s2r;
 
 import org.apache.commons.rdf.api.IRI;
 import org.apache.log4j.Logger;
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.exceptions.OutOfOrderElementException;
@@ -27,7 +28,7 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
-    protected final IRI name;
+    protected final String name;
     protected final ContentFactory<I, W> cf;
     protected ReportGrain grain;
     protected Report report;
@@ -37,7 +38,7 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     private long t0;
     private long toi;
 
-    public StreamToRelationOpImpl(Tick tick, Time time, IRI name, ContentFactory<I, W> cf, ReportGrain grain, Report report,
+    public StreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W> cf, ReportGrain grain, Report report,
                                   long width, long slide){
 
 
@@ -79,13 +80,13 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     }
 
     @Override
-    public IRI getName() {
+    public String getName() {
         return name;
     }
 
     @Override
     public boolean named() {
-        return name != null;
+        return !name.isEmpty();
     }
 
     /**
@@ -186,12 +187,12 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     //TODO: Get and apply do the same thing
     @Override
     public TimeVarying<W> apply() {
-        return new TimeVaryingObject(this, name);
+        return new TimeVaryingObject(this, RDFUtils.createIRI(name));
     }
 
     @Override
     public TimeVarying<W> get() {
-        return new TimeVaryingObject(this, name);
+        return new TimeVaryingObject(this, RDFUtils.createIRI(name));
     }
 
     private Content<I, W> getWindowContent(Window w) {

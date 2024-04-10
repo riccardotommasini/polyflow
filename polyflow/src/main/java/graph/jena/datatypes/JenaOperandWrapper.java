@@ -1,11 +1,9 @@
-package datatypes;
-import jena.content.ValidatedGraph;
-import org.apache.jena.graph.Graph;
+package graph.jena.datatypes;
+import graph.jena.content.ValidatedGraph;
 import org.apache.jena.sparql.engine.binding.Binding;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class JenaOperandWrapper implements Iterable<Binding>{

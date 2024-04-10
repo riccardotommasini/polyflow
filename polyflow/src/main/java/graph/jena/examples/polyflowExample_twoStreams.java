@@ -1,10 +1,12 @@
-import datatypes.JenaOperandWrapper;
-import jena.JenaBindingStream;
-import jena.JenaStreamGenerator;
-import jena.SDSJena;
-import jena.content.ValidatedGraph;
-import jena.content.ValidatedGraphContentFactory;
-import operatorsimpl.r2r.R2RJenaImpl;
+package graph.jena.examples;
+
+import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.JenaBindingStream;
+import graph.jena.JenaStreamGenerator;
+import graph.jena.SDSJena;
+import graph.jena.content.ValidatedGraph;
+import graph.jena.content.ValidatedGraphContentFactory;
+import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
 import operatorsimpl.r2s.RelationToStreamOpImpl;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.Graph;
@@ -31,14 +33,14 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class polyflowExample_twoS2R {
-
+public class polyflowExample_twoStreams {
 
     public static void main(String [] args) throws InterruptedException {
 
         JenaStreamGenerator generator = new JenaStreamGenerator();
 
-        DataStream<Graph> inputStream = generator.getStream("http://test/stream1");
+        DataStream<Graph> inputStreamColors = generator.getStream("http://test/stream1");
+        DataStream<Graph> inputStreamNumbers = generator.getStream("http://test/stream2");
         // define output stream
         JenaBindingStream outStream = new JenaBindingStream("out");
 
@@ -61,7 +63,7 @@ public class polyflowExample_twoS2R {
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
-                        RDFUtils.createIRI("w1"),
+                        "w1",
                         validatedGraphContentFactory,
                         report_grain,
                         report,
@@ -72,19 +74,19 @@ public class polyflowExample_twoS2R {
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
-                        RDFUtils.createIRI("w2"),
+                        "w2",
                         validatedGraphContentFactory,
                         report_grain,
                         report,
                         500,
                         500);
 
-        S2RContainer<Graph, ValidatedGraph> s2rContainer_one = new S2RContainer<>(inputStream.getName(), s2rOp_one, s2rOp_one.getName().getIRIString());
-        S2RContainer<Graph, ValidatedGraph> s2rContainer_two = new S2RContainer<>(inputStream.getName(), s2rOp_two, s2rOp_two.getName().getIRIString());
+        S2RContainer<Graph, ValidatedGraph> s2rContainer_one = new S2RContainer<>(inputStreamColors.getName(), s2rOp_one, s2rOp_one.getName());
+        S2RContainer<Graph, ValidatedGraph> s2rContainer_two = new S2RContainer<>(inputStreamNumbers.getName(), s2rOp_two, s2rOp_two.getName());
 
         List<String> s2r_names = new ArrayList<>();
-        s2r_names.add(s2rOp_one.getName().getIRIString());
-        s2r_names.add(s2rOp_two.getName().getIRIString());
+        s2r_names.add(s2rOp_one.getName());
+        s2r_names.add(s2rOp_two.getName());
 
         R2RContainer<JenaOperandWrapper> r2rContainer = new R2RContainer<>(s2r_names, new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}"), false);
         R2RContainer<JenaOperandWrapper> r2rBinaryContainer = new R2RContainer<>("", new R2RJenaImpl(""), true);
@@ -92,8 +94,8 @@ public class polyflowExample_twoS2R {
         R2SContainer<JenaOperandWrapper, Binding> r2sContainer = new R2SContainer<>(outStream.getName(), new RelationToStreamOpImpl());
 
         Task<Graph, ValidatedGraph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
-        task = task.addS2RContainer(s2rContainer_one, inputStream)
-                .addS2RContainer(s2rContainer_two, inputStream)
+        task = task.addS2RContainer(s2rContainer_one, inputStreamColors)
+                .addS2RContainer(s2rContainer_two, inputStreamNumbers)
                 .addR2RContainer(r2rContainer)
                 .addR2RContainer(r2rBinaryContainer)
                 .addR2SContainer(r2sContainer)
@@ -101,10 +103,9 @@ public class polyflowExample_twoS2R {
                 .addTime(instance);
         task.initialize();
 
-
         List<DataStream<Graph>> inputStreams = new ArrayList<>();
-        inputStreams.add(inputStream);
-
+        inputStreams.add(inputStreamColors);
+        inputStreams.add(inputStreamNumbers);
 
         List<DataStream<Binding>> outputStreams = new ArrayList<>();
         outputStreams.add(outStream);

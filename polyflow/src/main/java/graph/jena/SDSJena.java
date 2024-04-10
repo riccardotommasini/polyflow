@@ -1,5 +1,6 @@
-package jena;
+package graph.jena;
 
+import graph.jena.content.ValidatedGraph;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -17,7 +18,6 @@ import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.util.Context;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
-import jena.content.ValidatedGraph;
 
 import java.util.*;
 import java.util.stream.Collectors;

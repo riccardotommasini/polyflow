@@ -1,6 +1,6 @@
-package operatorsimpl.r2r;
+package graph.jena.operatorsimpl.r2r;
 
-import datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.*;

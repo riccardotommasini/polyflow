@@ -1,4 +1,4 @@
-package jena.content;
+package graph.jena.content;
 
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
@@ -6,8 +6,6 @@ import org.apache.jena.shacl.Shapes;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
-import jena.content.ValidatedContent;
-import jena.content.EmptyContent;
 
 public class ValidatedGraphContentFactory implements ContentFactory<Graph, ValidatedGraph> {
 

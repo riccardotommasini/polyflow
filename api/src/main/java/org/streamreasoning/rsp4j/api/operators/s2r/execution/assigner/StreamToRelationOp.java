@@ -34,7 +34,7 @@ public interface StreamToRelationOp<I, W extends Convertible<?>> {
 
     TimeVarying<W> get();
 
-    IRI getName();
+    String getName();
 
     default boolean named() {
         return getName() != null;

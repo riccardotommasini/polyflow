@@ -1,4 +1,4 @@
-package jena.content;
+package graph.jena.content;
 
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
@@ -8,7 +8,6 @@ import org.apache.jena.shacl.ShaclValidator;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.shacl.ValidationReport;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
-import jena.content.ValidatedContent;
 
 import java.util.HashSet;
 import java.util.Objects;

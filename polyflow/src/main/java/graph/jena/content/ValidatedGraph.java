@@ -1,6 +1,6 @@
-package jena.content;
+package graph.jena.content;
 
-import datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.graph.Graph;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 

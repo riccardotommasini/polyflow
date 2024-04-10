@@ -1,4 +1,4 @@
-package jena.content;
+package graph.jena.content;
 
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 

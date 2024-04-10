@@ -1,8 +1,8 @@
 package operators.s2r;
 
-import jena.content.ValidatedContent;
-import jena.content.ValidatedGraph;
-import jena.content.ValidatedGraphContentFactory;
+import graph.jena.content.ValidatedContent;
+import graph.jena.content.ValidatedGraph;
+import graph.jena.content.ValidatedGraphContentFactory;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
@@ -46,7 +46,7 @@ public class StreamToRelationOpTest {
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
-                        RDFUtils.createIRI("w1"),
+                        "w1",
                         validatedGraphContentFactory,
                         report_grain,
                         report,

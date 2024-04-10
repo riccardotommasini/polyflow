@@ -1,44 +1,39 @@
-package jena;
+package relational.stream;
 
-import org.apache.commons.rdf.api.RDF;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.GraphMemFactory;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
-import org.streamreasoning.rsp4j.api.RDFUtils;
+
+import org.javatuples.Quartet;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+public class RowStreamGenerator {
 
-public class JenaStreamGenerator {
     private static final String PREFIX = "http://test/";
     private static final Long TIMEOUT = 1000l;
+    private final Map<String, DataStream<Quartet<Long, String, Integer, Boolean>>> activeStreams;
 
     private final String[] colors = new String[]{"Blue", "Green", "Red", "Yellow", "Black", "Grey", "White"};
-    private final Map<String, DataStream<Graph>> activeStreams;
     private final AtomicBoolean isStreaming;
     private final Random randomGenerator;
     private AtomicLong streamIndexCounter;
 
-    public JenaStreamGenerator() {
+    public RowStreamGenerator() {
         this.streamIndexCounter = new AtomicLong(0);
-        this.activeStreams = new HashMap<String, DataStream<Graph>>();
+        this.activeStreams = new HashMap<String, DataStream<Quartet<Long, String, Integer, Boolean>>>();
         this.isStreaming = new AtomicBoolean(false);
         randomGenerator = new Random(1336);
     }
 
     public static String getPREFIX() {
-        return JenaStreamGenerator.PREFIX;
+        return RowStreamGenerator.PREFIX;
     }
 
-    public DataStream<Graph> getStream(String streamURI) {
+    public DataStream<Quartet<Long, String, Integer, Boolean>> getStream(String streamURI) {
         if (!activeStreams.containsKey(streamURI)) {
-            JenaRDFStream stream = new JenaRDFStream(streamURI);
+            RowStream stream = new RowStream(streamURI);
             activeStreams.put(streamURI, stream);
         }
         return activeStreams.get(streamURI);
@@ -68,21 +63,18 @@ public class JenaStreamGenerator {
         }
     }
 
-    private void generateDataAndAddToStream(DataStream<Graph> stream, long ts) {
-        RDF instance = RDFUtils.getInstance();
-        Graph graph = GraphMemFactory.createGraphMem();
+    private void generateDataAndAddToStream(DataStream<Quartet<Long, String, Integer, Boolean>> stream, long ts) {
 
-        Node p = NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+
+        Quartet<Long, String, Integer, Boolean> row;
 
         if(stream.getName().equals("http://test/stream1")) {
-            graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + selectRandomColor()));
-            graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "Black"));
+            row = new Quartet<>(randomGenerator.nextLong(5), "stream_1", randomGenerator.nextInt(5), randomGenerator.nextBoolean());
         }
         else{
-            graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + randomGenerator.nextInt(10)));
-            graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "0"));
+            row = new Quartet<>(randomGenerator.nextLong(5), "stream_2", randomGenerator.nextInt(5), randomGenerator.nextBoolean());
         }
-        stream.put(graph, ts);
+        stream.put(row, ts);
     }
 
     private String selectRandomColor() {
@@ -93,4 +85,5 @@ public class JenaStreamGenerator {
     public void stopStreaming() {
         this.isStreaming.set(false);
     }
+
 }
