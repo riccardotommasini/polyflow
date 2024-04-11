@@ -3,6 +3,7 @@ package operators.s2r;
 import graph.jena.content.ValidatedContent;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.content.ValidatedGraphContentFactory;
+import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
@@ -17,6 +18,7 @@ import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
@@ -42,12 +44,15 @@ public class StreamToRelationOpTest {
 
         ValidatedGraphContentFactory validatedGraphContentFactory = new ValidatedGraphContentFactory(instance, shapes);
 
+        TimeVaryingFactory<ValidatedGraph> tvFactory = new TimeVaryingFactoryJena();
+
         StreamToRelationOp<Graph, ValidatedGraph> s2rOp =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
                         validatedGraphContentFactory,
+                        tvFactory,
                         report_grain,
                         report,
                         1000,

@@ -10,6 +10,7 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRe
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
@@ -29,6 +30,7 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     protected final Time time;
     protected final String name;
     protected final ContentFactory<I, W> cf;
+    protected final TimeVaryingFactory<W> tvFactory;
     protected ReportGrain grain;
     protected Report report;
     private final long width, slide;
@@ -37,10 +39,10 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     private long t0;
     private long toi;
 
-    public StreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W> cf, ReportGrain grain, Report report,
+    public StreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W> cf, TimeVaryingFactory<W> tvFactory,  ReportGrain grain, Report report,
                                   long width, long slide){
 
-
+        this.tvFactory = tvFactory;
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -186,13 +188,11 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
     //TODO: Get and apply do the same thing
     @Override
     public TimeVarying<W> apply() {
-        return new TimeVaryingObject(this, RDFUtils.createIRI(name));
+        return tvFactory.create(this, name);
     }
 
     @Override
-    public TimeVarying<W> get() {
-        return new TimeVaryingObject(this, RDFUtils.createIRI(name));
-    }
+    public TimeVarying<W> get() {return tvFactory.create(this, name);}
 
     private Content<I, W> getWindowContent(Window w) {
         return active_windows.containsKey(w) ? active_windows.get(w) : cf.createEmpty();

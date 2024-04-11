@@ -14,7 +14,8 @@ public class RelationToStreamjtableJoin implements RelationToStreamOperator<Tabl
     public Septet<Long, String, Integer, Boolean, Long, String, Boolean> transform(Object sm, long ts) {
 
         Row row = (Row) sm;
-        Septet<Long, String, Integer, Boolean, Long, String, Boolean> res = new Septet<>(row.getLong(0),
+        Septet<Long, String, Integer, Boolean, Long, String, Boolean> res = new Septet<>(
+                row.getLong(0),
                 row.getString(1),
                 row.getInt(2),
                 row.getBoolean(3),

@@ -1,5 +1,6 @@
 package relational.examples;
 
+import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Quartet;
 import org.javatuples.Septet;
 import org.streamreasoning.rsp4j.api.containers.R2RContainer;
@@ -11,6 +12,7 @@ import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
@@ -21,8 +23,8 @@ import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtableJoin;
-import relational.operatorsimpl.s2r.StreamToRelationOpImpljtablesaw;
 import relational.sds.SDSjtablesaw;
+import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.Table;
@@ -52,26 +54,30 @@ public class polyflowExample_relational_twoStreams {
 
         WindowContentFactory windowContentFactory = new WindowContentFactory();
 
+        TimeVaryingFactory<TableWrapper> tvFactory = new TimeVaryingFactoryjtablesaw();
+
         //TableWrapper because we need the interface convertible on the W generic type
         ContinuousProgram<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> cp = new ContinuousProgram<>();
 
         StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp_1 =
-                new StreamToRelationOpImpljtablesaw<>(
+                new StreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
                         windowContentFactory,
+                        tvFactory,
                         report_grain,
                         report,
                         1000,
                         1000);
 
         StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp_2 =
-                new StreamToRelationOpImpljtablesaw<>(
+                new StreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w2",
                         windowContentFactory,
+                        tvFactory,
                         report_grain,
                         report,
                         1000,

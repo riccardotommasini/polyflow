@@ -7,6 +7,7 @@ import graph.jena.sds.SDSJena;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.content.ValidatedGraphContentFactory;
 import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
+import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.r2s.RelationToStreamOpImpl;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.Graph;
@@ -22,6 +23,7 @@ import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
@@ -56,6 +58,8 @@ public class polyflowExample_twoS2R {
 
         ValidatedGraphContentFactory validatedGraphContentFactory = new ValidatedGraphContentFactory(instance, shapes);
 
+        TimeVaryingFactory<ValidatedGraph> tvFactory = new TimeVaryingFactoryJena();
+
         ContinuousProgram<Graph, ValidatedGraph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
 
         StreamToRelationOp<Graph, ValidatedGraph> s2rOp_one =
@@ -64,6 +68,7 @@ public class polyflowExample_twoS2R {
                         instance,
                         "w1",
                         validatedGraphContentFactory,
+                        tvFactory,
                         report_grain,
                         report,
                         1000,
@@ -75,6 +80,7 @@ public class polyflowExample_twoS2R {
                         instance,
                         "w2",
                         validatedGraphContentFactory,
+                        tvFactory,
                         report_grain,
                         report,
                         500,

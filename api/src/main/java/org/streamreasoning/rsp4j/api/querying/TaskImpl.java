@@ -1,5 +1,6 @@
 package org.streamreasoning.rsp4j.api.querying;
 
+import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.containers.R2RContainer;
 import org.streamreasoning.rsp4j.api.containers.R2SContainer;
@@ -16,6 +17,8 @@ import java.util.stream.Collectors;
 
 public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> implements Task<I, W, R, O>{
 
+
+    private static final Logger log = Logger.getLogger(TaskImpl.class);
     Set<S2RContainer<I, W>> s2rContainers;
     List<R2RContainer<R>> r2rContainers;
     R2SContainer<R, O> r2sContainer;
@@ -108,7 +111,9 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
         }
 
         while(time.hasEvaluationInstant()){
-            R partialRes = computeR2R(time.getEvaluationTime().t);
+            long t = time.getEvaluationTime().t;
+            log.debug("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            R partialRes = computeR2R(t);
             res.add(r2sContainer.getR2sOperator().eval(partialRes, timestamp).collect(Collectors.toList()));
         }
 
