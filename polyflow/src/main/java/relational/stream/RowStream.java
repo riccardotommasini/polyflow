@@ -9,21 +9,21 @@ import tech.tablesaw.api.Row;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RowStream implements DataStream<Quartet<Long, String, Integer, Boolean>> {
+public class RowStream<X> implements DataStream<X> {
 
     String URI;
-    protected List<Consumer<Quartet<Long, String, Integer, Boolean>>> consumers = new ArrayList<>();
+    protected List<Consumer<X>> consumers = new ArrayList<>();
 
     public RowStream(String streamURI){
         this.URI = streamURI;
     }
     @Override
-    public void addConsumer(Consumer<Quartet<Long, String, Integer, Boolean>> windowAssigner) {
+    public void addConsumer(Consumer<X> windowAssigner) {
         this.consumers.add(windowAssigner);
     }
 
     @Override
-    public void put(Quartet<Long, String, Integer, Boolean> row, long ts) {
+    public void put(X row, long ts) {
         consumers.forEach(graphConsumer -> graphConsumer.notify(this, row, ts));
     }
 

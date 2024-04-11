@@ -21,7 +21,6 @@ import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtableJoin;
-import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.operatorsimpl.s2r.StreamToRelationOpImpljtablesaw;
 import relational.sds.SDSjtablesaw;
 import relational.stream.RowStream;
@@ -31,13 +30,14 @@ import tech.tablesaw.api.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-public class polyflowExample_relational_twoS2R {
+public class polyflowExample_relational_twoStreams {
 
     public static void main(String [] args) throws InterruptedException {
 
         RowStreamGenerator generator = new RowStreamGenerator();
 
-        DataStream<Quartet<Long, String, Integer, Boolean>> inputStream = generator.getStream("http://test/stream1");
+        DataStream<Quartet<Long, String, Integer, Boolean>> inputStream_1 = generator.getStream("http://test/stream1");
+        DataStream<Quartet<Long, String, Integer, Boolean>> inputStream_2 = generator.getStream("http://test/stream2");
         // define output stream
         DataStream<Septet<Long, String, Integer, Boolean, Long, String, Boolean>> outStream = new RowStream<>("out");
 
@@ -77,8 +77,8 @@ public class polyflowExample_relational_twoS2R {
                         1000,
                         1000);
 
-        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_1 = new S2RContainer<>(inputStream.getName(), s2rOp_1, s2rOp_1.getName());
-        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_2 = new S2RContainer<>(inputStream.getName(), s2rOp_2, s2rOp_2.getName());
+        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_1 = new S2RContainer<>(inputStream_1.getName(), s2rOp_1, s2rOp_1.getName());
+        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_2 = new S2RContainer<>(inputStream_2.getName(), s2rOp_2, s2rOp_2.getName());
 
         List<String> s2r_names = new ArrayList<>();
         s2r_names.add(s2rOp_1.getName());
@@ -90,8 +90,8 @@ public class polyflowExample_relational_twoS2R {
         R2SContainer<Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> r2sContainer = new R2SContainer<>(outStream.getName(), new RelationToStreamjtableJoin());
 
         Task<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> task = new TaskImpl<>();
-        task = task.addS2RContainer(s2rContainer_1, inputStream)
-                .addS2RContainer(s2rContainer_2, inputStream)
+        task = task.addS2RContainer(s2rContainer_1, inputStream_1)
+                .addS2RContainer(s2rContainer_2, inputStream_2)
                 .addR2RContainer(r2rContainer)
                 .addR2RContainer(r2rBinaryContainer)
                 .addR2SContainer(r2sContainer)
@@ -100,7 +100,8 @@ public class polyflowExample_relational_twoS2R {
         task.initialize();
 
         List<DataStream<Quartet<Long, String, Integer, Boolean>>> inputStreams = new ArrayList<>();
-        inputStreams.add(inputStream);
+        inputStreams.add(inputStream_1);
+        inputStreams.add(inputStream_2);
 
 
         List<DataStream<Septet<Long, String, Integer, Boolean, Long, String, Boolean>>> outputStreams = new ArrayList<>();
