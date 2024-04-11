@@ -13,7 +13,7 @@ public interface SDS<E> {
 
     Collection<TimeVarying<E>> asTimeVaryingEs();
 
-    void add(IRI iri, TimeVarying<E> tvg);
+    void add(String iri, TimeVarying<E> tvg);
 
     void add(TimeVarying<E> tvg);
 

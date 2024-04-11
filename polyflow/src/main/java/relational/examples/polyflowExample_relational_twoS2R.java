@@ -1,6 +1,5 @@
 package relational.examples;
 
-import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Quartet;
 import org.streamreasoning.rsp4j.api.containers.R2RContainer;
 import org.streamreasoning.rsp4j.api.containers.R2SContainer;
@@ -30,8 +29,7 @@ import tech.tablesaw.api.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-public class polyflowExample_relational {
-
+public class polyflowExample_relational_twoS2R {
 
     public static void main(String [] args) throws InterruptedException {
 
@@ -55,7 +53,7 @@ public class polyflowExample_relational {
         //TableWrapper because we need the interface convertible on the W generic type
         ContinuousProgram<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Quartet<Long, String, Integer, Boolean>> cp = new ContinuousProgram<>();
 
-        StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp =
+        StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp_1 =
                 new StreamToRelationOpImpljtablesaw<>(
                         tick,
                         instance,
@@ -66,13 +64,34 @@ public class polyflowExample_relational {
                         1000,
                         1000);
 
-        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer = new S2RContainer<>(inputStream.getName(), s2rOp, s2rOp.getName());
-        R2RContainer<Table> r2rContainer = new R2RContainer<>(s2rOp.getName(), new R2RjtablesawImpl(5), false);
+        StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp_2 =
+                new StreamToRelationOpImpljtablesaw<>(
+                        tick,
+                        instance,
+                        "w2",
+                        windowContentFactory,
+                        report_grain,
+                        report,
+                        1000,
+                        1000);
+
+        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_1 = new S2RContainer<>(inputStream.getName(), s2rOp_1, s2rOp_1.getName());
+        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_2 = new S2RContainer<>(inputStream.getName(), s2rOp_2, s2rOp_2.getName());
+
+        List<String> s2r_names = new ArrayList<>();
+        s2r_names.add(s2rOp_1.getName());
+        s2r_names.add(s2rOp_2.getName());
+
+        R2RContainer<Table> r2rContainer = new R2RContainer<>(s2r_names, new R2RjtablesawImpl(0), false);
+        R2RContainer<Table> r2rBinaryContainer = new R2RContainer<>(s2r_names, new R2RjtablesawImpl(-1), true);
+
         R2SContainer<Table, Quartet<Long, String, Integer, Boolean>> r2sContainer = new R2SContainer<>(outStream.getName(), new RelationToStreamjtablesawImpl());
 
         Task<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Quartet<Long, String, Integer, Boolean>> task = new TaskImpl<>();
-        task = task.addS2RContainer(s2rContainer, inputStream)
+        task = task.addS2RContainer(s2rContainer_1, inputStream)
+                .addS2RContainer(s2rContainer_2, inputStream)
                 .addR2RContainer(r2rContainer)
+                .addR2RContainer(r2rBinaryContainer)
                 .addR2SContainer(r2sContainer)
                 .addSDS(new SDSjtablesaw())
                 .addTime(instance);
@@ -93,6 +112,4 @@ public class polyflowExample_relational {
         Thread.sleep(20_000);
         generator.stopStreaming();
     }
-
-
 }

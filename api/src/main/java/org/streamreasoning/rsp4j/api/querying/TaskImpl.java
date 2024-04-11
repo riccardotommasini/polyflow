@@ -88,7 +88,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
             TimeVarying<W> tvg = container.getS2rOperator().apply();
             this.sds.add(tvg);
             if(tvg.named()){
-                this.sds.add(RDFUtils.createIRI(tvg.iri()), tvg);
+                this.sds.add(tvg.iri(), tvg);
             }
         }
     }

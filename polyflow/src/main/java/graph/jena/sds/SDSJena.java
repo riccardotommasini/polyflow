@@ -1,4 +1,4 @@
-package graph.jena;
+package graph.jena.sds;
 
 import graph.jena.content.ValidatedGraph;
 import org.apache.commons.rdf.api.IRI;
@@ -40,8 +40,8 @@ public class SDSJena implements SDS<ValidatedGraph>, Dataset {
 
 
     @Override
-    public void add(IRI iri, TimeVarying<ValidatedGraph> tvg) {
-        tvgs.put(NodeFactory.createURI(iri.getIRIString()), tvg);
+    public void add(String iri, TimeVarying<ValidatedGraph> tvg) {
+        tvgs.put(NodeFactory.createURI(iri), tvg);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package sds;
+package graph.jena.sds;
 
 import org.apache.commons.rdf.api.IRI;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;

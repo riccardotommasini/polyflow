@@ -1,6 +1,5 @@
 package operatorsimpl.s2r;
 
-import org.apache.commons.rdf.api.IRI;
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -17,7 +16,7 @@ import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
-import sds.TimeVaryingObject;
+import graph.jena.sds.TimeVaryingObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
