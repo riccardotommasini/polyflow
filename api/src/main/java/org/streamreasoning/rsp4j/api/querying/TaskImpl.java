@@ -2,9 +2,8 @@ package org.streamreasoning.rsp4j.api.querying;
 
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.RDFUtils;
-import org.streamreasoning.rsp4j.api.containers.R2RContainer;
-import org.streamreasoning.rsp4j.api.containers.R2SContainer;
-import org.streamreasoning.rsp4j.api.containers.S2RContainer;
+import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.sds.SDS;
@@ -19,9 +18,9 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
 
     private static final Logger log = Logger.getLogger(TaskImpl.class);
-    Set<S2RContainer<I, W>> s2rContainers;
-    List<R2RContainer<R>> r2rContainers;
-    R2SContainer<R, O> r2sContainer;
+    Set<StreamToRelationOp<I, W>> s2rOperators;
+    List<RelationToRelationOperator<R>> r2rOperators;
+    RelationToStreamOperator<R, O> r2sOperator;
     Map<DataStream<I>, List<StreamToRelationOp<I, W>>> registeredS2R;
     Time time;
 
@@ -29,48 +28,48 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
     public TaskImpl(){
 
-        this.s2rContainers = new HashSet<>();
-        this.r2rContainers = new ArrayList<>();
+        this.s2rOperators = new HashSet<>();
+        this.r2rOperators = new ArrayList<>();
         this.registeredS2R = new HashMap<>();
     }
 
     @Override
-    public Set<S2RContainer<I, W>> getS2Rs() {
-        return s2rContainers;
+    public Set<StreamToRelationOp<I, W>> getS2Rs() {
+        return s2rOperators;
     }
 
     @Override
-    public List<R2RContainer<R>> getR2Rs() {
-        return r2rContainers;
+    public List<RelationToRelationOperator<R>> getR2Rs() {
+        return r2rOperators;
     }
 
     @Override
-    public R2SContainer<R, O> getR2Ss() {
-        return r2sContainer;
+    public RelationToStreamOperator<R, O> getR2Ss() {
+        return r2sOperator;
     }
 
     @Override
-    public Task<I, W, R, O> addS2RContainer(S2RContainer<I, W> s2rContainer, DataStream<I> inputStream) {
-        this.s2rContainers.add(s2rContainer);
+    public Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream) {
+        this.s2rOperators.add(s2rOperator);
         if(!registeredS2R.containsKey(inputStream)){
             registeredS2R.put(inputStream, new ArrayList<>());
         }
-        if(registeredS2R.get(inputStream).contains(s2rContainer.getS2rOperator())){
+        if(registeredS2R.get(inputStream).contains(s2rOperator)){
             throw new RuntimeException("S2R operator already registered on this input stream");
         }
-        registeredS2R.get(inputStream).add(s2rContainer.getS2rOperator());
+        registeredS2R.get(inputStream).add(s2rOperator);
         return this;
     }
 
     @Override
-    public Task<I, W, R, O> addR2RContainer(R2RContainer<R> r2rContainer) {
-        this.r2rContainers.add(r2rContainer);
+    public Task<I, W, R, O> addR2ROperator(RelationToRelationOperator<R> r2rOperator) {
+        this.r2rOperators.add(r2rOperator);
         return this;
     }
 
     @Override
-    public Task<I, W, R, O> addR2SContainer(R2SContainer<R, O> r2sContainer) {
-        this.r2sContainer= r2sContainer;
+    public Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator) {
+        this.r2sOperator= r2sOperator;
         return this;
     }
 
@@ -87,8 +86,8 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
     }
 
     public void initialize(){
-        for(S2RContainer<I, W> container: s2rContainers){
-            TimeVarying<W> tvg = container.getS2rOperator().apply();
+        for(StreamToRelationOp<I, W> operator: s2rOperators){
+            TimeVarying<W> tvg = operator.apply();
             this.sds.add(tvg);
             if(tvg.named()){
                 this.sds.add(tvg.iri(), tvg);
@@ -114,11 +113,11 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
             long t = time.getEvaluationTime().t;
             log.debug("Evaluation time instant found with t= "+t+", R2R computation will begin");
             R partialRes = computeR2R(t);
-            res.add(r2sContainer.getR2sOperator().eval(partialRes, timestamp).collect(Collectors.toList()));
+            res.add(r2sOperator.eval(partialRes, timestamp).collect(Collectors.toList()));
         }
 
-        for(S2RContainer<I, W> container : s2rContainers){
-            container.getS2rOperator().evict();
+        for(StreamToRelationOp<I, W> operator : s2rOperators){
+            operator.evict();
         }
 
         return res;
@@ -129,17 +128,18 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
         this.sds.materialize(ts);
         for(TimeVarying<W> tvg : sds.asTimeVaryingEs()){
+            //Operation that is more efficient to do on W than on R
             tvg.get().compute();
         }
 
         List<R> binary = new ArrayList<>();
         for(TimeVarying<W> tvg : sds.asTimeVaryingEs()){
             R result = tvg.get().convertToR();
-            for(R2RContainer<R> container : r2rContainers){
+            for(RelationToRelationOperator<R> operator : r2rOperators){
                 //If the R2R has to be applied to the TVG (based on the iri name) and is not a binary operation
                 //TODO :Assume that the list of R2R containers has all the unary operations first and the binary operations as last, need to improve later
-                if(container.getTvgNames().contains(tvg.iri()) && !container.isBinary()){
-                    result = container.getR2rOperator().evalUnary(result);
+                if(operator.getTvgNames().contains(tvg.iri()) && !operator.isBinary()){
+                    result = operator.evalUnary(result);
                 }
             }
             binary.add(result);
@@ -152,11 +152,11 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
         R result = binary.get(0);
 
 
-        //TODO: Assume only 1 binary R2R, need to change later
+        //TODO: Assume only 1 binary R2R, which makes sense if we only have 2 tvgs
         if(binary.size() > 1) {
-            for (R2RContainer<R> container : r2rContainers) {
-                if (container.isBinary()) {
-                    result = container.getR2rOperator().evalBinary(binary.get(0), binary.get(1));
+            for (RelationToRelationOperator<R> operator : r2rOperators) {
+                if (operator.isBinary()) {
+                    result = operator.evalBinary(binary.get(0), binary.get(1));
                 }
             }
         }

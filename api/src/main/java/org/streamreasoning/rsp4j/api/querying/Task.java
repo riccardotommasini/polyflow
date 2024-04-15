@@ -1,9 +1,8 @@
 package org.streamreasoning.rsp4j.api.querying;
-
-import org.streamreasoning.rsp4j.api.containers.R2RContainer;
-import org.streamreasoning.rsp4j.api.containers.R2SContainer;
-import org.streamreasoning.rsp4j.api.containers.S2RContainer;
+import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
@@ -13,30 +12,30 @@ import java.util.List;
 import java.util.Set;
 
 public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
-    Set<S2RContainer<I, W>> getS2Rs();
+    Set<StreamToRelationOp<I, W>> getS2Rs();
 
-    List<R2RContainer<R>> getR2Rs();
+    List<RelationToRelationOperator<R>> getR2Rs();
 
-    R2SContainer<R, O> getR2Ss();
+    RelationToStreamOperator<R, O> getR2Ss();
     /**
      * Adds an S2R container to the task and registers it as consumer of the input stream it's interest in
-     * @param s2rContainer Container that needs to be added to the Task
+     * @param s2rOperator The stream to relation operator
      * @param inputStream Stream which the operator inside the container is interested in
      * @return The task itself
      */
-    public Task<I, W, R, O> addS2RContainer(S2RContainer<I, W> s2rContainer, DataStream<I> inputStream);
+    public Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream);
 
     /**
      * Adds an R2R container to the task
      * @return The task itself
      */
-    public Task<I, W, R, O> addR2RContainer(R2RContainer<R> r2rContainer);
+    public Task<I, W, R, O> addR2ROperator(RelationToRelationOperator<R> r2rOperator);
 
     /**
      * Adds a R2S container to the task
      * @return The task itself
      */
-    public Task<I, W, R, O> addR2SContainer(R2SContainer<R, O> r2sContainer);
+    public Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator);
 
     public Task<I, W, R, O> addTime(Time time);
 

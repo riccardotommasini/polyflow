@@ -2,12 +2,11 @@ package relational.examples;
 
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Quartet;
-import org.streamreasoning.rsp4j.api.containers.R2RContainer;
-import org.streamreasoning.rsp4j.api.containers.R2SContainer;
-import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
+import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
@@ -29,6 +28,7 @@ import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class polyflowExample_relational {
@@ -70,14 +70,14 @@ public class polyflowExample_relational {
                         1000,
                         1000);
 
-        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer = new S2RContainer<>(inputStream.getName(), s2rOp, s2rOp.getName());
-        R2RContainer<Table> r2rContainer = new R2RContainer<>(s2rOp.getName(), new R2RjtablesawImpl(5), false);
-        R2SContainer<Table, Quartet<Long, String, Integer, Boolean>> r2sContainer = new R2SContainer<>(outStream.getName(), new RelationToStreamjtablesawImpl());
+
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, Collections.singletonList(s2rOp.getName()), false);
+        RelationToStreamOperator<Table, Quartet<Long, String, Integer, Boolean>> r2sOp = new RelationToStreamjtablesawImpl();
 
         Task<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Quartet<Long, String, Integer, Boolean>> task = new TaskImpl<>();
-        task = task.addS2RContainer(s2rContainer, inputStream)
-                .addR2RContainer(r2rContainer)
-                .addR2SContainer(r2sContainer)
+        task = task.addS2ROperator(s2rOp, inputStream)
+                .addR2ROperator(r2rOp)
+                .addR2SOperator(r2sOp)
                 .addSDS(new SDSjtablesaw())
                 .addTime(instance);
         task.initialize();

@@ -5,12 +5,11 @@ import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Quartet;
 import org.javatuples.Septet;
-import org.streamreasoning.rsp4j.api.containers.R2RContainer;
-import org.streamreasoning.rsp4j.api.containers.R2SContainer;
-import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
+import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
@@ -84,24 +83,23 @@ public class polyflowExample_relational_twoS2R {
                         1000,
                         1000);
 
-        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_1 = new S2RContainer<>(inputStream.getName(), s2rOp_1, s2rOp_1.getName());
-        S2RContainer<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rContainer_2 = new S2RContainer<>(inputStream.getName(), s2rOp_2, s2rOp_2.getName());
+
 
         List<String> s2r_names = new ArrayList<>();
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        R2RContainer<Table> r2rContainer = new R2RContainer<>(s2r_names, new R2RjtablesawImpl(0), false);
-        R2RContainer<Table> r2rBinaryContainer = new R2RContainer<>(s2r_names, new R2RjtablesawImpl(-1), true);
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(0, s2r_names, false);
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true);
 
-        R2SContainer<Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> r2sContainer = new R2SContainer<>(outStream.getName(), new RelationToStreamjtableJoin());
+        RelationToStreamOperator<Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> r2sOp = new RelationToStreamjtableJoin();
 
         Task<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> task = new TaskImpl<>();
-        task = task.addS2RContainer(s2rContainer_1, inputStream)
-                .addS2RContainer(s2rContainer_2, inputStream)
-                .addR2RContainer(r2rContainer)
-                .addR2RContainer(r2rBinaryContainer)
-                .addR2SContainer(r2sContainer)
+        task = task.addS2ROperator(s2rOp_1, inputStream)
+                .addS2ROperator(s2rOp_2, inputStream)
+                .addR2ROperator(r2rOp)
+                .addR2ROperator(r2rBinaryOp)
+                .addR2SOperator(r2sOp)
                 .addSDS(new SDSjtablesaw())
                 .addTime(instance);
         task.initialize();

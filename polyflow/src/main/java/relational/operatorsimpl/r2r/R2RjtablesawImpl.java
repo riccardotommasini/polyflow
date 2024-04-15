@@ -6,15 +6,34 @@ import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import tech.tablesaw.api.Table;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
 
     long query;
 
-    public R2RjtablesawImpl(long query){
+    private List<String> tvgNames;
+
+    private boolean isBinary;
+
+    public R2RjtablesawImpl(long query, List<String> tvgNames, boolean isBinary){
         this.query = query;
+        this.tvgNames = tvgNames;
+        this.isBinary = isBinary;
     }
+
+    @Override
+    public List<String> getTvgNames() {
+        return tvgNames;
+    }
+
+    @Override
+    public boolean isBinary() {
+        return isBinary;
+    }
+
     @Override
     public Table evalUnary(Table dataset) {
         return dataset.where(dataset.longColumn("c1").isGreaterThan(query));

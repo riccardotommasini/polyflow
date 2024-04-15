@@ -61,7 +61,9 @@ public class ContinuousProgram<I, W extends Convertible<R>, R extends Iterable<?
         if(!taskToOutMap.containsKey(task)){
             taskToOutMap.put(task, new ArrayList<>());
         }
-        taskToOutMap.get(task).add(outputStream);
+        if(!taskToOutMap.get(task).contains(outputStream)){
+            taskToOutMap.get(task).add(outputStream);
+        }
 
     }
 

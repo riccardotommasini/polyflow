@@ -13,12 +13,11 @@ import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.engine.binding.Binding;
-import org.streamreasoning.rsp4j.api.containers.R2RContainer;
-import org.streamreasoning.rsp4j.api.containers.R2SContainer;
-import org.streamreasoning.rsp4j.api.containers.S2RContainer;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
+import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
@@ -32,6 +31,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import org.apache.jena.shacl.Shapes;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class polyflowExample {
@@ -73,14 +73,13 @@ public class polyflowExample {
                         1000,
                         1000);
 
-        S2RContainer<Graph, ValidatedGraph> s2rContainer = new S2RContainer<>(inputStream.getName(), s2rOp, s2rOp.getName());
-        R2RContainer<JenaOperandWrapper> r2rContainer = new R2RContainer<>(s2rOp.getName(), new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}"), false);
-        R2SContainer<JenaOperandWrapper, Binding> r2sContainer = new R2SContainer<>(outStream.getName(), new RelationToStreamOpImpl());
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), false);
+        RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
 
         Task<Graph, ValidatedGraph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
-        task = task.addS2RContainer(s2rContainer, inputStream)
-                        .addR2RContainer(r2rContainer)
-                .addR2SContainer(r2sContainer)
+        task = task.addS2ROperator(s2rOp, inputStream)
+                        .addR2ROperator(r2rOp)
+                .addR2SOperator(r2sOp)
                 .addSDS(new SDSJena())
                 .addTime(instance);
         task.initialize();
