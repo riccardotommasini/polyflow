@@ -3,6 +3,7 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.querying.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
@@ -23,28 +24,30 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
      * @param inputStream Stream which the operator inside the container is interested in
      * @return The task itself
      */
-    public Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream);
+    Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream);
 
     /**
      * Adds an R2R container to the task
      * @return The task itself
      */
-    public Task<I, W, R, O> addR2ROperator(RelationToRelationOperator<R> r2rOperator);
+    Task<I, W, R, O> addR2ROperator(RelationToRelationOperator<R> r2rOperator);
 
     /**
      * Adds a R2S container to the task
      * @return The task itself
      */
-    public Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator);
+    Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator);
 
-    public Task<I, W, R, O> addTime(Time time);
+    Task<I, W, R, O> addTime(Time time);
 
-    public Task<I, W, R, O> addSDS(SDS<W> sds);
+    Task<I, W, R, O> addSDS(SDS<W> sds);
+
+    Task<I, W, R, O> addDAG(DAG<R> dag);
 
     /**
      * Initializes the Task by creating the Time Varying Objects and adds them to the SDS
      */
-    public void initialize();
+    void initialize();
 
 
 

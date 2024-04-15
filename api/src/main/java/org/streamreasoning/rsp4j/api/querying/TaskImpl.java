@@ -6,6 +6,7 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.querying.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
@@ -23,6 +24,8 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
     RelationToStreamOperator<R, O> r2sOperator;
     Map<DataStream<I>, List<StreamToRelationOp<I, W>>> registeredS2R;
     Time time;
+
+    DAG<R> dag;
 
     SDS<W> sds;
 
@@ -85,6 +88,12 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
         return this;
     }
 
+    @Override
+    public Task<I, W, R, O> addDAG(DAG<R> dag){
+        this.dag = dag;
+        return this;
+    }
+
     public void initialize(){
         for(StreamToRelationOp<I, W> operator: s2rOperators){
             TimeVarying<W> tvg = operator.apply();
@@ -93,6 +102,30 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
                 this.sds.add(tvg.iri(), tvg);
             }
         }
+
+       /*
+         here we assume that when we encounter a binary R2R operator, all of the previous operators in the dag of both operands have been already added
+         Moreover, after a binary operator, if more R2R needs to be computed, we add them as unary operators with the tvg name of the first operand of the
+         binary R2R, in order to be consistent with the DAG shape.
+
+         tableA: o -> o -> o -> \
+                                 O -> o this last 'o' will be an R2R operator with the tvg name tableA, so it will only be added once to the DAG
+         tableB: o -> o -> o -> /
+
+       */
+
+       for(RelationToRelationOperator<R> op : r2rOperators){
+           if(!op.isBinary()) {
+               for (String tvgName : op.getTvgNames()) {
+                   dag.addToDAG(Collections.singletonList(tvgName), op);
+               }
+           }
+           else {
+               //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
+               dag.addToDAG(op.getTvgNames(), op);
+           }
+       }
+
     }
 
 
@@ -132,7 +165,13 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
             tvg.get().compute();
         }
 
-        List<R> binary = new ArrayList<>();
+        R result = null;
+        for(TimeVarying<W> tvg : sds.asTimeVaryingEs()){
+            result = dag.eval(tvg.iri(), tvg.get().convertToR());
+        }
+        return result;
+
+        /*List<R> binary = new ArrayList<>();
         for(TimeVarying<W> tvg : sds.asTimeVaryingEs()){
             R result = tvg.get().convertToR();
             for(RelationToRelationOperator<R> operator : r2rOperators){
@@ -160,7 +199,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
                 }
             }
         }
-        return result;
+        return result;*/
 
 
     }
