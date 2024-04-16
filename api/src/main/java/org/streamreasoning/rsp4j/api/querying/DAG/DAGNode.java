@@ -53,5 +53,10 @@ public interface DAGNode<R extends Iterable<?>> {
      */
     R eval(R operand);
 
+    /**
+     * Clears the DAG node from previous computation's results
+     */
+    void clear();
+
 
 }

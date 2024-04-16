@@ -20,8 +20,8 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
         this.operandsNames = operandsNames;
         this.isBinary = isBinary;
     }
-
-   public List<String> getOperandsNames(){
+    @Override
+    public List<String> getOperandsNames(){
         return operandsNames;
    }
 
@@ -34,28 +34,33 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
     public R getPartialRes() {
        return this.partialRes;
     }
-
+    @Override
     public boolean isBinary() {
         return isBinary;
     }
-
+    @Override
     public RelationToRelationOperator<R> getR2rOperator() {
         return r2rOperator;
     }
-
+    @Override
     public void setNext(DAGNode<R> next){
         this.next = next;
     }
-
+    @Override
     public boolean hasNext(){
         return this.next != null;
     }
-
+    @Override
     public DAGNode<R> getNext(){
         return this.next;
     }
+    @Override
+    public void clear(){
+       this.operands = new ArrayList<>();
+       this.partialRes = null;
+    }
 
-
+    @Override
     public R eval(R operand){
 
         R result;

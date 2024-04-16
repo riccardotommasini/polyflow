@@ -45,4 +45,15 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
         return result;
 
     }
+
+    @Override
+    public void clear(){
+        for(DAGNode<R> node : root.values()){
+            node.clear();
+            while(node.hasNext()) {
+                node = node.getNext();
+                node.clear();
+            }
+        }
+    }
 }

@@ -15,4 +15,9 @@ public interface DAG<R extends Iterable<?>> {
      * Begins the computation of the specified path of the DAG, returns the (possibly partial) result of that branch of computation
      */
    R eval(String tvgName, R operand);
+
+    /**
+     * Clears the DAG from previous computation's partial results
+     */
+   void clear();
 }

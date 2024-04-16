@@ -30,6 +30,7 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
+import relational.operatorsimpl.r2r.DAGImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,7 +94,7 @@ public class polyflowExample_twoS2R {
         s2r_names.add(s2rOp_two.getName());
 
         RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, false);
-        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new R2RJenaImpl("", Collections.singletonList(""), true);
+        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new R2RJenaImpl("", s2r_names, true);
 
 
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
@@ -104,6 +105,7 @@ public class polyflowExample_twoS2R {
                 .addR2ROperator(r2rOp)
                 .addR2ROperator(r2rBinaryOp)
                 .addR2SOperator(r2sOp)
+                .addDAG(new DAGImpl<>())
                 .addSDS(new SDSJena())
                 .addTime(instance);
         task.initialize();

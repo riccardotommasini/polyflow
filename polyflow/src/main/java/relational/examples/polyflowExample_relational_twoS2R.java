@@ -22,6 +22,7 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
+import relational.operatorsimpl.r2r.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtableJoin;
 import relational.sds.SDSjtablesaw;
@@ -89,7 +90,7 @@ public class polyflowExample_relational_twoS2R {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(0, s2r_names, false);
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, s2r_names, false);
         RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true);
 
         RelationToStreamOperator<Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> r2sOp = new RelationToStreamjtableJoin();
@@ -100,6 +101,7 @@ public class polyflowExample_relational_twoS2R {
                 .addR2ROperator(r2rOp)
                 .addR2ROperator(r2rBinaryOp)
                 .addR2SOperator(r2sOp)
+                .addDAG(new DAGImpl<>())
                 .addSDS(new SDSjtablesaw())
                 .addTime(instance);
         task.initialize();

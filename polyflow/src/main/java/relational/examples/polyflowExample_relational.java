@@ -19,6 +19,7 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
+import relational.operatorsimpl.r2r.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
@@ -79,6 +80,7 @@ public class polyflowExample_relational {
                 .addR2ROperator(r2rOp)
                 .addR2SOperator(r2sOp)
                 .addSDS(new SDSjtablesaw())
+                .addDAG(new DAGImpl<>())
                 .addTime(instance);
         task.initialize();
 

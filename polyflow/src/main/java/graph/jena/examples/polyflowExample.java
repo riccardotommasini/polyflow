@@ -29,6 +29,7 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import org.apache.jena.shacl.Shapes;
+import relational.operatorsimpl.r2r.DAGImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +81,7 @@ public class polyflowExample {
         task = task.addS2ROperator(s2rOp, inputStream)
                         .addR2ROperator(r2rOp)
                 .addR2SOperator(r2sOp)
+                .addDAG(new DAGImpl<>())
                 .addSDS(new SDSJena())
                 .addTime(instance);
         task.initialize();

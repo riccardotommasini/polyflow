@@ -169,6 +169,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
         for(TimeVarying<W> tvg : sds.asTimeVaryingEs()){
             result = dag.eval(tvg.iri(), tvg.get().convertToR());
         }
+        dag.clear();
         return result;
 
         /*List<R> binary = new ArrayList<>();
