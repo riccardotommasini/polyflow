@@ -15,11 +15,14 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
     private boolean isBinary;
     private DAGNode<R> next;
 
+    private String opName;
+
     public DAGNodeImpl(RelationToRelationOperator<R> r2rOperator, List<String> operandsNames, boolean isBinary){
         this.r2rOperator = r2rOperator;
         this.operandsNames = operandsNames;
         this.isBinary = isBinary;
     }
+
     @Override
     public List<String> getOperandsNames(){
         return operandsNames;
@@ -42,6 +45,12 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
     public RelationToRelationOperator<R> getR2rOperator() {
         return r2rOperator;
     }
+
+    @Override
+    public String getOpName() {
+        return isBinary? r2rOperator.getBinaryOpName():r2rOperator.getUnaryOpName();
+    }
+
     @Override
     public void setNext(DAGNode<R> next){
         this.next = next;

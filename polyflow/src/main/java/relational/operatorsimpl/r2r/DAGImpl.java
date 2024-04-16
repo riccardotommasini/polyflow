@@ -4,9 +4,7 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.DAG.DAG;
 import org.streamreasoning.rsp4j.api.querying.DAG.DAGNode;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
@@ -36,6 +34,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
     }
 
+
     @Override
     public R eval(String tvgName, R operand) {
         if(!root.containsKey(tvgName)){
@@ -54,6 +53,26 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
                 node = node.getNext();
                 node.clear();
             }
+        }
+    }
+
+    @Override
+    public void printDAG(){
+        Set<DAGNode<R>> printed = new HashSet<>();
+        for(DAGNode<R> node : root.values()){
+            while(node != null){
+                if(!printed.contains(node)) {
+                    printed.add(node);
+                    System.out.print("[T:" + node.getOperandsNames() + " O:" + node.getOpName() + "]->");
+                    node = node.getNext();
+                }
+                else if(printed.contains(node) && node.isBinary()){
+                    System.out.print("[T:" + node.getOperandsNames() + " O:" + node.getOpName() + "]->");
+                    break;
+                }
+            }
+            System.out.print("\n");
+
         }
     }
 }

@@ -74,7 +74,7 @@ public class polyflowExample {
                         1000,
                         1000);
 
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), false);
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), false, "selection", "empty");
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
 
         Task<Graph, ValidatedGraph, JenaOperandWrapper, Binding> task = new TaskImpl<>();

@@ -94,6 +94,11 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
         return this;
     }
 
+    @Override
+    public DAG<R> getDAG(){
+        return this.dag;
+    }
+
     public void initialize(){
         for(StreamToRelationOp<I, W> operator: s2rOperators){
             TimeVarying<W> tvg = operator.apply();

@@ -2,6 +2,7 @@ package relational.stream;
 
 
 import org.javatuples.Quartet;
+import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,19 +15,19 @@ public class RowStreamGenerator {
 
     private static final String PREFIX = "http://test/";
     private static final Long TIMEOUT = 1000l;
-    private final Map<String, DataStream<Quartet<Long, String, Integer, Boolean>>> activeStreams;
+    private final Map<String, DataStream<Tuple>> activeStreams;
 
     private final String[] colors = new String[]{"Blue", "Green", "Red", "Yellow", "Black", "Grey", "White"};
     private final AtomicBoolean isStreaming;
 
 
     public RowStreamGenerator() {
-        this.activeStreams = new HashMap<String, DataStream<Quartet<Long, String, Integer, Boolean>>>();
+        this.activeStreams = new HashMap<String, DataStream<Tuple>>();
         this.isStreaming = new AtomicBoolean(false);
     }
 
 
-    public DataStream<Quartet<Long, String, Integer, Boolean>> getStream(String streamURI) {
+    public DataStream<Tuple> getStream(String streamURI) {
         if (!activeStreams.containsKey(streamURI)) {
             RowStream stream = new RowStream(streamURI);
             activeStreams.put(streamURI, stream);
@@ -58,7 +59,7 @@ public class RowStreamGenerator {
         }
     }
 
-    private void generateDataAndAddToStream(DataStream<Quartet<Long, String, Integer, Boolean>> stream, long ts) {
+    private void generateDataAndAddToStream(DataStream<Tuple> stream, long ts) {
 
 
         Quartet<Long, String, Integer, Boolean> row;

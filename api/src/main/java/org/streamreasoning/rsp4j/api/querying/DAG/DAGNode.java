@@ -58,5 +58,10 @@ public interface DAGNode<R extends Iterable<?>> {
      */
     void clear();
 
+    /**
+     * Returns the name of the operation (selection, projection, join)
+     */
+    String getOpName();
+
 
 }

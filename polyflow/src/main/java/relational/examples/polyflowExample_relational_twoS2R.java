@@ -5,6 +5,7 @@ import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Quartet;
 import org.javatuples.Septet;
+import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -40,9 +41,9 @@ public class polyflowExample_relational_twoS2R {
 
         RowStreamGenerator generator = new RowStreamGenerator();
 
-        DataStream<Quartet<Long, String, Integer, Boolean>> inputStream = generator.getStream("http://test/stream1");
+        DataStream<Tuple> inputStream = generator.getStream("http://test/stream1");
         // define output stream
-        DataStream<Septet<Long, String, Integer, Boolean, Long, String, Boolean>> outStream = new RowStream<>("out");
+        DataStream<Tuple> outStream = new RowStream<>("out");
 
         // Engine properties
         Report report = new ReportImpl();
@@ -58,9 +59,9 @@ public class polyflowExample_relational_twoS2R {
         TimeVaryingFactory<TableWrapper> tvFactory = new TimeVaryingFactoryjtablesaw();
 
         //TableWrapper because we need the interface convertible on the W generic type
-        ContinuousProgram<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> cp = new ContinuousProgram<>();
+        ContinuousProgram<Tuple, TableWrapper, Table, Tuple> cp = new ContinuousProgram<>();
 
-        StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp_1 =
+        StreamToRelationOp<Tuple, TableWrapper> s2rOp_1 =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -72,7 +73,7 @@ public class polyflowExample_relational_twoS2R {
                         1000,
                         1000);
 
-        StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp_2 =
+        StreamToRelationOp<Tuple, TableWrapper> s2rOp_2 =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -90,12 +91,12 @@ public class polyflowExample_relational_twoS2R {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, s2r_names, false);
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true);
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, s2r_names, false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true, "empty", "join");
 
-        RelationToStreamOperator<Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> r2sOp = new RelationToStreamjtableJoin();
+        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtableJoin();
 
-        Task<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> task = new TaskImpl<>();
+        Task<Tuple, TableWrapper, Table, Tuple> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_1, inputStream)
                 .addS2ROperator(s2rOp_2, inputStream)
                 .addR2ROperator(r2rOp)
@@ -106,11 +107,11 @@ public class polyflowExample_relational_twoS2R {
                 .addTime(instance);
         task.initialize();
 
-        List<DataStream<Quartet<Long, String, Integer, Boolean>>> inputStreams = new ArrayList<>();
+        List<DataStream<Tuple>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStream);
 
 
-        List<DataStream<Septet<Long, String, Integer, Boolean, Long, String, Boolean>>> outputStreams = new ArrayList<>();
+        List<DataStream<Tuple>> outputStreams = new ArrayList<>();
         outputStreams.add(outStream);
 
         cp.buildTask(task, inputStreams, outputStreams);

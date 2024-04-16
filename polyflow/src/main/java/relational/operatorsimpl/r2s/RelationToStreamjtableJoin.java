@@ -1,6 +1,7 @@
 package relational.operatorsimpl.r2s;
 
 import org.javatuples.Septet;
+import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
@@ -9,12 +10,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-public class RelationToStreamjtableJoin implements RelationToStreamOperator<Table, Septet<Long, String, Integer, Boolean, Long, String, Boolean>> {
+public class RelationToStreamjtableJoin implements RelationToStreamOperator<Table, Tuple> {
 
-    public Septet<Long, String, Integer, Boolean, Long, String, Boolean> transform(Object sm, long ts) {
+    public Tuple transform(Object sm, long ts) {
 
         Row row = (Row) sm;
-        Septet<Long, String, Integer, Boolean, Long, String, Boolean> res = new Septet<>(
+        Tuple res = new Septet<>(
                 row.getLong(0),
                 row.getString(1),
                 row.getInt(2),
@@ -25,8 +26,8 @@ public class RelationToStreamjtableJoin implements RelationToStreamOperator<Tabl
         return res;
     }
 
-    public Stream<Septet<Long, String, Integer, Boolean, Long, String, Boolean>> eval(Table sml, long ts) {
-        Collection<Septet<Long, String, Integer, Boolean, Long, String, Boolean>> result = new ArrayList<>();
+    public Stream<Tuple> eval(Table sml, long ts) {
+        Collection<Tuple> result = new ArrayList<>();
         sml.forEach(e -> result.add(transform(e, ts)));
         return result.stream();
     }

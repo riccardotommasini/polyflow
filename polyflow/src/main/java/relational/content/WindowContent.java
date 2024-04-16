@@ -1,15 +1,16 @@
 package relational.content;
 
 import org.javatuples.Quartet;
+import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import relational.datatypes.TableWrapper;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class WindowContent implements Content<Quartet<Long, String, Integer, Boolean>, TableWrapper> {
+public class WindowContent implements Content<Tuple, TableWrapper> {
 
-    Set<Quartet<Long, String, Integer, Boolean>> rows = new HashSet<>();
+    Set<Tuple> rows = new HashSet<>();
 
 
     @Override
@@ -18,7 +19,7 @@ public class WindowContent implements Content<Quartet<Long, String, Integer, Boo
     }
 
     @Override
-    public void add(Quartet<Long, String, Integer, Boolean> e) {
+    public void add(Tuple e) {
         rows.add(e);
     }
 

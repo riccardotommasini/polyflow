@@ -20,4 +20,9 @@ public interface DAG<R extends Iterable<?>> {
      * Clears the DAG from previous computation's partial results
      */
    void clear();
+
+    /**
+     * Prints the DAG
+     */
+   void printDAG();
 }

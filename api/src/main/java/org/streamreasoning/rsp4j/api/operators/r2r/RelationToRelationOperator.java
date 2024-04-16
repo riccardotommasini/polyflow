@@ -35,6 +35,16 @@ public interface RelationToRelationOperator<R extends Iterable<?>> {
      */
     boolean isBinary();
 
+    /**
+     * Returns the name of the unary operation (selection, projection ...)
+     */
+    String getUnaryOpName();
+
+    /**
+     * Returns the name of the binary operation (join ..)
+     */
+    String getBinaryOpName();
+
     SolutionMapping<R> createSolutionMapping(R result);
 
     default Map<String, RelationToRelationOperator<R>> getR2RComponents(){

@@ -33,7 +33,7 @@ import tech.tablesaw.api.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-public class polyflowExample_relational_twoStreams {
+public class polyflowExample_complexDAG {
 
     public static void main(String [] args) throws InterruptedException {
 

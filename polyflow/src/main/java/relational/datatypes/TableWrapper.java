@@ -1,6 +1,7 @@
 package relational.datatypes;
 
 import org.javatuples.Quartet;
+import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import tech.tablesaw.api.*;
 
@@ -12,12 +13,12 @@ public class TableWrapper implements Convertible<Table> {
 
     Table table;
 
-    public TableWrapper(Collection<Quartet<Long, String, Integer, Boolean>> rows){
+    public TableWrapper(Collection<Tuple> rows){
 
-        List<Long> column_1 = rows.stream().map(quartet -> quartet.getValue0()).collect(Collectors.toList());
-        List<String> column_2 = rows.stream().map(quartet -> quartet.getValue1()).collect(Collectors.toList());
-        List<Integer> column_3 = rows.stream().map(quartet -> quartet.getValue2()).collect(Collectors.toList());
-        List<Boolean> column_4 = rows.stream().map(quartet -> quartet.getValue3()).collect(Collectors.toList());
+        List<Long> column_1 = rows.stream().map(quartet ->(Long) quartet.getValue(0)).collect(Collectors.toList());
+        List<String> column_2 = rows.stream().map(quartet -> (String) quartet.getValue(1)).collect(Collectors.toList());
+        List<Integer> column_3 = rows.stream().map(quartet -> (Integer) quartet.getValue(2)).collect(Collectors.toList());
+        List<Boolean> column_4 = rows.stream().map(quartet -> (Boolean) quartet.getValue(3)).collect(Collectors.toList());
 
         LongColumn c1 = LongColumn.create("c1");
         for(Long l : column_1){

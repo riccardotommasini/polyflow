@@ -29,10 +29,15 @@ public class R2RJenaImpl implements RelationToRelationOperator<JenaOperandWrappe
 
     private boolean isBinary;
 
-    public R2RJenaImpl(String query, List<String> tvgNames, boolean isBinary) {
+    private String unaryOpName;
+    private String binaryOpName;
+
+    public R2RJenaImpl(String query, List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName) {
         this.query = query;
         this.tvgNames = tvgNames;
         this.isBinary = isBinary;
+        this.unaryOpName = unaryOpName;
+        this.binaryOpName = binaryOpName;
 
     }
 
@@ -44,6 +49,16 @@ public class R2RJenaImpl implements RelationToRelationOperator<JenaOperandWrappe
     @Override
     public boolean isBinary() {
         return isBinary;
+    }
+
+    @Override
+    public String getUnaryOpName() {
+        return unaryOpName;
+    }
+
+    @Override
+    public String getBinaryOpName() {
+        return binaryOpName;
     }
 
     @Override

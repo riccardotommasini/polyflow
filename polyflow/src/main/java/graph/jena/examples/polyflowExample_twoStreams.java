@@ -93,8 +93,8 @@ public class polyflowExample_twoStreams {
         s2r_names.add(s2rOp_one.getName());
         s2r_names.add(s2rOp_two.getName());
 
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, false);
-        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new R2RJenaImpl("", s2r_names, true);
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, false, "selection", "empty");
+        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new R2RJenaImpl("", s2r_names, true, "empty", "concatenation");
 
        RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
 
@@ -108,7 +108,7 @@ public class polyflowExample_twoStreams {
                 .addSDS(new SDSJena())
                 .addTime(instance);
         task.initialize();
-
+        task.getDAG().printDAG();
         List<DataStream<Graph>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStreamColors);
         inputStreams.add(inputStreamNumbers);

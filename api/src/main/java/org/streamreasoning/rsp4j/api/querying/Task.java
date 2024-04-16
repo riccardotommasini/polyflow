@@ -19,7 +19,7 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
 
     RelationToStreamOperator<R, O> getR2Ss();
     /**
-     * Adds an S2R container to the task and registers it as consumer of the input stream it's interest in
+     * Adds an S2R operator to the task and registers it as consumer of the input stream it's interest in
      * @param s2rOperator The stream to relation operator
      * @param inputStream Stream which the operator inside the container is interested in
      * @return The task itself
@@ -27,13 +27,13 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
     Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream);
 
     /**
-     * Adds an R2R container to the task
+     * Adds an R2R operator to the task
      * @return The task itself
      */
     Task<I, W, R, O> addR2ROperator(RelationToRelationOperator<R> r2rOperator);
 
     /**
-     * Adds a R2S container to the task
+     * Adds a R2S operator to the task
      * @return The task itself
      */
     Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator);
@@ -43,6 +43,8 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
     Task<I, W, R, O> addSDS(SDS<W> sds);
 
     Task<I, W, R, O> addDAG(DAG<R> dag);
+
+    DAG<R> getDAG();
 
     /**
      * Initializes the Task by creating the Time Varying Objects and adds them to the SDS

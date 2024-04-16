@@ -2,6 +2,7 @@ package relational.examples;
 
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Quartet;
+import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -39,9 +40,9 @@ public class polyflowExample_relational {
 
         RowStreamGenerator generator = new RowStreamGenerator();
 
-        DataStream<Quartet<Long, String, Integer, Boolean>> inputStream = generator.getStream("http://test/stream1");
+        DataStream<Tuple> inputStream = generator.getStream("http://test/stream1");
         // define output stream
-        DataStream<Quartet<Long, String, Integer, Boolean>> outStream = new RowStream("out");
+        DataStream<Tuple> outStream = new RowStream("out");
 
         // Engine properties
         Report report = new ReportImpl();
@@ -57,9 +58,9 @@ public class polyflowExample_relational {
         TimeVaryingFactory<TableWrapper> tvFactory = new TimeVaryingFactoryjtablesaw();
 
         //TableWrapper because we need the interface convertible on the W generic type
-        ContinuousProgram<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Quartet<Long, String, Integer, Boolean>> cp = new ContinuousProgram<>();
+        ContinuousProgram<Tuple, TableWrapper, Table, Tuple> cp = new ContinuousProgram<>();
 
-        StreamToRelationOp<Quartet<Long, String, Integer, Boolean>, TableWrapper> s2rOp =
+        StreamToRelationOp<Tuple, TableWrapper> s2rOp =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -72,10 +73,10 @@ public class polyflowExample_relational {
                         1000);
 
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, Collections.singletonList(s2rOp.getName()), false);
-        RelationToStreamOperator<Table, Quartet<Long, String, Integer, Boolean>> r2sOp = new RelationToStreamjtablesawImpl();
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, Collections.singletonList(s2rOp.getName()), false, "selection", "empty");
+        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
-        Task<Quartet<Long, String, Integer, Boolean>, TableWrapper, Table, Quartet<Long, String, Integer, Boolean>> task = new TaskImpl<>();
+        Task<Tuple, TableWrapper, Table, Tuple> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp, inputStream)
                 .addR2ROperator(r2rOp)
                 .addR2SOperator(r2sOp)
@@ -84,11 +85,11 @@ public class polyflowExample_relational {
                 .addTime(instance);
         task.initialize();
 
-        List<DataStream<Quartet<Long, String, Integer, Boolean>>> inputStreams = new ArrayList<>();
+        List<DataStream<Tuple>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStream);
 
 
-        List<DataStream<Quartet<Long, String, Integer, Boolean>>> outputStreams = new ArrayList<>();
+        List<DataStream<Tuple>> outputStreams = new ArrayList<>();
         outputStreams.add(outStream);
 
         cp.buildTask(task, inputStreams, outputStreams);

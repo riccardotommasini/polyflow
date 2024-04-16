@@ -18,10 +18,15 @@ public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
 
     private boolean isBinary;
 
-    public R2RjtablesawImpl(long query, List<String> tvgNames, boolean isBinary){
+    private String unaryOpName;
+    private String binaryOpName;
+
+    public R2RjtablesawImpl(long query, List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName){
         this.query = query;
         this.tvgNames = tvgNames;
         this.isBinary = isBinary;
+        this.unaryOpName = unaryOpName;
+        this.binaryOpName = binaryOpName;
     }
 
     @Override
@@ -32,6 +37,16 @@ public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
     @Override
     public boolean isBinary() {
         return isBinary;
+    }
+
+    @Override
+    public String getUnaryOpName() {
+        return unaryOpName;
+    }
+
+    @Override
+    public String getBinaryOpName() {
+        return binaryOpName;
     }
 
     @Override
