@@ -1,8 +1,9 @@
 package relational.operatorsimpl.r2s;
 
-import org.javatuples.Quintet;
+import org.javatuples.Pair;
 import org.javatuples.Septet;
 import org.javatuples.Tuple;
+import org.javatuples.Unit;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import tech.tablesaw.api.Row;
 import tech.tablesaw.api.Table;
@@ -11,17 +12,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-public class RelationToStreamjtableJoin implements RelationToStreamOperator<Table, Tuple> {
+public class RelationToStreamjtableProjection implements RelationToStreamOperator<Table, Tuple> {
 
     public Tuple transform(Object sm, long ts) {
 
         Row row = (Row) sm;
-        Tuple res = new Quintet<>(
-                row.getLong(0),
-                row.getString(1),
-                row.getInt(2),
-                row.getBoolean(3),
-                row.getString(4));
+        Tuple res = new Pair<>(
+                row.getString(0),
+                row.getString(1));
         return res;
     }
 
@@ -30,5 +28,4 @@ public class RelationToStreamjtableJoin implements RelationToStreamOperator<Tabl
         sml.forEach(e -> result.add(transform(e, ts)));
         return result.stream();
     }
-
 }

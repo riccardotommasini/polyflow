@@ -1,29 +1,37 @@
 package relational.stream;
 
 
+import org.javatuples.Pair;
 import org.javatuples.Quartet;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class RowStreamGenerator {
 
-    private static final String PREFIX = "http://test/";
     private static final Long TIMEOUT = 1000l;
     private final Map<String, DataStream<Tuple>> activeStreams;
 
-    private final String[] colors = new String[]{"Blue", "Green", "Red", "Yellow", "Black", "Grey", "White"};
+    private File f1 = new File(RowStreamGenerator.class.getResource("/relational_stream_items.txt").getPath());
+    private File f2 = new File(RowStreamGenerator.class.getResource("/relational_stream_happiness.txt").getPath());
+    private Scanner s1, s2;
     private final AtomicBoolean isStreaming;
 
 
     public RowStreamGenerator() {
         this.activeStreams = new HashMap<String, DataStream<Tuple>>();
         this.isStreaming = new AtomicBoolean(false);
+        try {
+            s1 = new Scanner(f1);
+            s2 = new Scanner(f2);
+        }catch(FileNotFoundException ignored){}
     }
 
 
@@ -40,7 +48,7 @@ public class RowStreamGenerator {
             this.isStreaming.set(true);
             Runnable task = () -> {
                 long ts = 0;
-                while (this.isStreaming.get()) {
+                while (this.isStreaming.get() && s1.hasNext() && s2.hasNext()) {
                     long finalTs = ts;
                     activeStreams.entrySet().forEach(e -> generateDataAndAddToStream(e.getValue(), finalTs));
                     ts += 1000;
@@ -62,13 +70,17 @@ public class RowStreamGenerator {
     private void generateDataAndAddToStream(DataStream<Tuple> stream, long ts) {
 
 
-        Quartet<Long, String, Integer, Boolean> row;
+        Tuple row;
+        String [] items;
+        String [] happiness;
 
         if(stream.getName().equals("http://test/stream1")) {
-            row = new Quartet<>(ThreadLocalRandom.current().nextLong(10), "stream_1", ThreadLocalRandom.current().nextInt(10), ThreadLocalRandom.current().nextBoolean());
+            items = s1.nextLine().split(",");
+            row = new Quartet<>(Long.parseLong(items[0]), items[1], Integer.parseInt(items[2]), Boolean.parseBoolean(items[3]));
         }
         else{
-            row = new Quartet<>(ThreadLocalRandom.current().nextLong(10), "stream_2", ThreadLocalRandom.current().nextInt(10), ThreadLocalRandom.current().nextBoolean());
+            happiness = s2.nextLine().split(",");
+            row = new Pair<>(Long.parseLong(happiness[0]), happiness[1]);
         }
         stream.put(row, ts);
     }

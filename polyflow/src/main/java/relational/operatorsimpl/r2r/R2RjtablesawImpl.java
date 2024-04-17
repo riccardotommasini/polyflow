@@ -51,15 +51,20 @@ public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
 
     @Override
     public Table evalUnary(Table dataset) {
-        return dataset.where(dataset.longColumn("c1").isGreaterThan(query));
+        if(dataset.isEmpty())
+            return dataset;
+        return dataset.where(dataset.intColumn("c3").isGreaterThan(query));
     }
 
     @Override
     public Table evalBinary(Table dataset1, Table dataset2) {
-        dataset2.column(0).setName("t2.c1");
+        if(dataset1.isEmpty())
+            return dataset1;
+        if(dataset2.isEmpty())
+            return dataset2;
         dataset2.column(1).setName("t2.c2");
-        dataset2.column(3).setName("t2.c4");
-        return dataset1.joinOn("c3").inner(dataset2);
+        return dataset1.joinOn("c1").inner(dataset2);
+
     }
 
     @Override

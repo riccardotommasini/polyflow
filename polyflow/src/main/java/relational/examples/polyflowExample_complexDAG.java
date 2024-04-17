@@ -23,7 +23,9 @@ import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
 import relational.operatorsimpl.r2r.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
+import relational.operatorsimpl.r2r.R2RjtablesawProjection;
 import relational.operatorsimpl.r2s.RelationToStreamjtableJoin;
+import relational.operatorsimpl.r2s.RelationToStreamjtableProjection;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
@@ -31,6 +33,7 @@ import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class polyflowExample_complexDAG {
@@ -89,16 +92,18 @@ public class polyflowExample_complexDAG {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(0, s2r_names, false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rSelectionOp = new R2RjtablesawImpl(0, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rJoinOp = new R2RjtablesawImpl(-1, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rProjectionOp = new R2RjtablesawProjection(new int[]{1,4}, Collections.singletonList(s2rOp_1.getName()), "projection", "empty");
 
-        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtableJoin();
+        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtableProjection();
 
         Task<Tuple, TableWrapper, Table, Tuple> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_1, inputStream_1)
                 .addS2ROperator(s2rOp_2, inputStream_2)
-                .addR2ROperator(r2rOp)
-                .addR2ROperator(r2rBinaryOp)
+                .addR2ROperator(r2rSelectionOp)
+                .addR2ROperator(r2rJoinOp)
+                .addR2ROperator(r2rProjectionOp)
                 .addR2SOperator(r2sOp)
                 .addDAG(new DAGImpl<>())
                 .addSDS(new SDSjtablesaw())

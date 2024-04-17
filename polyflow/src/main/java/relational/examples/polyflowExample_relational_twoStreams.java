@@ -31,6 +31,7 @@ import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.Table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class polyflowExample_relational_twoStreams {
@@ -89,7 +90,7 @@ public class polyflowExample_relational_twoStreams {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(0, s2r_names, false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(4, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
         RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true, "empty", "join");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtableJoin();
