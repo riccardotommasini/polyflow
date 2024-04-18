@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
-    Set<StreamToRelationOp<I, W>> getS2Rs();
+    List<StreamToRelationOp<I, W>> getS2Rs();
 
     List<RelationToRelationOperator<R>> getR2Rs();
 

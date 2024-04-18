@@ -1,8 +1,6 @@
 package relational.examples;
 
 import operatorsimpl.s2r.StreamToRelationOpImpl;
-import org.javatuples.Quartet;
-import org.javatuples.Septet;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -21,11 +19,11 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
+import relational.operatorsimpl.r2r.CustomRelationalQuery;
 import relational.operatorsimpl.r2r.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawProjection;
-import relational.operatorsimpl.r2s.RelationToStreamjtableJoin;
-import relational.operatorsimpl.r2s.RelationToStreamjtableProjection;
+import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
@@ -58,7 +56,7 @@ public class polyflowExample_complexDAG {
 
         WindowContentFactory windowContentFactory = new WindowContentFactory();
 
-        TimeVaryingFactory<TableWrapper> tvFactory = new TimeVaryingFactoryjtablesaw();
+        TimeVaryingFactory<TableWrapper> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
         //TableWrapper because we need the interface convertible on the W generic type
         ContinuousProgram<Tuple, TableWrapper, Table, Tuple> cp = new ContinuousProgram<>();
@@ -92,11 +90,15 @@ public class polyflowExample_complexDAG {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        RelationToRelationOperator<Table> r2rSelectionOp = new R2RjtablesawImpl(0, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rJoinOp = new R2RjtablesawImpl(-1, s2r_names, true, "empty", "join");
-        RelationToRelationOperator<Table> r2rProjectionOp = new R2RjtablesawProjection(new int[]{1,4}, Collections.singletonList(s2rOp_1.getName()), "projection", "empty");
+        CustomRelationalQuery selection = new CustomRelationalQuery(5, "c3");
+        CustomRelationalQuery join = new CustomRelationalQuery("c1");
+        CustomRelationalQuery projection = new CustomRelationalQuery(new int[]{1, 4});
 
-        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtableProjection();
+        RelationToRelationOperator<Table> r2rSelectionOp = new R2RjtablesawImpl(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rJoinOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rProjectionOp = new R2RjtablesawProjection(projection, Collections.singletonList(s2rOp_1.getName()), "projection", "empty");
+
+        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
         Task<Tuple, TableWrapper, Table, Tuple> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_1, inputStream_1)

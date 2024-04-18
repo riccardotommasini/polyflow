@@ -1,8 +1,6 @@
 package relational.examples;
 
 import operatorsimpl.s2r.StreamToRelationOpImpl;
-import org.javatuples.Quartet;
-import org.javatuples.Septet;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -21,9 +19,10 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
+import relational.operatorsimpl.r2r.CustomRelationalQuery;
 import relational.operatorsimpl.r2r.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
-import relational.operatorsimpl.r2s.RelationToStreamjtableJoin;
+import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
@@ -90,10 +89,13 @@ public class polyflowExample_relational_twoStreams {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(4, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(-1, s2r_names, true, "empty", "join");
+        CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
+        CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtableJoin();
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+
+        RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
         Task<Tuple, TableWrapper, Table, Tuple> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_1, inputStream_1)

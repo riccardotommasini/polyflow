@@ -1,7 +1,6 @@
 package relational.examples;
 
 import operatorsimpl.s2r.StreamToRelationOpImpl;
-import org.javatuples.Quartet;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -20,6 +19,7 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.WindowContentFactory;
 import relational.datatypes.TableWrapper;
+import relational.operatorsimpl.r2r.CustomRelationalQuery;
 import relational.operatorsimpl.r2r.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
@@ -72,8 +72,9 @@ public class polyflowExample_relational {
                         1000,
                         1000);
 
+        CustomRelationalQuery query = new CustomRelationalQuery(5, "c3");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(5, Collections.singletonList(s2rOp.getName()), false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(query, Collections.singletonList(s2rOp.getName()), false, "selection", "empty");
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
         Task<Tuple, TableWrapper, Table, Tuple> task = new TaskImpl<>();

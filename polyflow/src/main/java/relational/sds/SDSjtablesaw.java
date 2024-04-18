@@ -6,14 +6,12 @@ import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import relational.datatypes.TableWrapper;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class SDSjtablesaw implements SDS<TableWrapper> {
 
-    private final Set<TimeVarying<TableWrapper>> tvgs = new HashSet<>();
+    private final List<TimeVarying<TableWrapper>> tvgs = new ArrayList<>();
     private boolean materialized = false;
 
     @Override

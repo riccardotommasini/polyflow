@@ -11,7 +11,7 @@ import java.util.List;
 
 public class R2RjtablesawProjection implements RelationToRelationOperator<Table> {
 
-    int [] query;
+    CustomRelationalQuery query;
 
     private List<String> tvgNames;
 
@@ -20,7 +20,7 @@ public class R2RjtablesawProjection implements RelationToRelationOperator<Table>
     private String unaryOpName;
     private String binaryOpName;
 
-    public R2RjtablesawProjection(int [] query, List<String> tvgNames, String unaryOpName, String binaryOpName){
+    public R2RjtablesawProjection(CustomRelationalQuery query, List<String> tvgNames, String unaryOpName, String binaryOpName){
         this.query = query;
         this.tvgNames = tvgNames;
         this.isBinary = false;
@@ -31,7 +31,7 @@ public class R2RjtablesawProjection implements RelationToRelationOperator<Table>
     public Table evalUnary(Table dataset) {
         if(dataset.isEmpty())
             return dataset;
-        return dataset.selectColumns(query);
+        return dataset.selectColumns(query.projectionColumns);
     }
 
     @Override

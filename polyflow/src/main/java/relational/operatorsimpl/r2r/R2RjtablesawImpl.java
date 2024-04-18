@@ -12,7 +12,7 @@ import java.util.List;
 
 public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
 
-    long query;
+    CustomRelationalQuery query;
 
     private List<String> tvgNames;
 
@@ -21,7 +21,7 @@ public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
     private String unaryOpName;
     private String binaryOpName;
 
-    public R2RjtablesawImpl(long query, List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName){
+    public R2RjtablesawImpl(CustomRelationalQuery query, List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName){
         this.query = query;
         this.tvgNames = tvgNames;
         this.isBinary = isBinary;
@@ -53,7 +53,7 @@ public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
     public Table evalUnary(Table dataset) {
         if(dataset.isEmpty())
             return dataset;
-        return dataset.where(dataset.intColumn("c3").isGreaterThan(query));
+        return dataset.where(dataset.intColumn(query.columnName).isGreaterThan(query.selectionValue));
     }
 
     @Override
@@ -62,8 +62,12 @@ public class R2RjtablesawImpl implements RelationToRelationOperator<Table> {
             return dataset1;
         if(dataset2.isEmpty())
             return dataset2;
-        dataset2.column(1).setName("t2.c2");
-        return dataset1.joinOn("c1").inner(dataset2);
+        for(int i = 0; i< dataset2.columnCount(); i++){
+            if(!dataset2.column(i).name().equals(query.columnName)){
+                dataset2.column(i).setName("t2."+dataset2.column(i).name());
+            }
+        }
+        return dataset1.joinOn(query.columnName).inner(dataset2);
 
     }
 

@@ -19,7 +19,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
 
     private static final Logger log = Logger.getLogger(TaskImpl.class);
-    Set<StreamToRelationOp<I, W>> s2rOperators;
+    List<StreamToRelationOp<I, W>> s2rOperators;
     List<RelationToRelationOperator<R>> r2rOperators;
     RelationToStreamOperator<R, O> r2sOperator;
     Map<DataStream<I>, List<StreamToRelationOp<I, W>>> registeredS2R;
@@ -31,13 +31,13 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
     public TaskImpl(){
 
-        this.s2rOperators = new HashSet<>();
+        this.s2rOperators = new ArrayList<>();
         this.r2rOperators = new ArrayList<>();
         this.registeredS2R = new HashMap<>();
     }
 
     @Override
-    public Set<StreamToRelationOp<I, W>> getS2Rs() {
+    public List<StreamToRelationOp<I, W>> getS2Rs() {
         return s2rOperators;
     }
 
