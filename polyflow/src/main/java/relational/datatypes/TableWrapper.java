@@ -18,7 +18,38 @@ public class TableWrapper implements Convertible<Table> {
         //Here it's hardcoded, a custom implementation of Tuples that can return the size and type of fields can help in make this code generic
         if(rows.isEmpty())
             return;
-        int size = rows.iterator().next().getSize();
+
+        Tuple t = rows.iterator().next();
+        for(int i = 0; i< t.getSize(); i++){
+            int idx = i;
+
+            if(t.getValue(i) instanceof Long){
+                List<Long> column = rows.stream().map(row -> (Long) row.getValue(idx)).collect(Collectors.toList());
+                LongColumn c = LongColumn.create("c"+(i+1));
+                column.forEach(l -> c.append(l));
+                table.addColumns(c);
+            }
+            else if(t.getValue(i) instanceof Integer){
+                List<Integer> column = rows.stream().map(row -> (Integer) row.getValue(idx)).collect(Collectors.toList());
+                IntColumn c = IntColumn.create("c"+(i+1));
+                column.forEach(l -> c.append(l));
+                table.addColumns(c);
+            }
+            else if(t.getValue(i) instanceof Boolean){
+                List<Boolean> column = rows.stream().map(row -> (Boolean) row.getValue(idx)).collect(Collectors.toList());
+                BooleanColumn c = BooleanColumn.create("c"+(i+1));
+                column.forEach(l -> c.append(l));
+                table.addColumns(c);
+            }
+            else if(t.getValue(i) instanceof String){
+                List<String> column = rows.stream().map(row -> (String) row.getValue(idx)).collect(Collectors.toList());
+                StringColumn c = StringColumn.create("c"+(i+1));
+                column.forEach(l -> c.append(l));
+                table.addColumns(c);
+            }
+
+        }
+       /* int size = rows.iterator().next().getSize();
         if(size == 4) {
             List<Long> column_1 = rows.stream().map(quartet -> (Long) quartet.getValue(0)).collect(Collectors.toList());
             List<String> column_2 = rows.stream().map(quartet -> (String) quartet.getValue(1)).collect(Collectors.toList());
@@ -60,7 +91,7 @@ public class TableWrapper implements Convertible<Table> {
             }
             this.table = Table.create("window_2").addColumns(c1, c2);
 
-        }
+        }*/
     }
 
 
