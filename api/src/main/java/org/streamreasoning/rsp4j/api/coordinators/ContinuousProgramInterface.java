@@ -10,6 +10,6 @@ public interface ContinuousProgramInterface<I, W extends Convertible<R>, R exten
     /**
      * Passes the query that will be used to build the various components needed to answer it(tasks, operators etc..)
      */
-    public void buildTask(String query);
+    void buildTask(String query);
 
 }

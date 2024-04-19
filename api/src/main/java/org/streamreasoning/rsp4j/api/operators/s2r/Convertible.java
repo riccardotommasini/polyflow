@@ -10,10 +10,10 @@ public interface Convertible<R extends Iterable<?>> {
     /**
      * Method used to do some computations on the W type, can be empty if no computations are needed
      */
-    public void compute();
+    void compute();
 
     /**
      * Method used on the W type to convert it into an R type, R must be iterable
      */
-    public R convertToR();
+    R convertToR();
 }

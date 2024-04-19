@@ -15,7 +15,6 @@ public class TableWrapper implements Convertible<Table> {
 
     public TableWrapper(Collection<Tuple> rows){
 
-        //Here it's hardcoded, a custom implementation of Tuples that can return the size and type of fields can help in make this code generic
         if(rows.isEmpty())
             return;
 

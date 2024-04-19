@@ -90,7 +90,7 @@ public class polyflowExample_complexDAG {
         s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
-        CustomRelationalQuery selection = new CustomRelationalQuery(5, "c3");
+        CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
         CustomRelationalQuery projection = new CustomRelationalQuery(new int[]{1, 4});
 
@@ -125,8 +125,8 @@ public class polyflowExample_complexDAG {
         outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
-        Thread.sleep(20_000);
-        generator.stopStreaming();
+        //Thread.sleep(20_000);
+        ///generator.stopStreaming();
 
     }
 }

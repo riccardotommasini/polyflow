@@ -51,13 +51,14 @@ public class RowStreamGenerator {
                 while (this.isStreaming.get() && s1.hasNext() && s2.hasNext()) {
                     long finalTs = ts;
                     activeStreams.entrySet().forEach(e -> generateDataAndAddToStream(e.getValue(), finalTs));
-                    ts += 1000;
+                    ts += 300;
                     try {
                         Thread.sleep(TIMEOUT);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
+                stopStreaming();
 
             };
 

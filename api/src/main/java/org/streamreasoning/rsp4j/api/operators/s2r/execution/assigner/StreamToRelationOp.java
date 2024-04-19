@@ -42,8 +42,6 @@ public interface StreamToRelationOp<I, W extends Convertible<?>> {
 
     Content<I, W> compute(long t_e, Window w);
 
-    //StreamToRelationOp<I, W> link(ContinuousQueryExecution<I, W, ?, ?> context);
-
     TimeVarying<W> apply();
 
     /**

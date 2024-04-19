@@ -121,8 +121,8 @@ public class polyflowExample_relational_twoStreams {
         outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
-        Thread.sleep(20_000);
-        generator.stopStreaming();
+        //Thread.sleep(20_000);
+        //generator.stopStreaming();
 
     }
 }
