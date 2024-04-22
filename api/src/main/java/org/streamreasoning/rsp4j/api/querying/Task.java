@@ -2,18 +2,17 @@ package org.streamreasoning.rsp4j.api.querying;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
-import org.streamreasoning.rsp4j.api.querying.DAG.DAG;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
-    List<StreamToRelationOp<I, W>> getS2Rs();
+    List<StreamToRelationOperator<I, W>> getS2Rs();
 
     List<RelationToRelationOperator<R>> getR2Rs();
 
@@ -24,7 +23,7 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
      * @param inputStream Stream which the operator inside the container is interested in
      * @return The task itself
      */
-    Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream);
+    Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W> s2rOperator, DataStream<I> inputStream);
 
     /**
      * Adds an R2R operator to the task

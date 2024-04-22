@@ -1,7 +1,7 @@
 package org.streamreasoning.rsp4j.api.sds.timevarying;
 
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 
 /**
  * Factory to use in order to instantiate different TimeVarying implementations at runtime.
@@ -10,6 +10,6 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRe
 public interface TimeVaryingFactory<W extends Convertible<?>> {
 
 
-    TimeVarying<W> create(StreamToRelationOp<?, W> s2r, String name);
+    TimeVarying<W> create(StreamToRelationOperator<?, W> s2r, String name);
 
 }

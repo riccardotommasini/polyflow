@@ -1,12 +1,11 @@
 package org.streamreasoning.rsp4j.api.querying;
 
 import org.apache.log4j.Logger;
-import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
-import org.streamreasoning.rsp4j.api.querying.DAG.DAG;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
@@ -19,10 +18,10 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
 
     private static final Logger log = Logger.getLogger(TaskImpl.class);
-    List<StreamToRelationOp<I, W>> s2rOperators;
+    List<StreamToRelationOperator<I, W>> s2rOperators;
     List<RelationToRelationOperator<R>> r2rOperators;
     RelationToStreamOperator<R, O> r2sOperator;
-    Map<DataStream<I>, List<StreamToRelationOp<I, W>>> registeredS2R;
+    Map<DataStream<I>, List<StreamToRelationOperator<I, W>>> registeredS2R;
     Time time;
 
     DAG<R> dag;
@@ -37,7 +36,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
     }
 
     @Override
-    public List<StreamToRelationOp<I, W>> getS2Rs() {
+    public List<StreamToRelationOperator<I, W>> getS2Rs() {
         return s2rOperators;
     }
 
@@ -52,7 +51,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
     }
 
     @Override
-    public Task<I, W, R, O> addS2ROperator(StreamToRelationOp<I, W> s2rOperator, DataStream<I> inputStream) {
+    public Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W> s2rOperator, DataStream<I> inputStream) {
         this.s2rOperators.add(s2rOperator);
         if(!registeredS2R.containsKey(inputStream)){
             registeredS2R.put(inputStream, new ArrayList<>());
@@ -100,7 +99,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
     }
 
     public void initialize(){
-        for(StreamToRelationOp<I, W> operator: s2rOperators){
+        for(StreamToRelationOperator<I, W> operator: s2rOperators){
             TimeVarying<W> tvg = operator.apply();
             this.sds.add(tvg);
             if(tvg.named()){
@@ -143,7 +142,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
 
         Collection<Collection<O>> res = new ArrayList<>();
 
-        for(StreamToRelationOp<I, W> s2r : registeredS2R.get(inputStream)){
+        for(StreamToRelationOperator<I, W> s2r : registeredS2R.get(inputStream)){
             s2r.windowing(element, timestamp);
         }
 
@@ -154,7 +153,7 @@ public class TaskImpl<I, W extends Convertible<R>, R extends Iterable<?>, O> imp
             res.add(r2sOperator.eval(partialRes, timestamp).collect(Collectors.toList()));
         }
 
-        for(StreamToRelationOp<I, W> operator : s2rOperators){
+        for(StreamToRelationOperator<I, W> operator : s2rOperators){
             operator.evict();
         }
 

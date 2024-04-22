@@ -1,8 +1,8 @@
 package relational.operatorsimpl.r2r;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
-import org.streamreasoning.rsp4j.api.querying.DAG.DAG;
-import org.streamreasoning.rsp4j.api.querying.DAG.DAGNode;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 
 import java.util.*;
 

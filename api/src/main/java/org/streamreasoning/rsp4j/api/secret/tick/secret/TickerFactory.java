@@ -1,12 +1,12 @@
 package org.streamreasoning.rsp4j.api.secret.tick.secret;
 
 import org.streamreasoning.rsp4j.api.enums.Tick;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 
 public class TickerFactory {
 
-    public static Ticker tick(Tick t, StreamToRelationOp<?, ?> wa) {
+    public static Ticker tick(Tick t, StreamToRelationOperator<?, ?> wa) {
         switch (t) {
             case TUPLE_DRIVEN:
                 return new TupleTicker(wa);

@@ -18,7 +18,7 @@ import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
@@ -62,7 +62,7 @@ public class polyflowExample {
 
         ContinuousProgram<Graph, ValidatedGraph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
 
-        StreamToRelationOp<Graph, ValidatedGraph> s2rOp =
+        StreamToRelationOperator<Graph, ValidatedGraph> s2rOp =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,

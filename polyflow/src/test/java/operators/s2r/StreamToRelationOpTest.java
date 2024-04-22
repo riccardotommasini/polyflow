@@ -13,10 +13,9 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.junit.Test;
-import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
@@ -46,7 +45,7 @@ public class StreamToRelationOpTest {
 
         TimeVaryingFactory<ValidatedGraph> tvFactory = new TimeVaryingFactoryJena();
 
-        StreamToRelationOp<Graph, ValidatedGraph> s2rOp =
+        StreamToRelationOperator<Graph, ValidatedGraph> s2rOp =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,

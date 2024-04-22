@@ -1,4 +1,4 @@
-package org.streamreasoning.rsp4j.api.querying.DAG;
+package org.streamreasoning.rsp4j.api.operators.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 

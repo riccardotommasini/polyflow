@@ -1,6 +1,6 @@
 package org.streamreasoning.rsp4j.api.secret.tick.secret;
 
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 
@@ -17,9 +17,9 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
  **/
 public class TupleTicker implements Ticker {
 
-    private final StreamToRelationOp<?, ?> wa;
+    private final StreamToRelationOperator<?, ?> wa;
 
-    public TupleTicker(StreamToRelationOp<?, ?> wa) {
+    public TupleTicker(StreamToRelationOperator<?, ?> wa) {
         this.wa = wa;
     }
 

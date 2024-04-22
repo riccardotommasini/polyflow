@@ -1,12 +1,11 @@
 package operatorsimpl.s2r;
 
 import org.apache.log4j.Logger;
-import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.exceptions.OutOfOrderElementException;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
@@ -17,12 +16,11 @@ import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
-import graph.jena.sds.TimeVaryingObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements StreamToRelationOp<I, W> {
+public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements StreamToRelationOperator<I, W> {
 
     private static final Logger log = Logger.getLogger(StreamToRelationOpImpl.class);
     protected final Ticker ticker;

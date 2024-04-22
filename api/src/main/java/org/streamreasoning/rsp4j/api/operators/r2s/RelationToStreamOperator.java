@@ -22,9 +22,4 @@ public interface RelationToStreamOperator<R extends Iterable<?>, O> {
         return result.stream();
     }
 
-    /*default Collection<O> eval(TimeVarying<Collection<R>> sml, long ts) {
-        sml.materialize(ts);
-        Collection<R> rs = sml.get();
-        return eval(rs.stream(), ts).collect(Collectors.toList());
-    }*/
 }

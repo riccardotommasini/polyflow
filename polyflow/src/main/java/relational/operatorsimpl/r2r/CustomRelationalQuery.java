@@ -1,6 +1,6 @@
 package relational.operatorsimpl.r2r;
 
-public class CustomRelationalQuery {
+public class CustomRelationalQuery{
 
     long selectionValue; //Value used in the selection query "greater than (selectionValue)"
     String columnName; //Name of the join column or the column on which to perform the selection

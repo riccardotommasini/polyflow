@@ -1,6 +1,6 @@
 package org.streamreasoning.rsp4j.api.secret.tick.secret;
 
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 
@@ -18,11 +18,11 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 
 public class BatchTicker implements Ticker {
 
-    protected final StreamToRelationOp<?, ?> wa;
+    protected final StreamToRelationOperator<?, ?> wa;
     private int curr = 0;
     private int batch;
 
-    public BatchTicker(StreamToRelationOp<?, ?> wa) {
+    public BatchTicker(StreamToRelationOperator<?, ?> wa) {
         this.wa = wa;
     }
 

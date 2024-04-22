@@ -1,7 +1,6 @@
 package org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner;
 
 
-import org.apache.commons.rdf.api.IRI;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
@@ -18,7 +17,7 @@ import java.util.List;
  * W represents the variable type of the maintained status, e.g., BAG of RDF Triple, RDF Graph (set) or RELATION
  * */
 
-public interface StreamToRelationOp<I, W extends Convertible<?>> {
+public interface StreamToRelationOperator<I, W extends Convertible<?>> {
 
     Report report();
 

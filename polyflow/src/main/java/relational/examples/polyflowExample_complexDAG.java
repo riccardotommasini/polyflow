@@ -7,7 +7,7 @@ import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
@@ -61,7 +61,7 @@ public class polyflowExample_complexDAG {
         //TableWrapper because we need the interface convertible on the W generic type
         ContinuousProgram<Tuple, TableWrapper, Table, Tuple> cp = new ContinuousProgram<>();
 
-        StreamToRelationOp<Tuple, TableWrapper> s2rOp_1 =
+        StreamToRelationOperator<Tuple, TableWrapper> s2rOp_1 =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -73,7 +73,7 @@ public class polyflowExample_complexDAG {
                         1000,
                         1000);
 
-        StreamToRelationOp<Tuple, TableWrapper> s2rOp_2 =
+        StreamToRelationOperator<Tuple, TableWrapper> s2rOp_2 =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,

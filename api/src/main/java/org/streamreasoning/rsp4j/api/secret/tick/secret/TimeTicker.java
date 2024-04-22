@@ -1,6 +1,6 @@
 package org.streamreasoning.rsp4j.api.secret.tick.secret;
 
-import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOp;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
@@ -20,10 +20,10 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 
 public class TimeTicker implements Ticker {
 
-    private final StreamToRelationOp<?, ?> wa;
+    private final StreamToRelationOperator<?, ?> wa;
     private final Time time;
 
-    public TimeTicker(StreamToRelationOp<?, ?> wa, Time time) {
+    public TimeTicker(StreamToRelationOperator<?, ?> wa, Time time) {
         this.wa = wa;
         this.time = time;
     }
