@@ -1,3 +1,4 @@
+/*
 package graph.jena.sds;
 
 import graph.jena.content.ValidatedGraph;
@@ -12,3 +13,4 @@ public class TimeVaryingFactoryJena implements TimeVaryingFactory<ValidatedGraph
         return new TimeVaryingObject<>(s2r, RDFUtils.createIRI(name));
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*
 package relational.content;
 
 import org.javatuples.Quartet;
@@ -33,3 +34,4 @@ public class WindowContent implements Content<Tuple, TableWrapper> {
         return new TableWrapper(rows);
     }
 }
+*/

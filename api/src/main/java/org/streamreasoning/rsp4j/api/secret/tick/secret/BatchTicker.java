@@ -18,11 +18,11 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 
 public class BatchTicker implements Ticker {
 
-    protected final StreamToRelationOperator<?, ?> wa;
+    protected final StreamToRelationOperator<?, ?, ?> wa;
     private int curr = 0;
     private int batch;
 
-    public BatchTicker(StreamToRelationOperator<?, ?> wa) {
+    public BatchTicker(StreamToRelationOperator<?, ?, ?> wa) {
         this.wa = wa;
     }
 

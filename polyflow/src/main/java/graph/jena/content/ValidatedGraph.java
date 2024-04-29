@@ -1,3 +1,4 @@
+/*
 package graph.jena.content;
 
 import graph.jena.datatypes.JenaOperandWrapper;
@@ -33,3 +34,4 @@ public class ValidatedGraph implements Convertible<JenaOperandWrapper> {
         return wrapper;
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*
 package graph.jena.content;
 
 import org.apache.jena.shacl.Shapes;
@@ -16,3 +17,4 @@ public interface ValidatedContent<I, O> extends Content<I, O> {
     void setValidationOption(ValidationOption vo);
     ValidationOption getValidationOption(ValidationOption vo);
 }
+*/

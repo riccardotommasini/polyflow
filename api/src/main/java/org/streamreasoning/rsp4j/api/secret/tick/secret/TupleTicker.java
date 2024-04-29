@@ -17,9 +17,9 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
  **/
 public class TupleTicker implements Ticker {
 
-    private final StreamToRelationOperator<?, ?> wa;
+    private final StreamToRelationOperator<?, ?, ?> wa;
 
-    public TupleTicker(StreamToRelationOperator<?, ?> wa) {
+    public TupleTicker(StreamToRelationOperator<?, ?, ?> wa) {
         this.wa = wa;
     }
 

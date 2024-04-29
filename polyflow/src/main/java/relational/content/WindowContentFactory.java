@@ -1,3 +1,4 @@
+/*
 package relational.content;
 
 import graph.jena.content.EmptyContent;
@@ -21,3 +22,4 @@ public class WindowContentFactory implements ContentFactory<Tuple, TableWrapper>
         return new WindowContent();
     }
 }
+*/

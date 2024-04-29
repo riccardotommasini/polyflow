@@ -17,7 +17,7 @@ import java.util.List;
  * W represents the variable type of the maintained status, e.g., BAG of RDF Triple, RDF Graph (set) or RELATION
  * */
 
-public interface StreamToRelationOperator<I, W extends Convertible<?>> {
+public interface StreamToRelationOperator<I, W, R> {
 
     Report report();
 
@@ -27,11 +27,11 @@ public interface StreamToRelationOperator<I, W extends Convertible<?>> {
 
     ReportGrain grain();
 
-    Content<I, W> content(long t_e);
+    Content<I, W, R> content(long t_e);
 
-    List<Content<I, W>> getContents(long t_e);
+    List<Content<I, W, R>> getContents(long t_e);
 
-    TimeVarying<W> get();
+    TimeVarying<R> get();
 
     String getName();
 
@@ -39,9 +39,9 @@ public interface StreamToRelationOperator<I, W extends Convertible<?>> {
         return getName() != null;
     }
 
-    Content<I, W> compute(long t_e, Window w);
+    Content<I, W, R> compute(long t_e, Window w);
 
-    TimeVarying<W> apply();
+    TimeVarying<R> apply();
 
     /**
      * Inserts the element in the windows it belongs. If needed, signals that the query result needs to be computed

@@ -18,7 +18,7 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.ReportingStrategy;
  **/
 public interface Report {
 
-    boolean report(Window w, Content<?, ?> c, long tapp, long tsys);
+    boolean report(Window w, Content<?, ?, ?> c, long tapp, long tsys);
 
     void add(ReportingStrategy r);
 

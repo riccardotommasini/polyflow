@@ -5,13 +5,13 @@ import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
-public class TimeVaryingObject<W extends Convertible<?>> implements TimeVarying<W> {
+public class TimeVaryingObject<R> implements TimeVarying<R> {
 
-    private final StreamToRelationOperator<?, W> op;
+    private final StreamToRelationOperator<?, ?, R> op;
     private final IRI name;
-    private W content;
+    private R content;
 
-    public TimeVaryingObject(StreamToRelationOperator<?, W> op, IRI name) {
+    public TimeVaryingObject(StreamToRelationOperator<?, ?, R> op, IRI name) {
         this.op = op;
         this.name = name;
     }
@@ -27,7 +27,7 @@ public class TimeVaryingObject<W extends Convertible<?>> implements TimeVarying<
     }
 
     @Override
-    public W get() {
+    public R get() {
         return content;
     }
 

@@ -20,10 +20,10 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 
 public class TimeTicker implements Ticker {
 
-    private final StreamToRelationOperator<?, ?> wa;
+    private final StreamToRelationOperator<?, ?, ?> wa;
     private final Time time;
 
-    public TimeTicker(StreamToRelationOperator<?, ?> wa, Time time) {
+    public TimeTicker(StreamToRelationOperator<?, ?, ?> wa, Time time) {
         this.wa = wa;
         this.time = time;
     }

@@ -11,8 +11,8 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.Collection;
 import java.util.List;
 
-public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
-    List<StreamToRelationOperator<I, W>> getS2Rs();
+public interface Task<I, W, R extends Iterable<?>, O> {
+    List<StreamToRelationOperator<I, W, R>> getS2Rs();
 
     List<RelationToRelationOperator<R>> getR2Rs();
 
@@ -23,7 +23,7 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
      * @param inputStream Stream which the operator inside the container is interested in
      * @return The task itself
      */
-    Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W> s2rOperator, DataStream<I> inputStream);
+    Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W, R> s2rOperator, DataStream<I> inputStream);
 
     /**
      * Adds an R2R operator to the task
@@ -39,7 +39,7 @@ public interface Task<I, W extends Convertible<R>, R extends Iterable<?>, O> {
 
     Task<I, W, R, O> addTime(Time time);
 
-    Task<I, W, R, O> addSDS(SDS<W> sds);
+    Task<I, W, R, O> addSDS(SDS<R> sds);
 
     Task<I, W, R, O> addDAG(DAG<R> dag);
 

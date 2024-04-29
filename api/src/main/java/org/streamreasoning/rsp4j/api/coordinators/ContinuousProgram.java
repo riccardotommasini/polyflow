@@ -8,7 +8,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.*;
 
 
-public class ContinuousProgram<I, W extends Convertible<R>, R extends Iterable<?>, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
+public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
 
     List<Task<I, W, R, O>> taskList;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;

@@ -20,24 +20,24 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements StreamToRelationOperator<I, W> {
+public class StreamToRelationOpImpl<I, W, R> implements StreamToRelationOperator<I, W, R> {
 
     private static final Logger log = Logger.getLogger(StreamToRelationOpImpl.class);
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
     protected final String name;
-    protected final ContentFactory<I, W> cf;
-    protected final TimeVaryingFactory<W> tvFactory;
+    protected final ContentFactory<I, W, R> cf;
+    protected final TimeVaryingFactory<R> tvFactory;
     protected ReportGrain grain;
     protected Report report;
     private final long width, slide;
-    private Map<Window, Content<I, W>> active_windows;
+    private Map<Window, Content<I, W, R>> active_windows;
     private Set<Window> to_evict;
     private long t0;
     private long toi;
 
-    public StreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W> cf, TimeVaryingFactory<W> tvFactory,  ReportGrain grain, Report report,
+    public StreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory,  ReportGrain grain, Report report,
                                   long width, long slide){
 
         this.tvFactory = tvFactory;
@@ -92,7 +92,7 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
      * Returns the content of the last window closed before time t_e. If no such window exists, returns an empty content
      */
     @Override
-    public Content<I, W> content(long t_e) {
+    public Content<I, W, R> content(long t_e) {
         Optional<Window> max = active_windows.keySet().stream()
                 //TODO: 09/04/24 qui c'era w.getC()<= t_e, ma è incoerente col report perché nel report se t_e == w.getC() la window non conta come chiusa, qui invece veniva reportata. Mettendo solo < è più coerente, prende la window che ha triggerato un report
                 .filter(w -> w.getO() < t_e && w.getC() < t_e)
@@ -108,7 +108,7 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
      * Returns the content of all the windows closed before time t_e as a list of contents. If no such windows exist, returns an empty list of contents
      */
     @Override
-    public List<Content<I, W>> getContents(long t_e) {
+    public List<Content<I, W, R>> getContents(long t_e) {
         return active_windows.keySet().stream()
                 .filter(w -> w.getO() <= t_e && t_e < w.getC())
                 .map(active_windows::get).collect(Collectors.toList());
@@ -171,8 +171,8 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
 
 
     @Override
-    public Content<I, W> compute(long t_e, Window w) {
-        Content<I, W> content = getWindowContent(w);
+    public Content<I, W, R> compute(long t_e, Window w) {
+        Content<I, W, R> content = getWindowContent(w);
         time.setAppTime(t_e);
         log.debug("Report [" + w.getO() + "," + w.getC() + ") with Content " + content + "");
         return content;
@@ -185,14 +185,14 @@ public class StreamToRelationOpImpl<I, W extends Convertible<?>> implements Stre
 
     //TODO: Get and apply do the same thing
     @Override
-    public TimeVarying<W> apply() {
+    public TimeVarying<R> apply() {
         return tvFactory.create(this, name);
     }
 
     @Override
-    public TimeVarying<W> get() {return tvFactory.create(this, name);}
+    public TimeVarying<R> get() {return tvFactory.create(this, name);}
 
-    private Content<I, W> getWindowContent(Window w) {
+    private Content<I, W, R> getWindowContent(Window w) {
         return active_windows.containsKey(w) ? active_windows.get(w) : cf.createEmpty();
     }
 

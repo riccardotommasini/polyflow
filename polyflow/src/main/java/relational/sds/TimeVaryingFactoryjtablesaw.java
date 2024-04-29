@@ -5,9 +5,9 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRe
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 
-public class TimeVaryingFactoryjtablesaw<W extends Convertible<?>> implements TimeVaryingFactory<W> {
+public class TimeVaryingFactoryjtablesaw<R> implements TimeVaryingFactory<R> {
     @Override
-    public TimeVarying<W> create(StreamToRelationOperator<?, W> s2r, String name) {
+    public TimeVarying<R> create(StreamToRelationOperator<?, ?, R> s2r, String name) {
         return new TimeVaryingObjectjtablesaw<>(s2r, name);
     }
 }

@@ -1,3 +1,4 @@
+/*
 package operatorsimpl.r2s;
 
 import graph.jena.datatypes.JenaOperandWrapper;
@@ -8,3 +9,4 @@ public class RelationToStreamOpImpl implements RelationToStreamOperator<JenaOper
 
 
 }
+*/

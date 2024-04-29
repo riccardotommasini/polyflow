@@ -21,7 +21,6 @@ public class TableWrapper implements Convertible<Table> {
         Tuple t = rows.iterator().next();
         for(int i = 0; i< t.getSize(); i++){
             int idx = i;
-
             if(t.getValue(i) instanceof Long){
                 List<Long> column = rows.stream().map(row -> (Long) row.getValue(idx)).collect(Collectors.toList());
                 LongColumn c = LongColumn.create("c"+(i+1));

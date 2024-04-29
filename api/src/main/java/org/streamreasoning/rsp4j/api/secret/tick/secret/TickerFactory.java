@@ -6,7 +6,7 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 
 public class TickerFactory {
 
-    public static Ticker tick(Tick t, StreamToRelationOperator<?, ?> wa) {
+    public static Ticker tick(Tick t, StreamToRelationOperator<?, ?, ?> wa) {
         switch (t) {
             case TUPLE_DRIVEN:
                 return new TupleTicker(wa);

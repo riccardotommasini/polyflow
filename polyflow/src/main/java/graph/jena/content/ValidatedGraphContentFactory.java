@@ -1,3 +1,4 @@
+/*
 package graph.jena.content;
 
 import org.apache.jena.graph.Factory;
@@ -29,3 +30,4 @@ public class ValidatedGraphContentFactory implements ContentFactory<Graph, Valid
         return new ValidatedContentJenaGraph(time, shapes);
     }
 }
+*/

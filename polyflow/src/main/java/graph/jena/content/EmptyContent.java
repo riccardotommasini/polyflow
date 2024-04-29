@@ -1,3 +1,4 @@
+/*
 package graph.jena.content;
 
 import org.streamreasoning.rsp4j.api.secret.content.Content;
@@ -23,13 +24,10 @@ public class EmptyContent<I, O> implements Content<I, O> {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Long getTimeStampLastUpdate() {
-        return ts;
-    }
 
     @Override
     public O coalesce() {
         return o;
     }
 }
+*/

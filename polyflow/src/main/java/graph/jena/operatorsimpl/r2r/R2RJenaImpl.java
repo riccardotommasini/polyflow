@@ -1,3 +1,4 @@
+/*
 package graph.jena.operatorsimpl.r2r;
 
 import graph.jena.datatypes.JenaOperandWrapper;
@@ -107,3 +108,4 @@ public class R2RJenaImpl implements RelationToRelationOperator<JenaOperandWrappe
         return null;
     }
 }
+*/

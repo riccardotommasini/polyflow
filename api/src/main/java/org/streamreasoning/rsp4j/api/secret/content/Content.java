@@ -1,13 +1,12 @@
 package org.streamreasoning.rsp4j.api.secret.content;
 
 
-public interface Content<I, O> {
+public interface Content<I, W, R> {
+
     int size();
 
     void add(I e);
 
-    Long getTimeStampLastUpdate();
+    R coalesce();
 
-    //TODO CONSIDERING MAKING THIS INCONCISTENCY AWARE
-    O coalesce();
 }
