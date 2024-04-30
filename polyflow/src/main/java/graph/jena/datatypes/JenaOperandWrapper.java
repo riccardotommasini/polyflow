@@ -1,4 +1,3 @@
-/*
 package graph.jena.datatypes;
 import graph.jena.content.ValidatedGraph;
 import org.apache.jena.sparql.engine.binding.Binding;
@@ -45,4 +44,3 @@ public class JenaOperandWrapper implements Iterable<Binding>{
         this.result = res;
     }
 }
-*/

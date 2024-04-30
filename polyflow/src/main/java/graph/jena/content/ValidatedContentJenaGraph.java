@@ -1,6 +1,7 @@
 /*
 package graph.jena.content;
 
+import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
@@ -14,7 +15,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class ValidatedContentJenaGraph implements ValidatedContent<Graph, ValidatedGraph> {
+public class ValidatedContentJenaGraph implements ValidatedContent<Graph, ValidatedGraph, JenaOperandWrapper> {
 
 
     Time instance;

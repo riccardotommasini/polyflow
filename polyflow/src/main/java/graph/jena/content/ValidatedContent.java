@@ -1,10 +1,9 @@
-/*
 package graph.jena.content;
 
 import org.apache.jena.shacl.Shapes;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 
-public interface ValidatedContent<I, O> extends Content<I, O> {
+public interface ValidatedContent<I, W, R> extends Content<I, W, R> {
 
     enum ValidationOption {
         STREAM_LEVEL,
@@ -17,4 +16,3 @@ public interface ValidatedContent<I, O> extends Content<I, O> {
     void setValidationOption(ValidationOption vo);
     ValidationOption getValidationOption(ValidationOption vo);
 }
-*/

@@ -1,7 +1,7 @@
-/*
 package graph.jena.sds;
 
 import graph.jena.content.ValidatedGraph;
+import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.commons.rdf.api.IRI;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
@@ -24,10 +24,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SDSJena implements SDS<ValidatedGraph>, Dataset {
+public class SDSJena implements SDS<JenaOperandWrapper>, Dataset {
 
-    private final Set<TimeVarying<ValidatedGraph>> defs = new HashSet<>();
-    private final Map<Node, TimeVarying<ValidatedGraph>> tvgs = new HashMap<>();
+    private final Set<TimeVarying<JenaOperandWrapper>> defs = new HashSet<>();
+    private final Map<Node, TimeVarying<JenaOperandWrapper>> tvgs = new HashMap<>();
     private boolean materialized = false;
     private final Node def = NodeFactory.createURI("def");
 
@@ -35,18 +35,18 @@ public class SDSJena implements SDS<ValidatedGraph>, Dataset {
 
 
     @Override
-    public Collection<TimeVarying<ValidatedGraph>> asTimeVaryingEs() {
+    public Collection<TimeVarying<JenaOperandWrapper>> asTimeVaryingEs() {
         return tvgs.values();
     }
 
 
     @Override
-    public void add(String iri, TimeVarying<ValidatedGraph> tvg) {
+    public void add(String iri, TimeVarying<JenaOperandWrapper> tvg) {
         tvgs.put(NodeFactory.createURI(iri), tvg);
     }
 
     @Override
-    public void add(TimeVarying<ValidatedGraph> tvg) {
+    public void add(TimeVarying<JenaOperandWrapper> tvg) {
         defs.add(tvg);
     }
 
@@ -56,7 +56,7 @@ public class SDSJena implements SDS<ValidatedGraph>, Dataset {
     }
 
     @Override
-    public SDS<ValidatedGraph> materialize(final long ts) {
+    public SDS<JenaOperandWrapper> materialize(final long ts) {
         //TODO here applies the consolidation strategies
         //Default consolidation coaleces all the current
         //content graphs and produces the SDS to who execute the query.
@@ -73,13 +73,13 @@ public class SDSJena implements SDS<ValidatedGraph>, Dataset {
         defs.stream().map(g -> {
                     g.materialize(ts);
                     return g.get();
-                }).map(ValidatedGraph::getContent).flatMap(Graph::stream)
+                }).map(r->r.getContent().content).flatMap(Graph::stream)
                 .forEach(t -> dg.add(def, t.getSubject(), t.getPredicate(), t.getObject()));
 
         tvgs.entrySet().stream()
                 .map(e -> {
                     e.getValue().materialize(ts);
-                    return new NamedGraph(e.getKey(), e.getValue().get().content);
+                    return new NamedGraph(e.getKey(), e.getValue().get().getContent().getContent());
                 }).forEach(n -> n.g.stream()
                         .forEach(o -> dg.add(n.name, o.getSubject(), o.getPredicate(), o.getObject())));
 
@@ -88,18 +88,8 @@ public class SDSJena implements SDS<ValidatedGraph>, Dataset {
     }
 
     @Override
-    public Stream<ValidatedGraph> toStream() {
-        if (materialized) {
-            materialized = false;
-            Stream<Quad> stream = dataset.asDatasetGraph().stream();
-            Map<Node, List<Quad>> collect = stream.collect(Collectors.groupingBy(Quad::getGraph));
-
-            return collect.entrySet().stream().map(e -> {
-                Graph graphMem = GraphFactory.createGraphMem();
-                e.getValue().stream().forEach(v -> graphMem.add(v.asTriple()));
-                return new ValidatedGraph(tvgs.get(e.getKey()).get().report, graphMem);
-            });
-        } else throw new RuntimeException("SDS not materialized");
+    public Stream<JenaOperandWrapper> toStream() {
+        return null;
     }
 
     //From Jena Dataset, redirected to interal dataset
@@ -269,4 +259,3 @@ public class SDSJena implements SDS<ValidatedGraph>, Dataset {
     }
 }
 
-*/

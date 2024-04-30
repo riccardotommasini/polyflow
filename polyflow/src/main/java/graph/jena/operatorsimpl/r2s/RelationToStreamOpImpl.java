@@ -1,5 +1,4 @@
-/*
-package operatorsimpl.r2s;
+package graph.jena.operatorsimpl.r2s;
 
 import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.sparql.engine.binding.Binding;
@@ -9,4 +8,3 @@ public class RelationToStreamOpImpl implements RelationToStreamOperator<JenaOper
 
 
 }
-*/
