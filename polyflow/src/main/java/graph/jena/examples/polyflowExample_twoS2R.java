@@ -1,4 +1,3 @@
-/*
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaOperandWrapper;
@@ -6,12 +5,14 @@ import graph.jena.JenaBindingStream;
 import graph.jena.JenaStreamGenerator;
 import graph.jena.sds.SDSJena;
 import graph.jena.content.ValidatedGraph;
-import graph.jena.content.ValidatedGraphContentFactory;
 import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
 import graph.jena.sds.TimeVaryingFactoryJena;
-import operatorsimpl.r2s.RelationToStreamOpImpl;
+import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
+import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.sparql.engine.binding.Binding;
@@ -30,6 +31,7 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
+import relational.content.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.DAGImpl;
 
 import java.util.ArrayList;
@@ -57,30 +59,54 @@ public class polyflowExample_twoS2R {
         Graph shapesGraph = RDFDataMgr.loadGraph(polyflowExample.class.getResource("/shapes.ttl").getPath());
         Shapes shapes = Shapes.parse(shapesGraph);
 
-        ValidatedGraphContentFactory validatedGraphContentFactory = new ValidatedGraphContentFactory(instance, shapes);
 
-        TimeVaryingFactory<ValidatedGraph> tvFactory = new TimeVaryingFactoryJena();
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
+        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
 
-        ContinuousProgram<Graph, ValidatedGraph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
+        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
+                (g)->g,
+                (g)->{
+                    JenaOperandWrapper r = new JenaOperandWrapper();
+                    r.setContent(new ValidatedGraph(g, g));
+                    return r;
+                },
+                (r1, r2)->{
+                    JenaOperandWrapper result = new JenaOperandWrapper();
+                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
+                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
+                    Graph res_content = m1.union(m2).getGraph();
 
-        StreamToRelationOperator<Graph, ValidatedGraph> s2rOp_one =
+                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
+                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
+                    Graph res_report = m1.union(m2).getGraph();
+                    result.setContent(new ValidatedGraph(res_content, res_report ));
+                    return result;
+                },
+                emptyContent
+        );
+
+        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
+
+        ContinuousProgram<Graph, Graph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
+
+        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
-                        validatedGraphContentFactory,
+                        accumulatorContentFactory,
                         tvFactory,
                         report_grain,
                         report,
                         1000,
                         1000);
 
-        StreamToRelationOperator<Graph, ValidatedGraph> s2rOp_two =
+        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_two =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w2",
-                        validatedGraphContentFactory,
+                        accumulatorContentFactory,
                         tvFactory,
                         report_grain,
                         report,
@@ -98,7 +124,7 @@ public class polyflowExample_twoS2R {
 
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
 
-        Task<Graph, ValidatedGraph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
+        Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_one, inputStream)
                 .addS2ROperator(s2rOp_two, inputStream)
                 .addR2ROperator(r2rOp)
@@ -127,4 +153,3 @@ public class polyflowExample_twoS2R {
     }
 
 }
-*/

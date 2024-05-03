@@ -52,15 +52,12 @@ public class polyflow_FilterContent {
             ReportGrain report_grain = ReportGrain.SINGLE;
             Time instance = new TimeImpl(0);
 
+            Table emptyContent = Table.create();
 
             FilterContentFactory<Tuple, Tuple, Table> filterContentFactory = new FilterContentFactory<>(
                     t->t,
-                    (t, r)->{
-                        if(r == null){
-                            r = Table.create();
-                        }
-                        if(t == null)
-                            return r;
+                    (t)->{
+                        Table r = Table.create();
 
                         for(int i = 0; i<t.getSize(); i++){
                             if(t.getValue(i) instanceof Long){
@@ -115,6 +112,8 @@ public class polyflow_FilterContent {
                         }
                         return r;
                     },
+                    (r1, r2)-> r1.isEmpty()? r2: r1.append(r2),
+                    emptyContent,
                     (t)-> {
                         if(t.getSize() > 2){
                             return (Integer)t.getValue(2)>4;

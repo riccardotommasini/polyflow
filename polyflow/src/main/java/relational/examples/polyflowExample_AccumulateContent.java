@@ -50,16 +50,12 @@ public class polyflowExample_AccumulateContent {
         Tick tick = Tick.TIME_DRIVEN;
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
-
+        Table emptyContent = Table.create();
 
         AccumulatorContentFactory<Tuple, Tuple, Table> accumulatorContentFactory = new AccumulatorContentFactory<>(
                 t->t,
-                (t, r)->{
-                    if(r == null){
-                        r = Table.create();
-                    }
-                    if(t == null)
-                        return r;
+                (t)->{
+                    Table r = Table.create();
 
                     for(int i = 0; i<t.getSize(); i++){
                         if(t.getValue(i) instanceof Long){
@@ -113,12 +109,14 @@ public class polyflowExample_AccumulateContent {
                         }
                     }
                     return r;
-                }
+                },
+                (r1, r2)->r1.isEmpty()? r2:r1.append(r2),
+                emptyContent
+
         );
 
         TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
-        //TableWrapper because we need the interface convertible on the W generic type
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
         StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =

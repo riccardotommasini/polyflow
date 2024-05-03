@@ -1,16 +1,14 @@
-/*
 package operators.s2r;
 
 import graph.jena.content.ValidatedContent;
 import graph.jena.content.ValidatedGraph;
-import graph.jena.content.ValidatedGraphContentFactory;
+import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
-import org.apache.jena.graph.Triple;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.GraphMemFactory;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.Jena;
+import org.apache.jena.graph.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.junit.Test;
@@ -19,11 +17,14 @@ import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
+import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
+import relational.content.AccumulatorContent;
+import relational.content.AccumulatorContentFactory;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -41,24 +42,47 @@ public class StreamToRelationOpTest {
         Time instance = new TimeImpl(0);
         Graph shapesGraph = RDFDataMgr.loadGraph(StreamToRelationOpTest.class.getResource("/shapes.ttl").getPath());
         Shapes shapes = Shapes.parse(shapesGraph);
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
+        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
 
-        ValidatedGraphContentFactory validatedGraphContentFactory = new ValidatedGraphContentFactory(instance, shapes);
 
-        TimeVaryingFactory<ValidatedGraph> tvFactory = new TimeVaryingFactoryJena();
+        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
+                (g)->g,
+                (g)->{
+                    JenaOperandWrapper r = new JenaOperandWrapper();
+                    r.setContent(new ValidatedGraph(g, g));
+                    return r;
+                },
+                (r1, r2)->{
+                    JenaOperandWrapper result = new JenaOperandWrapper();
+                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
+                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
+                    Graph res_content = m1.union(m2).getGraph();
 
-        StreamToRelationOperator<Graph, ValidatedGraph> s2rOp =
+                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
+                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
+                    Graph res_report = m1.union(m2).getGraph();
+                    result.setContent(new ValidatedGraph(res_content, res_report ));
+                    return result;
+                },
+                emptyContent
+        );
+
+        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
+
+        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp =
                 new StreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
-                        validatedGraphContentFactory,
+                        accumulatorContentFactory,
                         tvFactory,
                         report_grain,
                         report,
                         1000,
                         1000);
 
-        TimeVarying<ValidatedGraph> tvg = s2rOp.get();
+        TimeVarying<JenaOperandWrapper> tvg = s2rOp.get();
 
         //CRAFT A GRAPH TO SIMULATE THE INPUT
         Graph graph1 = GraphMemFactory.createGraphMem();
@@ -86,12 +110,12 @@ public class StreamToRelationOpTest {
         //WHEN THE EVENT WITH TS=4000 ARRIVES, THE WINDOW [3000, 4000) DOES NOT CLOSE, BUT THE WINDOW [2000, 3000) CLOSES AND IT'S REPORTED WITH ITS CONTENT (GRAPH 1)
 
         tvg.materialize(4000);
-        ValidatedContent<Graph, ValidatedGraph> content = validatedGraphContentFactory.create();
+        Content<Graph, Graph, JenaOperandWrapper> content = accumulatorContentFactory.create();
         content.add(graph1);
-        ValidatedGraph expected = content.coalesce();
+        JenaOperandWrapper expected = content.coalesce();
 
-        expected.getContent().stream().map(Triple.class::cast).forEach(triple ->
-                assertTrue(tvg.get().content.contains(triple)));
+        expected.getContent().content.stream().map(Triple.class::cast).forEach(triple ->
+                assertTrue(tvg.get().getContent().content.contains(triple)));
 
         Graph graph3 = GraphMemFactory.createGraphMem();
         graph3.add(NodeFactory.createURI("http://test/S2"), p, NodeFactory.createURI("http://test/Green"));
@@ -104,7 +128,7 @@ public class StreamToRelationOpTest {
 
         tvg.materialize(5000);
 
-        assertTrue(tvg.get().content.isEmpty());
+        assertTrue(tvg.get().getContent().content.isEmpty());
 
 
         //ADD ANOTHER GRAPH IN THE WINDOW [5000, 6000) TO SEE IF THE APP REPORTS ALL THE CONTENT CORRECTLY
@@ -117,13 +141,15 @@ public class StreamToRelationOpTest {
         //ADD EVENT AT TIME 7000 SO THAT WINDOW [5000, 6000) IS REPORTED
         s2rOp.windowing(Graph.emptyGraph, 7000);
 
-        content = validatedGraphContentFactory.create();
+        content = accumulatorContentFactory.create();
         content.add(graph3);
         content.add(graph4);
         expected = content.coalesce();
 
-        expected.getContent().stream().map(Triple.class::cast).forEach(triple ->
-                assertTrue(tvg.get().content.contains(triple)));
+        tvg.materialize(7000);
+
+        expected.getContent().content.stream().map(Triple.class::cast).forEach(triple ->
+                assertTrue(tvg.get().getContent().content.contains(triple)));
 
         //CHECK THAT ALL THE TIME INSTANTS ADDED ARE IN THE TIME INSTANTS LIST
         assertTrue(s2rOp.time().getEvaluationTimeInstants().size() == 3);
@@ -135,4 +161,3 @@ public class StreamToRelationOpTest {
 
     }
 }
-*/

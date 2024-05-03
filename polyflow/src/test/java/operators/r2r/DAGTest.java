@@ -21,20 +21,20 @@ public class DAGTest {
     public void Test() {
 
         DAG<Table> dag = new DAGImpl<>();
-        IntColumn c1 = IntColumn.create("c3");
+        IntColumn c1 = IntColumn.create("intCol");
         for(int i = 0; i<10; i++){
             c1.append(i);
         }
-        BooleanColumn c2 = BooleanColumn.create("c1");
+        BooleanColumn c2 = BooleanColumn.create("joinCol");
         for(int i =0; i<10; i++){
             c2.append(i%2==0);
         }
 
-        IntColumn c3 = IntColumn.create("foo");
+        IntColumn c3 = IntColumn.create("intCol");
         for(int i = 0; i<2; i++){
             c3.append(i);
         }
-        BooleanColumn c4 = BooleanColumn.create("c1");
+        BooleanColumn c4 = BooleanColumn.create("joinCol");
         for(int i =0; i<2; i++){
             c4.append(i%2==0);
         }
@@ -45,8 +45,8 @@ public class DAGTest {
         tvgNames.add("test1");
         tvgNames.add("test2");
 
-        CustomRelationalQuery selection = new CustomRelationalQuery(5, "c3");
-        CustomRelationalQuery join = new CustomRelationalQuery("c1");
+        CustomRelationalQuery selection = new CustomRelationalQuery(5, "intCol");
+        CustomRelationalQuery join = new CustomRelationalQuery("joinCol");
 
         RelationToRelationOperator<Table> r2rSelection = new R2RjtablesawImpl(selection, Collections.singletonList("test1"), false, "selection", "empty");
         RelationToRelationOperator<Table> r2rJoin = new R2RjtablesawImpl(join, tvgNames, true, "empty", "join");

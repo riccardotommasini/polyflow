@@ -1,13 +1,12 @@
-package graph.jena.examples;
-
-import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.JenaBindingStream;
 import graph.jena.JenaStreamGenerator;
-import graph.jena.sds.SDSJena;
 import graph.jena.content.ValidatedGraph;
+import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.examples.polyflowExample;
 import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
-import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
+import graph.jena.sds.SDSJena;
+import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
@@ -16,7 +15,8 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.sparql.engine.binding.Binding;
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
+import org.junit.Test;
+import static junit.framework.TestCase.*;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -31,36 +31,35 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import org.streamreasoning.rsp4j.api.stream.metadata.StreamSchema;
 import relational.content.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.DAGImpl;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class polyflowExample_twoStreams {
+public class TaskTest {
 
-    public static void main(String [] args) throws InterruptedException {
+    @Test
+    public void Test(){
+
+
+         /*------INITIALIZATION OF COMPONENTS USED BY THE TASK------*/
+
 
         JenaStreamGenerator generator = new JenaStreamGenerator();
-
         DataStream<Graph> inputStreamColors = generator.getStream("http://test/stream1");
         DataStream<Graph> inputStreamNumbers = generator.getStream("http://test/stream2");
-        // define output stream
         JenaBindingStream outStream = new JenaBindingStream("out");
-
-        // Engine properties
         Report report = new ReportImpl();
         report.add(new OnWindowClose());
-
         Tick tick = Tick.TIME_DRIVEN;
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
-
         Graph shapesGraph = RDFDataMgr.loadGraph(polyflowExample.class.getResource("/shapes.ttl").getPath());
         Shapes shapes = Shapes.parse(shapesGraph);
-
         JenaOperandWrapper emptyContent = new JenaOperandWrapper();
         emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
+        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
 
         AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
                 (g)->g,
@@ -83,11 +82,6 @@ public class polyflowExample_twoStreams {
                 },
                 emptyContent
         );
-
-        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
-
-        ContinuousProgram<Graph, Graph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
-
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one =
                 new StreamToRelationOpImpl<>(
                         tick,
@@ -117,11 +111,14 @@ public class polyflowExample_twoStreams {
         List<String> s2r_names = new ArrayList<>();
         s2r_names.add(s2rOp_one.getName());
         s2r_names.add(s2rOp_two.getName());
-
         RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, false, "selection", "empty");
         RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new R2RJenaImpl("", s2r_names, true, "empty", "concatenation");
+        RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
 
-       RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
+
+        /*-----END OF INITIALIZATION-----*/
+
+
 
         Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_one, inputStreamColors)
@@ -132,22 +129,25 @@ public class polyflowExample_twoStreams {
                 .addDAG(new DAGImpl<>())
                 .addSDS(new SDSJena())
                 .addTime(instance);
-        task.initialize();
-        task.getDAG().printDAG();
-        List<DataStream<Graph>> inputStreams = new ArrayList<>();
-        inputStreams.add(inputStreamColors);
-        inputStreams.add(inputStreamNumbers);
 
-        List<DataStream<Binding>> outputStreams = new ArrayList<>();
-        outputStreams.add(outStream);
+        //Create a dummy S2R to check if the Task correctly throws an exception when an S2R with the same name is already present
+        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy =
+                new StreamToRelationOpImpl<>(
+                        tick,
+                        instance,
+                        "w2",
+                        accumulatorContentFactory,
+                        tvFactory,
+                        report_grain,
+                        report,
+                        500,
+                        500);
 
-        cp.buildTask(task, inputStreams, outputStreams);
 
-        outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
-
-        generator.startStreaming();
-        Thread.sleep(20_000);
-        generator.stopStreaming();
     }
 
+    @Test
+    public void noDuplicateTests(){
+
+    }
 }

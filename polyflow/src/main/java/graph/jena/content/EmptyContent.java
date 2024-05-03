@@ -1,15 +1,13 @@
-/*
 package graph.jena.content;
 
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 
-public class EmptyContent<I, O> implements Content<I, O> {
+public class EmptyContent<I,W,R> implements Content<I, W, R> {
 
     long ts = System.currentTimeMillis();
-    private O o;
+    private R o;
 
-
-    public EmptyContent(O o) {
+    public EmptyContent(R o) {
         this.o = o;
     }
 
@@ -26,8 +24,7 @@ public class EmptyContent<I, O> implements Content<I, O> {
 
 
     @Override
-    public O coalesce() {
+    public R coalesce() {
         return o;
     }
 }
-*/

@@ -52,6 +52,12 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     @Override
     public Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W, R> s2rOperator, DataStream<I> inputStream) {
+
+        for(StreamToRelationOperator<I, W, R> op : s2rOperators){
+            if(op.getName().equals(s2rOperator.getName())){
+                throw new RuntimeException("S2R Operator with same name already present");
+            }
+        }
         this.s2rOperators.add(s2rOperator);
         if(!registeredS2R.containsKey(inputStream)){
             registeredS2R.put(inputStream, new ArrayList<>());

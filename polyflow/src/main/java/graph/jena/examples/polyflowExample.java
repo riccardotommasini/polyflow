@@ -59,31 +59,29 @@ public class polyflowExample {
         Graph shapesGraph = RDFDataMgr.loadGraph(polyflowExample.class.getResource("/shapes.ttl").getPath());
         Shapes shapes = Shapes.parse(shapesGraph);
 
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
+        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
+
         AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
                 (g)->g,
-                (g, r)->{
-                    if(g == null){
-                        r = new JenaOperandWrapper();
-                        r.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
-                        return r;
-                    }
-                    if(r ==  null){
-                        r = new JenaOperandWrapper();
-                        r.setContent(new ValidatedGraph(g, g));
-                        return r;
-                    }
-                    else{
-                        Model m1 = ModelFactory.createModelForGraph(r.getContent().content);
-                        Model m2 = ModelFactory.createModelForGraph(g);
-                        Graph res = m1.union(m2).getGraph();
-                        r.getContent().content = res;
+                (g)->{
+                    JenaOperandWrapper r = new JenaOperandWrapper();
+                    r.setContent(new ValidatedGraph(g, g));
+                    return r;
+                },
+                (r1, r2)->{
+                    JenaOperandWrapper result = new JenaOperandWrapper();
+                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
+                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
+                    Graph res_content = m1.union(m2).getGraph();
 
-                        m1 = ModelFactory.createModelForGraph(r.getContent().report);
-                        res = m1.union(m2).getGraph();
-                        r.getContent().report = res;
-                        return r;
-                    }
-                }
+                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
+                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
+                    Graph res_report = m1.union(m2).getGraph();
+                    result.setContent(new ValidatedGraph(res_content, res_report ));
+                    return result;
+                },
+                emptyContent
         );
 
         TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
