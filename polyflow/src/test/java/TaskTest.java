@@ -15,8 +15,8 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.sparql.engine.binding.Binding;
-import org.junit.Test;
-import static junit.framework.TestCase.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -33,16 +33,17 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.DAGImpl;
+import relational.stream.RowStream;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaskTest {
 
-    @Test
-    public void Test(){
 
+    Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
 
+    public void initializeTask(Task<Graph, Graph, JenaOperandWrapper, Binding> task){
          /*------INITIALIZATION OF COMPONENTS USED BY THE TASK------*/
 
 
@@ -117,11 +118,7 @@ public class TaskTest {
 
 
         /*-----END OF INITIALIZATION-----*/
-
-
-
-        Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
-        task = task.addS2ROperator(s2rOp_one, inputStreamColors)
+        task.addS2ROperator(s2rOp_one, inputStreamColors)
                 .addS2ROperator(s2rOp_two, inputStreamNumbers)
                 .addR2ROperator(r2rOp)
                 .addR2ROperator(r2rBinaryOp)
@@ -129,6 +126,45 @@ public class TaskTest {
                 .addDAG(new DAGImpl<>())
                 .addSDS(new SDSJena())
                 .addTime(instance);
+
+
+
+
+    }
+
+    @Test
+    public void noDuplicateTests(){
+
+        Report report = new ReportImpl();
+        report.add(new OnWindowClose());
+        Tick tick = Tick.TIME_DRIVEN;
+        ReportGrain report_grain = ReportGrain.SINGLE;
+        Time instance = new TimeImpl(0);
+        initializeTask(this.task);
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
+        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
+        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
+        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
+                (g)->g,
+                (g)->{
+                    JenaOperandWrapper r = new JenaOperandWrapper();
+                    r.setContent(new ValidatedGraph(g, g));
+                    return r;
+                },
+                (r1, r2)->{
+                    JenaOperandWrapper result = new JenaOperandWrapper();
+                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
+                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
+                    Graph res_content = m1.union(m2).getGraph();
+
+                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
+                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
+                    Graph res_report = m1.union(m2).getGraph();
+                    result.setContent(new ValidatedGraph(res_content, res_report ));
+                    return result;
+                },
+                emptyContent
+        );
 
         //Create a dummy S2R to check if the Task correctly throws an exception when an S2R with the same name is already present
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy =
@@ -144,10 +180,7 @@ public class TaskTest {
                         500);
 
 
-    }
 
-    @Test
-    public void noDuplicateTests(){
-
+        assertThrows(RuntimeException.class, ()->task.addS2ROperator(s2rOp_dummy, new RowStream<>("foo")));
     }
 }

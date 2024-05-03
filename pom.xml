@@ -52,12 +52,7 @@
                 <artifactId>lombok</artifactId>
                 <version>1.18.20</version>
             </dependency>
-            <dependency>
-                <groupId>org.jetbrains.externalAnnotations.junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.12-an1</version>
-                <scope>test</scope>
-            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

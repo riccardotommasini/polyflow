@@ -8,8 +8,8 @@ import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.IntColumn;
 import tech.tablesaw.api.Table;
-import org.junit.Test;
-import static junit.framework.TestCase.assertTrue;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;

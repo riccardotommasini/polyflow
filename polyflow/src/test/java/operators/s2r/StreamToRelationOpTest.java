@@ -11,7 +11,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
@@ -26,7 +26,7 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import relational.content.AccumulatorContent;
 import relational.content.AccumulatorContentFactory;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class StreamToRelationOpTest {
 
