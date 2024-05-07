@@ -11,7 +11,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
     Map<String, DAGNode<R>> root = new HashMap<>();
 
-    R result;
+    DAGNode<R> tail;
 
 
     @Override
@@ -29,6 +29,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
                     node = node.getNext();
                 }
                 node.setNext(dagNode);
+                dagNode.addPrev(node);
             }
         }
 
@@ -36,13 +37,25 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
 
     @Override
-    public R eval(String tvgName, R operand) {
+    public void prepare(String tvgName, R operand) {
         if(!root.containsKey(tvgName)){
             throw new RuntimeException("No DAG is available for the specified tvg");
         }
-        this.result = root.get(tvgName).eval(operand);
-        return result;
+        root.get(tvgName).addOperand(operand);
+    }
 
+    @Override
+    public void initialize(){
+        DAGNode<R> tmp  = root.values().stream().findFirst().get();
+        while(tmp.hasNext()){
+            tmp = tmp.getNext();
+        }
+        this.tail = tmp;
+    }
+
+    @Override
+    public R eval(){
+        return this.tail.eval();
     }
 
     @Override

@@ -14,12 +14,22 @@ public interface DAG<R extends Iterable<?>> {
     /**
      * Begins the computation of the specified path of the DAG, returns the (possibly partial) result of that branch of computation
      */
-   R eval(String tvgName, R operand);
+   R eval();
 
+    /**
+     * Prepares the DAG by setting the starting value from which to start the computation (operand) for each head of the DAG
+     */
+   void prepare(String tvgName, R operand);
     /**
      * Clears the DAG from previous computation's partial results
      */
    void clear();
+
+    /**
+     * Initializes the DAG by traversing it and storing the last element (tail) to begin the computation backwards from there efficiently
+     */
+   void initialize();
+
 
     /**
      * Prints the DAG

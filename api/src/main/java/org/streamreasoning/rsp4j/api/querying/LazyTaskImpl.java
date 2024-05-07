@@ -130,6 +130,7 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
                 dag.addToDAG(op.getTvgNames(), op);
             }
         }
+        dag.initialize();
 
     }
 

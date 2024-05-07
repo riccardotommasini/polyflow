@@ -144,6 +144,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
                dag.addToDAG(op.getTvgNames(), op);
            }
        }
+       dag.initialize();
 
     }
 
@@ -188,8 +189,9 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         this.sds.materialize(ts);
         R result = null;
         for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
-            result = dag.eval(tvg.iri(), tvg.get());
+            dag.prepare(tvg.iri(), tvg.get());
         }
+        result = dag.eval();
         dag.clear();
         if(result == null){
             throw new RuntimeException("Result of DAG computation is null");

@@ -11,9 +11,9 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
     private RelationToRelationOperator<R> r2rOperator;
     private List<String> operandsNames;
     private List<R> operands = new ArrayList<>();
-    private R partialRes;
     private boolean isBinary;
     private DAGNode<R> next;
+    private List<DAGNode<R>> prev;
 
     private String opName;
 
@@ -21,6 +21,7 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
         this.r2rOperator = r2rOperator;
         this.operandsNames = operandsNames;
         this.isBinary = isBinary;
+        this.prev = new ArrayList<>();
     }
 
     @Override
@@ -35,7 +36,7 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
 
     @Override
     public R getPartialRes() {
-       return this.partialRes;
+       return null;
     }
     @Override
     public boolean isBinary() {
@@ -56,56 +57,57 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
         this.next = next;
     }
     @Override
-    public boolean hasNext(){
-        return this.next != null;
+    public void addOperand(R operand){this.operands.add(operand);}
+
+    @Override
+    public void addPrev(DAGNode<R> prev){
+        this.prev.add(prev);
     }
     @Override
     public DAGNode<R> getNext(){
         return this.next;
     }
     @Override
+    public List<DAGNode<R>> getPrev(){
+        return this.prev;
+    }
+    @Override
+    public boolean hasNext(){
+        return this.next != null;
+    }
+    @Override
+    public boolean hasPrev(){
+        return !this.prev.isEmpty();
+    }
+    @Override
     public void clear(){
        this.operands = new ArrayList<>();
-       this.partialRes = null;
     }
 
     @Override
-    public R eval(R operand){
-
-        R result;
+    public R eval(){
 
         //Operator unary, keep applying operations on the DAG and store the result of the current node for provenance reasons
         if(!isBinary){
-            partialRes = this.r2rOperator.evalUnary(operand);
-            if(hasNext()) {
-                result = next.eval(partialRes);
+            if(hasPrev()){
+                return this.r2rOperator.evalUnary(prev.get(0).eval());
             }
-            else result = partialRes;
+
+            else {
+                return this.r2rOperator.evalUnary(operands.get(0));
+            }
+
         }
+
         //Operator is binary
         else{
-            //if we receive the first operand we append it and return it as a result (won't be used)
-           if(this.operands.isEmpty()){
-               this.operands.add(operand);
-               result = operand;
-           }
-
-           //If instead we receive the second operand, we can proceed with the binary R2R computation and keep going along the DAG chain
-           else if(this.operands.size() == 1){
-               this.operands.add(operand);
-               partialRes = this.r2rOperator.evalBinary(this.operands.get(0), this.operands.get(1));
-               if(hasNext()) {
-                   result = next.eval(partialRes);
-               }
-               else result = partialRes;
-           }
-
-           else{
-               throw new RuntimeException("Too many operands to R2R operator");
-           }
-
+            if(hasPrev()) {
+                return this.r2rOperator.evalBinary(prev.get(0).eval(), prev.get(1).eval());
+            }
+            else{
+                return this.r2rOperator.evalBinary(operands.get(0), operands.get(1));
+            }
         }
-        return result;
 
     }
 

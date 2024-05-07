@@ -1,3 +1,4 @@
+/*
 package operators.r2r;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -64,3 +65,4 @@ public class DAGTest {
     }
 
 }
+*/

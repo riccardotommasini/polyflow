@@ -19,8 +19,9 @@ public class LazyTimeVarying<R extends Iterable<?>> implements TimeVarying<R> {
     public void materialize(long ts) {
         this.sds.materialize(ts);
         for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
-            content = dag.eval(tvg.iri(), tvg.get());
+            dag.prepare(tvg.iri(), tvg.get());
         }
+        content = dag.eval();
         dag.clear();
         if(content == null){
             throw new RuntimeException("Result of DAG computation is null");
