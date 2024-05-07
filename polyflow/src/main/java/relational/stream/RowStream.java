@@ -19,7 +19,8 @@ public class RowStream<X> implements DataStream<X> {
     }
     @Override
     public void addConsumer(Consumer<X> windowAssigner) {
-        this.consumers.add(windowAssigner);
+        if(!consumers.contains(windowAssigner))
+            this.consumers.add(windowAssigner);
     }
 
     @Override

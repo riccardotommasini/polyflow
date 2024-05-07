@@ -1,12 +1,12 @@
 package org.streamreasoning.rsp4j.api.querying;
 
 import org.apache.log4j.Logger;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
-import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
+import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
@@ -14,13 +14,10 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O>{
-
-
+public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O>{
     private static final Logger log = Logger.getLogger(TaskImpl.class);
     private List<StreamToRelationOperator<I, W, R>> s2rOperators;
     private List<RelationToRelationOperator<R>> r2rOperators;
-    private RelationToStreamOperator<R, O> r2sOperator;
     private Map<DataStream<I>, List<StreamToRelationOperator<I, W, R>>> registeredS2R;
     private Time time;
 
@@ -28,7 +25,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     private SDS<R> sds;
 
-    public TaskImpl(){
+    public LazyTaskImpl(){
 
         this.s2rOperators = new ArrayList<>();
         this.r2rOperators = new ArrayList<>();
@@ -47,7 +44,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     @Override
     public RelationToStreamOperator<R, O> getR2Ss() {
-        return r2sOperator;
+        throw new RuntimeException("R2S not available in pull query");
     }
 
     @Override
@@ -77,8 +74,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     @Override
     public Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator) {
-        this.r2sOperator= r2sOperator;
-        return this;
+        throw new RuntimeException("R2S operator not available in pull query");
     }
 
     @Override
@@ -122,34 +118,24 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
             }
         }
 
-       /*
-         here we assume that when we encounter a binary R2R operator, all of the previous operators in the dag of both operands have been already added
-         Moreover, after a binary operator, if more R2R needs to be computed, we add them as unary operators with the tvg name of the first operand of the
-         binary R2R, in order to be consistent with the DAG shape.
 
-         tableA: o -> o -> o -> \
-                                 O -> o this last 'o' will be an R2R operator with the tvg name tableA, so it will only be added once to the DAG
-         tableB: o -> o -> o -> /
-
-       */
-
-       for(RelationToRelationOperator<R> op : r2rOperators){
-           if(!op.isBinary()) {
-               for (String tvgName : op.getTvgNames()) {
-                   dag.addToDAG(Collections.singletonList(tvgName), op);
-               }
-           }
-           else {
-               //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
-               dag.addToDAG(op.getTvgNames(), op);
-           }
-       }
+        for(RelationToRelationOperator<R> op : r2rOperators){
+            if(!op.isBinary()) {
+                for (String tvgName : op.getTvgNames()) {
+                    dag.addToDAG(Collections.singletonList(tvgName), op);
+                }
+            }
+            else {
+                //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
+                dag.addToDAG(op.getTvgNames(), op);
+            }
+        }
 
     }
 
     @Override
-    public TimeVarying<R> getLazyEvaluation() {
-        throw new RuntimeException("Lazy evaluation not available for push queries");
+    public TimeVarying<R> getLazyEvaluation(){
+        return new LazyTimeVarying<>(this.sds, this.dag);
     }
 
     @Override
@@ -163,43 +149,20 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     @Override
     public Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
 
+        if(registeredS2R.get(inputStream).isEmpty()){
+            throw new RuntimeException("No S2R operator interested in the Stream");
+        }
+
         Collection<Collection<O>> res = new ArrayList<>();
-        if(registeredS2R.containsKey(inputStream)) {
-            for (StreamToRelationOperator<I, W, R> s2r : registeredS2R.get(inputStream)) {
-                s2r.windowing(element, timestamp);
-            }
+
+        for(StreamToRelationOperator<I, W, R> s2r : registeredS2R.get(inputStream)){
+            s2r.windowing(element, timestamp);
         }
 
-        while(time.hasEvaluationInstant()){
-            long t = time.getEvaluationTime().t;
-            log.debug("Evaluation time instant found with t= "+t+", R2R computation will begin");
-            R partialRes = eval(t);
-            res.add(r2sOperator.eval(partialRes, timestamp).collect(Collectors.toList()));
-        }
-
-        evictWindows();
+        //Time instants are handled by the continuous program in the case of pull queries
+        //Windows should be also evicted by the continuous program
 
         return res;
 
     }
-
-    private R eval(long ts){
-
-        this.sds.materialize(ts);
-        R result = null;
-        for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
-            result = dag.eval(tvg.iri(), tvg.get());
-        }
-        dag.clear();
-        if(result == null){
-            throw new RuntimeException("Result of DAG computation is null");
-        }
-        return result;
-
-
-    }
-
-
-
-
 }

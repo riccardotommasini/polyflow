@@ -57,6 +57,7 @@ public class TimeImpl implements Time {
 
     }
 
+    @Override
     public boolean hasEvaluationInstant(){
         return !timeInstants.isEmpty();
     }

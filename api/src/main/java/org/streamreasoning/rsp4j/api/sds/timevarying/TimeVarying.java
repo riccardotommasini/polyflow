@@ -8,7 +8,8 @@ public interface TimeVarying<E> {
 
     String iri();
 
-    //Empty string is considered a name?
+    void setIri(String name);
+
     default boolean named() {
         return iri() != null;
     }

@@ -7,7 +7,7 @@ import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 public class TimeVaryingObjectjtablesaw<R> implements TimeVarying<R> {
 
     private final StreamToRelationOperator<?, ?, R> op;
-    private final String name;
+    private String name;
     private R content;
 
     public TimeVaryingObjectjtablesaw(StreamToRelationOperator<?, ?, R> op, String name) {
@@ -33,6 +33,11 @@ public class TimeVaryingObjectjtablesaw<R> implements TimeVarying<R> {
     @Override
     public String iri() {
         return name;
+    }
+
+    @Override
+    public void setIri(String name) {
+        this.name = name;
     }
 
 }

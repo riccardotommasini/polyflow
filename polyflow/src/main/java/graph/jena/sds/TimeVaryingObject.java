@@ -1,6 +1,7 @@
 package graph.jena.sds;
 
 import org.apache.commons.rdf.api.IRI;
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
@@ -8,7 +9,7 @@ import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 public class TimeVaryingObject<R> implements TimeVarying<R> {
 
     private final StreamToRelationOperator<?, ?, R> op;
-    private final IRI name;
+    private IRI name;
     private R content;
 
     public TimeVaryingObject(StreamToRelationOperator<?, ?, R> op, IRI name) {
@@ -34,6 +35,11 @@ public class TimeVaryingObject<R> implements TimeVarying<R> {
     @Override
     public String iri() {
         return name.getIRIString();
+    }
+
+    @Override
+    public void setIri(String name) {
+        this.name = RDFUtils.createIRI(name);
     }
 
 

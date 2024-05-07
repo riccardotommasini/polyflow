@@ -3,6 +3,7 @@ package org.streamreasoning.rsp4j.api.coordinators;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.querying.Task;
+import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.util.*;
@@ -11,13 +12,19 @@ import java.util.*;
 public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
 
     List<Task<I, W, R, O>> taskList;
+    List<Task<I, W, R, O>> viewList;
+    Map<DataStream<I>, List<Task<I, W, R, O>>> registeredViews;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
+    Map<Task<I, W, R, O>, Task<I, W, R, O>> mapTaskView;
     Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap;
 
 
     public ContinuousProgram(){
         this.taskList = new ArrayList<>();
+        this.viewList = new ArrayList<>();
         this.registeredTasks = new HashMap<>();
+        this.registeredViews = new HashMap<>();
+        this.mapTaskView = new HashMap<>();
         this.taskToOutMap = new HashMap<>();
     }
 
@@ -31,6 +38,27 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
         this.taskList.add(task);
         inputStreams.forEach(input -> addInputStream(input, task));
         outputStreams.forEach(output -> addOutputStream(output, task));
+    }
+
+    public void buildView(Task<I, W, R, O> view, List<DataStream<I>> inputStreams){
+        this.viewList.add(view);
+        inputStreams.forEach(input->addInputStreamViews(input, view));
+    }
+
+    private void addInputStreamViews(DataStream<I> inputStream, Task<I, W, R, O> view){
+        inputStream.addConsumer(this);
+        if(!registeredViews.containsKey(inputStream)){
+            registeredViews.put(inputStream, new ArrayList<>());
+        }
+        if(!registeredViews.get(inputStream).contains(view)){
+            registeredViews.get(inputStream).add(view);
+        }
+    }
+
+    public void bindTaskToView(Task<I, W, R, O> task, Task<I, W, R, O> view){
+        //1 to 1 map task-view for the time being (One view can only be consumed by one task)
+        mapTaskView.put(view, task);
+
     }
 
     /**
@@ -70,6 +98,16 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
     @Override
     public void notify(DataStream<I> inputStream, I element, long timestamp) {
 
+        if(registeredViews.containsKey(inputStream)) {
+            for (Task<I, W, R, O> v : registeredViews.get(inputStream)) {
+                v.elaborateElement(inputStream, element, timestamp);
+                while (v.getTime().hasEvaluationInstant()) {
+                    TimeInstant et = v.getTime().getEvaluationTime();
+                    mapTaskView.get(v).getTime().addEvaluationTimeInstants(et);
+                }
+            }
+        }
+
         for(Task<I, W, R, O> t : registeredTasks.get(inputStream)){
             //elaborateElement will transform R to Collection<O> using the task's r2s operators
            Collection<Collection<O>> result = t.elaborateElement(inputStream, element, timestamp);
@@ -82,6 +120,11 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
 
             }
         }
+
+        for(Task<I, W, R, O> v : viewList){
+            v.evictWindows();
+        }
+
 
     }
 

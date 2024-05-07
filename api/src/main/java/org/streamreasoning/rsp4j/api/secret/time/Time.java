@@ -23,6 +23,6 @@ public interface Time {
      */
     public TimeInstant getEvaluationTime();
 
-    public boolean hasEvaluationInstant();
+     boolean hasEvaluationInstant();
 
 }

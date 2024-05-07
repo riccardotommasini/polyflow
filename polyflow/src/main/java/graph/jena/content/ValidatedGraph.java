@@ -4,7 +4,7 @@ import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.graph.Graph;
 import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 
-public class ValidatedGraph implements Convertible<JenaOperandWrapper> {
+public class ValidatedGraph {
 
     public Graph report;
     public Graph content;
@@ -21,15 +21,4 @@ public class ValidatedGraph implements Convertible<JenaOperandWrapper> {
         return this.content;
     }
 
-    @Override
-    public void compute() {
-
-    }
-
-    @Override
-    public JenaOperandWrapper convertToR() {
-        JenaOperandWrapper wrapper = new JenaOperandWrapper();
-        wrapper.setContent(this);
-        return wrapper;
-    }
 }
