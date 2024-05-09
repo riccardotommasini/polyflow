@@ -99,10 +99,14 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
 
         }
 
-        //Operator is binary
+        //Operator is binary, we have different possible configurations
         else{
             if(hasPrev()) {
-                return this.r2rOperator.evalBinary(prev.get(0).eval(), prev.get(1).eval());
+                if(this.prev.size() > 1)
+                    return this.r2rOperator.evalBinary(prev.get(0).eval(), prev.get(1).eval());
+                else{
+                    return this.r2rOperator.evalBinary( operands.get(0), prev.get(0).eval());
+                }
             }
             else{
                 return this.r2rOperator.evalBinary(operands.get(0), operands.get(1));
