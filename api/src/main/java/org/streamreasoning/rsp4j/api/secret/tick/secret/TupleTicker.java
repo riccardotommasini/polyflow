@@ -3,6 +3,7 @@ package org.streamreasoning.rsp4j.api.secret.tick.secret;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
+import org.streamreasoning.rsp4j.api.secret.time.Time;
 
 /**
  * The Tick dimension in our model defines the condition which drives an SPE
@@ -18,14 +19,16 @@ import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 public class TupleTicker implements Ticker {
 
     private final StreamToRelationOperator<?, ?, ?> wa;
+    private Time time;
 
-    public TupleTicker(StreamToRelationOperator<?, ?, ?> wa) {
+    public TupleTicker(StreamToRelationOperator<?, ?, ?> wa, Time time) {
         this.wa = wa;
+        this.time = time;
     }
 
     @Override
     public void tick(long t_e, Window w) {
-        wa.compute(t_e, w);
+        time.setAppTime(t_e);
     }
 }
 

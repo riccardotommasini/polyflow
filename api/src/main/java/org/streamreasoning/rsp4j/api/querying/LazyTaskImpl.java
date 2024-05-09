@@ -160,9 +160,6 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
             s2r.windowing(element, timestamp);
         }
 
-        //Time instants are handled by the continuous program in the case of pull queries
-        //Windows should be also evicted by the continuous program
-
         return res;
 
     }

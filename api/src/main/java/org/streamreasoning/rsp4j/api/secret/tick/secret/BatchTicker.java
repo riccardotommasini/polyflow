@@ -3,6 +3,7 @@ package org.streamreasoning.rsp4j.api.secret.tick.secret;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
+import org.streamreasoning.rsp4j.api.secret.time.Time;
 
 /**
  * The Tick dimension in our model defines the condition which drives an SPE
@@ -22,15 +23,18 @@ public class BatchTicker implements Ticker {
     private int curr = 0;
     private int batch;
 
-    public BatchTicker(StreamToRelationOperator<?, ?, ?> wa) {
+    private Time time;
+
+    public BatchTicker(StreamToRelationOperator<?, ?, ?> wa, Time time) {
         this.wa = wa;
+        this.time = time;
     }
 
     @Override
     public void tick(long t_e, Window w) {
         curr++;
         if (curr == batch) {
-            wa.compute(t_e, w);
+            time.setAppTime(t_e);
             curr = 0;
         }
     }

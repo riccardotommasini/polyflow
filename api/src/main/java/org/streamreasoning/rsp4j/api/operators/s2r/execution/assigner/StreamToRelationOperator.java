@@ -39,8 +39,6 @@ public interface StreamToRelationOperator<I, W, R> {
         return getName() != null;
     }
 
-    Content<I, W, R> compute(long t_e, Window w);
-
     TimeVarying<R> apply();
 
     /**

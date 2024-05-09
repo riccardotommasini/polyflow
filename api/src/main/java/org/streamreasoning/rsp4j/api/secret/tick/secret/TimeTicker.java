@@ -34,7 +34,7 @@ public class TimeTicker implements Ticker {
         if (t_e > time.getAppTime()) {
             //We add the evaluation time instant only if the computation is triggered
             time.addEvaluationTimeInstants(new TimeInstant(t_e));
-            wa.compute(t_e, w);
+            time.setAppTime(t_e);
         }
     }
 

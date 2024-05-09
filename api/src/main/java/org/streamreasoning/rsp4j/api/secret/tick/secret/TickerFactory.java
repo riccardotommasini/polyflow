@@ -9,9 +9,9 @@ public class TickerFactory {
     public static Ticker tick(Tick t, StreamToRelationOperator<?, ?, ?> wa) {
         switch (t) {
             case TUPLE_DRIVEN:
-                return new TupleTicker(wa);
+                return new TupleTicker(wa, wa.time());
             case BATCH_DRIVEN:
-                return new BatchTicker(wa);
+                return new BatchTicker(wa, wa.time());
             case TIME_DRIVEN:
             default:
                 return new TimeTicker(wa, wa.time());

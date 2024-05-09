@@ -135,7 +135,7 @@ public class polyflow_LazyEvaluation {
         StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
                 new StreamToRelationOpImpl<>(
                         tick,
-                        instance,
+                        instance_2,
                         "w2",
                         accumulatorContentFactory,
                         tvFactory,
@@ -164,7 +164,7 @@ public class polyflow_LazyEvaluation {
                 .addR2ROperator(r2rOp)
                 .addSDS(new SDSjtablesaw())
                 .addDAG(new DAGImpl<>())
-                .addTime(instance_2);
+                .addTime(instance);
         materializedView.initialize();
 
 
@@ -177,7 +177,7 @@ public class polyflow_LazyEvaluation {
                 .addR2SOperator(r2sOp)
                 .addSDS(new SDSjtablesaw())
                 .addDAG(new DAGImpl<>())
-                .addTime(instance);
+                .addTime(instance_2);
 
         //Add the materialized view to the interested task
         TimeVarying<Table> view = materializedView.getLazyEvaluation();
@@ -195,7 +195,7 @@ public class polyflow_LazyEvaluation {
         outputStreams.add(outStream);
 
         cp.buildView(materializedView, Collections.singletonList(inputStream_1));
-        cp.buildTask(task, inputStreams, outputStreams);
+        cp.buildTask(task, Collections.singletonList(inputStream_2), outputStreams);
 
         outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
 

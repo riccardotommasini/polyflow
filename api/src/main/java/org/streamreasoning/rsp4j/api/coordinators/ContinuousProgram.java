@@ -55,12 +55,6 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
         }
     }
 
-    public void bindTaskToView(Task<I, W, R, O> task, Task<I, W, R, O> view){
-        //1 to 1 map task-view for the time being (One view can only be consumed by one task)
-        mapTaskView.put(view, task);
-
-    }
-
     /**
      * Maps a task to the inputStream it's interested in and adds the Continuous program as a consumer of the input stream
      * @param inputStream Input stream that the task is interested in
@@ -101,25 +95,22 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
         if(registeredViews.containsKey(inputStream)) {
             for (Task<I, W, R, O> v : registeredViews.get(inputStream)) {
                 v.elaborateElement(inputStream, element, timestamp);
-                while (v.getTime().hasEvaluationInstant()) {
-                    TimeInstant et = v.getTime().getEvaluationTime();
-                    mapTaskView.get(v).getTime().addEvaluationTimeInstants(et);
+            }
+        }
+        if(registeredTasks.containsKey(inputStream)) {
+            for (Task<I, W, R, O> t : registeredTasks.get(inputStream)) {
+                //elaborateElement will transform R to Collection<O> using the task's r2s operators
+                Collection<Collection<O>> result = t.elaborateElement(inputStream, element, timestamp);
+                if (!taskToOutMap.containsKey(t)) {
+                    throw new RuntimeException("Task has no associated output stream");
+                } else {
+                    //If the element triggered a computation and a result is available, insert it in every interested output stream
+                    result.forEach(coll -> coll.forEach(o -> taskToOutMap.get(t).forEach(out -> out.put(o, timestamp))));
+
                 }
             }
         }
 
-        for(Task<I, W, R, O> t : registeredTasks.get(inputStream)){
-            //elaborateElement will transform R to Collection<O> using the task's r2s operators
-           Collection<Collection<O>> result = t.elaborateElement(inputStream, element, timestamp);
-            if(!taskToOutMap.containsKey(t)){
-                throw new RuntimeException("Task has no associated output stream");
-            }
-            else{
-                //If the element triggered a computation and a result is available, insert it in every interested output stream
-                result.forEach(coll -> coll.forEach(o -> taskToOutMap.get(t).forEach(out->out.put(o, timestamp))));
-
-            }
-        }
 
         for(Task<I, W, R, O> v : viewList){
             v.evictWindows();

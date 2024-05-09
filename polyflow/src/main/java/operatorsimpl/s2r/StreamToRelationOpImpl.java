@@ -164,24 +164,8 @@ public class StreamToRelationOpImpl<I, W, R> implements StreamToRelationOperator
                 .filter(w -> report.report(w, getWindowContent(w), t_e, System.currentTimeMillis()))
                 .max(Comparator.comparingLong(Window::getC))
                 .ifPresent(window -> ticker.tick(t_e, window));
-
-
     }
 
-
-
-    @Override
-    public Content<I, W, R> compute(long t_e, Window w) {
-        Content<I, W, R> content = getWindowContent(w);
-        time.setAppTime(t_e);
-        log.debug("Report [" + w.getO() + "," + w.getC() + ") with Content " + content + "");
-        return content;
-    }
-
-    /*@Override
-    public StreamToRelationOp<I, W> link(ContinuousQueryExecution<I, W, ?, ?> context) {
-        return null;
-    }*/
 
     //TODO: Get and apply do the same thing
     @Override
