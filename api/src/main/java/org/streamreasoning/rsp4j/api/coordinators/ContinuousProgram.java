@@ -15,7 +15,6 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
     List<Task<I, W, R, O>> viewList;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredViews;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
-    Map<Task<I, W, R, O>, Task<I, W, R, O>> mapTaskView;
     Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap;
 
 
@@ -24,7 +23,6 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
         this.viewList = new ArrayList<>();
         this.registeredTasks = new HashMap<>();
         this.registeredViews = new HashMap<>();
-        this.mapTaskView = new HashMap<>();
         this.taskToOutMap = new HashMap<>();
     }
 
@@ -97,6 +95,9 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
                 v.elaborateElement(inputStream, element, timestamp);
             }
         }
+
+
+
         if(registeredTasks.containsKey(inputStream)) {
             for (Task<I, W, R, O> t : registeredTasks.get(inputStream)) {
                 //elaborateElement will transform R to Collection<O> using the task's r2s operators

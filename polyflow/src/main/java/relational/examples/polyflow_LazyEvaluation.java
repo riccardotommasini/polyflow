@@ -181,7 +181,7 @@ public class polyflow_LazyEvaluation {
 
         //Add the materialized view to the interested task
         TimeVarying<Table> view = materializedView.getLazyEvaluation();
-        view.setIri("materialized");
+        view.setIri(materializedViewName);
         task.getSDS().add(view);
 
         task.initialize();
