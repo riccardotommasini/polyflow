@@ -1,4 +1,4 @@
-# Stream Processing Library for Java (RSP4J) ![Alt text](./figs/rsp4jLogo.svg)
+# Stream Processing Library for Java (RSP4J)
 
 
 In this repository, the following projects are present:
