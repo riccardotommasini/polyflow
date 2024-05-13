@@ -6,7 +6,7 @@ Some default implementations are present ([Task](src/main/java/org/streamreasoni
 [ContinuousProgram](src/main/java/org/streamreasoning/rsp4j/api/coordinators/ContinuousProgram.java), [LazyTimeVarying](src/main/java/org/streamreasoning/rsp4j/api/sds/timevarying/LazyTimeVarying.java)),
 but it is possible to redefine these components by using their interfaces.
 
-In [polyflow](./polyflow/Readme.md) it is possible to find custom implementations of various components (operators, TimeVaryingObjects, SDS, DAG etc..), they all use the [default Task](src/main/java/org/streamreasoning/rsp4j/api/querying/TaskImpl.java)
+In [polyflow](../polyflow/Readme.md) it is possible to find custom implementations of various components (operators, TimeVaryingObjects, SDS, DAG etc..), they all use the [default Task](src/main/java/org/streamreasoning/rsp4j/api/querying/TaskImpl.java)
 and [ContinuousProgram](src/main/java/org/streamreasoning/rsp4j/api/coordinators/ContinuousProgram.java) provided in API. Please, refer to these examples in order to better understand how to instantiate and link the various components.
 
 This package is divided as follows:
