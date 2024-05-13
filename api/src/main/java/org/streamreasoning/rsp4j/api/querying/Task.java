@@ -1,7 +1,6 @@
 package org.streamreasoning.rsp4j.api.querying;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
@@ -13,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface Task<I, W, R extends Iterable<?>, O> {
+
     List<StreamToRelationOperator<I, W, R>> getS2Rs();
 
     List<RelationToRelationOperator<R>> getR2Rs();
@@ -51,7 +51,8 @@ public interface Task<I, W, R extends Iterable<?>, O> {
     Time getTime();
 
     /**
-     * Initializes the Task by creating the Time Varying Objects and adds them to the SDS
+     * Initializes the Task by creating the Time Varying Objects and the DAG of the Task.
+     * Adds the Time Varying Objects to the SDS
      */
     void initialize();
 

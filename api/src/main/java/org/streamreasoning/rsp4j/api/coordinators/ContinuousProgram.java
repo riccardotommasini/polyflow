@@ -1,9 +1,7 @@
 package org.streamreasoning.rsp4j.api.coordinators;
 
-import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.querying.Task;
-import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.util.*;
@@ -87,6 +85,12 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
 
     }
 
+    /**
+     * Notifies all the tasks subscribed to the input stream that generated the event
+     * @param inputStream The stream that generated the element
+     * @param element The value that entered the stream
+     * @param timestamp The event time of the element
+     */
     @Override
     public void notify(DataStream<I> inputStream, I element, long timestamp) {
 
@@ -112,7 +116,7 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
             }
         }
 
-
+        //Evict the windows of the views for memory efficiency
         for(Task<I, W, R, O> v : viewList){
             v.evictWindows();
         }

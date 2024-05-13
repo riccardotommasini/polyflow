@@ -4,7 +4,7 @@ package operators.r2r;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import relational.operatorsimpl.r2r.DAGImpl;
+import operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import tech.tablesaw.api.BooleanColumn;
 import tech.tablesaw.api.IntColumn;

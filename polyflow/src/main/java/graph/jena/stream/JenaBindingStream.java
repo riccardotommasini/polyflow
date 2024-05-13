@@ -1,28 +1,28 @@
-package graph.jena;
+package graph.jena.stream;
 
-import org.apache.jena.graph.Graph;
+import org.apache.jena.sparql.engine.binding.Binding;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class JenaRDFStream implements DataStream<Graph> {
+public class JenaBindingStream implements DataStream<Binding> {
 
     protected String stream_uri;
-    protected List<Consumer<Graph>> consumers = new ArrayList<>();
+    protected List<Consumer<Binding>> consumers = new ArrayList<>();
 
-    public JenaRDFStream(String stream_uri) {
+    public JenaBindingStream(String stream_uri) {
         this.stream_uri = stream_uri;
     }
 
     @Override
-    public void addConsumer(Consumer<Graph> c) {
-        consumers.add(c);
+    public void addConsumer(Consumer<Binding> windowAssigner) {
+        consumers.add(windowAssigner);
     }
 
     @Override
-    public void put(Graph e, long ts) {
+    public void put(Binding e, long ts) {
         consumers.forEach(graphConsumer -> graphConsumer.notify(this, e, ts));
     }
 
@@ -30,9 +30,4 @@ public class JenaRDFStream implements DataStream<Graph> {
     public String getName() {
         return stream_uri;
     }
-
-    public String uri() {
-        return stream_uri;
-    }
-
 }

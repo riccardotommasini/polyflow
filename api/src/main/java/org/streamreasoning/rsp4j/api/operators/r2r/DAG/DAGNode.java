@@ -17,11 +17,6 @@ public interface DAGNode<R extends Iterable<?>> {
     List<R> getOperands();
 
     /**
-     * Returns the result of the DAG computation up to (and including) this DAG node
-     */
-    R getPartialRes();
-
-    /**
      * True if the DAG node contains a binary operations, false otherwise
      */
     boolean isBinary();
@@ -62,12 +57,13 @@ public interface DAGNode<R extends Iterable<?>> {
     boolean hasPrev();
 
     /**
-     * If the DAG node does not contain a binary operator, applies the R2R operator and returns the result.
-     * If the DAG node contains a binary operator, the first time the method is called stores the first operand;
-     * The second time applies the binary R2R operation and returns the result
-     */
+     * Computes the result for the current DAG Node
+     **/
     R eval();
 
+    /**
+     * Adds an operand to the current DAG Node
+     */
     void addOperand(R operand);
 
     /**

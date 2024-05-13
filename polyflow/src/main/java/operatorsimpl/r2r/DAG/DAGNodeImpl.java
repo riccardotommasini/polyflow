@@ -1,4 +1,4 @@
-package relational.operatorsimpl.r2r;
+package operatorsimpl.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
@@ -34,10 +34,6 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
        return operands;
     }
 
-    @Override
-    public R getPartialRes() {
-       return null;
-    }
     @Override
     public boolean isBinary() {
         return isBinary;

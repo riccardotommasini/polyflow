@@ -16,10 +16,9 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.content.AccumulatorContentFactory;
 import relational.content.FilterContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import relational.operatorsimpl.r2r.DAGImpl;
+import operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
@@ -29,7 +28,6 @@ import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 

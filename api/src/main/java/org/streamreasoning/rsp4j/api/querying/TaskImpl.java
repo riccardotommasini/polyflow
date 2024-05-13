@@ -3,7 +3,6 @@ package org.streamreasoning.rsp4j.api.querying;
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-import org.streamreasoning.rsp4j.api.operators.s2r.Convertible;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.sds.SDS;
@@ -123,12 +122,12 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         }
 
        /*
-         here we assume that when we encounter a binary R2R operator, all of the previous operators in the dag of both operands have been already added
+         here we assume that when we encounter a binary R2R operator, all of the previous operators in the dag of both operands have been already added to the DAG.
          Moreover, after a binary operator, if more R2R needs to be computed, we add them as unary operators with the tvg name of the first operand of the
          binary R2R, in order to be consistent with the DAG shape.
 
          tableA: o -> o -> o -> \
-                                 O -> o this last 'o' will be an R2R operator with the tvg name tableA, so it will only be added once to the DAG
+                                 O -> o this last 'o' will be a R2R operator with the tvg name tableA, so it will only be added once to the DAG
          tableB: o -> o -> o -> /
 
        */

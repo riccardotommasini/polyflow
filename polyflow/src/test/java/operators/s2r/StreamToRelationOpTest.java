@@ -1,6 +1,5 @@
 package operators.s2r;
 
-import graph.jena.content.ValidatedContent;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.sds.TimeVaryingFactoryJena;

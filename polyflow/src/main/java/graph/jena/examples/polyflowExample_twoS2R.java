@@ -1,8 +1,8 @@
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaOperandWrapper;
-import graph.jena.JenaBindingStream;
-import graph.jena.JenaStreamGenerator;
+import graph.jena.stream.JenaBindingStream;
+import graph.jena.stream.JenaStreamGenerator;
 import graph.jena.sds.SDSJena;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
@@ -32,7 +32,7 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.AccumulatorContentFactory;
-import relational.operatorsimpl.r2r.DAGImpl;
+import operatorsimpl.r2r.DAG.DAGImpl;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -37,8 +37,6 @@ public class AccumulatorContent<I, W, R> implements Content<I, W, R> {
     @Override
     public R coalesce() {
 
-        R result = content.stream().map(f2).reduce(emptyContent,  (x, y) -> sumR.apply(x,y));
-
-        return result;
+        return content.stream().map(f2).reduce(emptyContent,  (x, y) -> sumR.apply(x,y));
     }
 }

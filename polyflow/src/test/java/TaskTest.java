@@ -1,5 +1,5 @@
-import graph.jena.JenaBindingStream;
-import graph.jena.JenaStreamGenerator;
+import graph.jena.stream.JenaBindingStream;
+import graph.jena.stream.JenaStreamGenerator;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.examples.polyflowExample;
@@ -8,7 +8,6 @@ import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import operatorsimpl.s2r.StreamToRelationOpImpl;
-import org.apache.jena.Jena;
 import org.apache.jena.graph.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -32,7 +31,7 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.content.AccumulatorContentFactory;
-import relational.operatorsimpl.r2r.DAGImpl;
+import operatorsimpl.r2r.DAG.DAGImpl;
 import relational.stream.RowStream;
 
 import java.util.ArrayList;

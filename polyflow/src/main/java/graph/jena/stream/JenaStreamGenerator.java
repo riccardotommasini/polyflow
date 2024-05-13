@@ -1,4 +1,4 @@
-package graph.jena;
+package graph.jena.stream;
 
 import org.apache.commons.rdf.api.RDF;
 import org.apache.jena.graph.Graph;
