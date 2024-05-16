@@ -1,39 +1,38 @@
 package relational.examples;
 
-import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-
+import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
-import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import shared.contentimpl.factories.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
+import shared.contentimpl.factories.AccumulatorContentFactory;
+import shared.contentimpl.factories.FirstContentFactory;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
+import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class polyflowExample_AccumulateContent {
-
+public class polyflow_FirstContent {
     public static void main(String [] args) throws InterruptedException {
 
         RowStreamGenerator generator = new RowStreamGenerator();
@@ -52,7 +51,7 @@ public class polyflowExample_AccumulateContent {
         Time instance = new TimeImpl(0);
         Table emptyContent = Table.create();
 
-        AccumulatorContentFactory<Tuple, Tuple, Table> accumulatorContentFactory = new AccumulatorContentFactory<>(
+        FirstContentFactory<Tuple, Tuple, Table> firstContentFactory = new FirstContentFactory<>(
                 t->t,
                 (t)->{
                     Table r = Table.create();
@@ -110,7 +109,6 @@ public class polyflowExample_AccumulateContent {
                     }
                     return r;
                 },
-                (r1, r2)->r1.isEmpty()? r2:r1.append(r2),
                 emptyContent
 
         );
@@ -124,7 +122,7 @@ public class polyflowExample_AccumulateContent {
                         tick,
                         instance,
                         "w1",
-                        accumulatorContentFactory,
+                        firstContentFactory,
                         tvFactory,
                         report_grain,
                         report,
@@ -135,7 +133,7 @@ public class polyflowExample_AccumulateContent {
                         tick,
                         instance,
                         "w2",
-                        accumulatorContentFactory,
+                        firstContentFactory,
                         tvFactory,
                         report_grain,
                         report,
@@ -181,9 +179,4 @@ public class polyflowExample_AccumulateContent {
         //Thread.sleep(20_000);
         //generator.stopStreaming();
     }
-
-
 }
-
-
-

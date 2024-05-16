@@ -1,4 +1,4 @@
-package relational.content;
+package shared.contentimpl.content;
 
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 

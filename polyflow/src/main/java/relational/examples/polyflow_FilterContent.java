@@ -1,6 +1,6 @@
 package relational.examples;
 
-import operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -16,9 +16,9 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.content.FilterContentFactory;
+import shared.contentimpl.factories.FilterContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import operatorsimpl.r2r.DAG.DAGImpl;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawImpl;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;

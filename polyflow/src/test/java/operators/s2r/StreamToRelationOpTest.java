@@ -3,8 +3,7 @@ package operators.s2r;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.sds.TimeVaryingFactoryJena;
-import operatorsimpl.s2r.StreamToRelationOpImpl;
-import org.apache.jena.Jena;
+import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.apache.jena.graph.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -22,8 +21,7 @@ import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
-import relational.content.AccumulatorContent;
-import relational.content.AccumulatorContentFactory;
+import shared.contentimpl.factories.AccumulatorContentFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

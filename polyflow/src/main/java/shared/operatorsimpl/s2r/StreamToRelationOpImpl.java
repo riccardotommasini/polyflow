@@ -1,4 +1,4 @@
-package operatorsimpl.s2r;
+package shared.operatorsimpl.s2r;
 
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
