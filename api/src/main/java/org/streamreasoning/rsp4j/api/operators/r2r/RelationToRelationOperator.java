@@ -14,14 +14,10 @@ import java.util.stream.Stream;
 public interface RelationToRelationOperator<R extends Iterable<?>> {
 
     /**
-     * Unary function of the operator, takes as input an R and applies an operation to return another R
+     * Takes as input one (or two) R and applies an operation to return another R
      */
-    R evalUnary(R dataset);
+    R eval(List<R> datasets);
 
-    /**
-     * Binary function of the operator, takes as input two R and applies an operation to return another R
-     */
-    R evalBinary(R dataset1, R dataset2);
 
     TimeVarying<Collection<R>> apply(SDS<R> sds);
 
@@ -31,25 +27,10 @@ public interface RelationToRelationOperator<R extends Iterable<?>> {
     List<String> getTvgNames();
 
     /**
-     * True if the operator is binary, false otherwise
+     * Returns the name of the partial result of this operator
      */
-    boolean isBinary();
+    String getResName();
 
-    /**
-     * Returns the name of the unary operation (selection, projection ...)
-     */
-    String getUnaryOpName();
-
-    /**
-     * Returns the name of the binary operation (join ..)
-     */
-    String getBinaryOpName();
-
-    SolutionMapping<R> createSolutionMapping(R result);
-
-    default Map<String, RelationToRelationOperator<R>> getR2RComponents(){
-        return Collections.emptyMap();
-    }
 
 }
     

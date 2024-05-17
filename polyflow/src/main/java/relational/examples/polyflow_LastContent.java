@@ -1,3 +1,4 @@
+/*
 package relational.examples;
 
 import org.javatuples.Tuple;
@@ -16,13 +17,12 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import relational.operatorsimpl.r2r.R2RjtablesawImpl;
+import relational.operatorsimpl.r2r.R2RjtablesawJoin;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
-import shared.contentimpl.factories.FirstContentFactory;
 import shared.contentimpl.factories.LastContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
@@ -147,8 +147,8 @@ public class polyflow_LastContent {
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawJoin(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, true, "empty", "join");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
@@ -180,3 +180,4 @@ public class polyflow_LastContent {
         //generator.stopStreaming();
     }
 }
+*/

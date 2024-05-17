@@ -11,15 +11,6 @@ public interface DAGNode<R extends Iterable<?>> {
      */
     List<String> getOperandsNames();
 
-    /**
-     * Returns the operands of this DAG node
-     */
-    List<R> getOperands();
-
-    /**
-     * True if the DAG node contains a binary operations, false otherwise
-     */
-    boolean isBinary();
 
     /**
      * Returns the R2R operator associated with this DAG node
@@ -59,7 +50,7 @@ public interface DAGNode<R extends Iterable<?>> {
     /**
      * Computes the result for the current DAG Node
      **/
-    R eval();
+    R eval(long ts);
 
     /**
      * Adds an operand to the current DAG Node

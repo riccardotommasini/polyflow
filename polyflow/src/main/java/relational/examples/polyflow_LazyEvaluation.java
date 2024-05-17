@@ -1,3 +1,4 @@
+/*
 package relational.examples;
 
 import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
@@ -21,7 +22,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import shared.contentimpl.factories.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
-import relational.operatorsimpl.r2r.R2RjtablesawImpl;
+import relational.operatorsimpl.r2r.R2RjtablesawJoin;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
@@ -152,8 +153,8 @@ public class polyflow_LazyEvaluation {
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawJoin(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, true, "empty", "join");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
@@ -205,3 +206,4 @@ public class polyflow_LazyEvaluation {
     }
 
 }
+*/

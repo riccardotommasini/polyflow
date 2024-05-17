@@ -1,3 +1,4 @@
+/*
 package org.streamreasoning.rsp4j.api.querying;
 
 import org.apache.log4j.Logger;
@@ -164,3 +165,4 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
 
     }
 }
+*/

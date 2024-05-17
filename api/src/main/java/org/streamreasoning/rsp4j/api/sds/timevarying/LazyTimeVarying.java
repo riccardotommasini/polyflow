@@ -1,3 +1,4 @@
+/*
 package org.streamreasoning.rsp4j.api.sds.timevarying;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
@@ -48,3 +49,4 @@ public class LazyTimeVarying<R extends Iterable<?>> implements TimeVarying<R> {
         return true;
     }
 }
+*/

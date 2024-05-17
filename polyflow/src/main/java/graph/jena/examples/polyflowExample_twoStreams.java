@@ -1,3 +1,4 @@
+/*
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaOperandWrapper;
@@ -150,3 +151,4 @@ public class polyflowExample_twoStreams {
     }
 
 }
+*/

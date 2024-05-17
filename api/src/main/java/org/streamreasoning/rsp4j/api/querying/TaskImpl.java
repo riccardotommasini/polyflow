@@ -132,7 +132,13 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
        */
 
-       for(RelationToRelationOperator<R> op : r2rOperators){
+
+
+        dag.addTVGs(sds.asTimeVaryingEs());
+        for (RelationToRelationOperator<R> op : r2rOperators){
+            dag.addToDAG(op);
+        }
+       /*for(RelationToRelationOperator<R> op : r2rOperators){
            if(!op.isBinary()) {
                for (String tvgName : op.getTvgNames()) {
                    dag.addToDAG(Collections.singletonList(tvgName), op);
@@ -142,7 +148,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
                //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
                dag.addToDAG(op.getTvgNames(), op);
            }
-       }
+       }*/
        dag.initialize();
 
     }
@@ -185,12 +191,12 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     private R eval(long ts){
 
-        this.sds.materialize(ts);
+        //this.sds.materialize(ts);
         R result = null;
-        for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
+        /*for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
             dag.prepare(tvg.iri(), tvg.get());
-        }
-        result = dag.eval();
+        }*/
+        result = dag.eval(ts);
         dag.clear();
         if(result == null){
             throw new RuntimeException("Result of DAG computation is null");

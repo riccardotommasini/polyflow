@@ -3,6 +3,7 @@ package shared.operatorsimpl.r2r.DAG;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.*;
 
@@ -14,7 +15,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
     DAGNode<R> tail;
 
 
-    @Override
+   /* @Override
     public void addToDAG(List<String> tvgNames, RelationToRelationOperator<R> op) {
 
         DAGNode<R> dagNode = new DAGNodeImpl<>(op, tvgNames, op.isBinary());
@@ -33,6 +34,32 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
             }
         }
 
+    }*/
+
+
+   @Override
+   public void addToDAG(RelationToRelationOperator<R> op) {
+
+       DAGNode<R> dagNode;
+       if(op.getTvgNames().size()>1) //Binary R2R
+            dagNode = new BinaryDAGNodeImpl<>(op);
+
+       else //Unary R2R
+            dagNode = new UnaryDAGNodeImpl<>(op);
+
+       root.put(op.getResName(), dagNode);
+       for(String prev : op.getTvgNames()){
+           DAGNode<R> node = root.get(prev);
+           node.setNext(dagNode);
+           dagNode.addPrev(node);
+       }
+
+   }
+
+    public void addTVGs(Collection<TimeVarying<R>> sds){
+        for(TimeVarying<R> tvg : sds){
+            root.put(tvg.iri(), new DAGRootNodeImpl<>(tvg));
+        }
     }
 
 
@@ -54,8 +81,8 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
     }
 
     @Override
-    public R eval(){
-        return this.tail.eval();
+    public R eval(long ts){
+        return this.tail.eval(ts);
     }
 
     @Override
@@ -71,7 +98,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
     @Override
     public void printDAG(){
-        Set<DAGNode<R>> printed = new HashSet<>();
+       /* Set<DAGNode<R>> printed = new HashSet<>();
         for(DAGNode<R> node : root.values()){
             while(node != null){
                 if(!printed.contains(node)) {
@@ -86,6 +113,6 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
             }
             System.out.print("\n");
 
-        }
+        }*/
     }
 }

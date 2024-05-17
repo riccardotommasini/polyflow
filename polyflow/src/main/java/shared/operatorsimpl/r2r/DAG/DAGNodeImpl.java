@@ -1,3 +1,4 @@
+/*
 package shared.operatorsimpl.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -81,7 +82,7 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
     }
 
     @Override
-    public R eval(){
+    public R eval(long ts){
 
         //Operator unary, keep applying operations on the DAG and store the result of the current node for provenance reasons
         if(!isBinary){
@@ -112,3 +113,4 @@ public class DAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
     }
 
 }
+*/

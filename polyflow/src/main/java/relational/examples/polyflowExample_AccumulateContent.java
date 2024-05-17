@@ -1,5 +1,6 @@
 package relational.examples;
 
+import relational.operatorsimpl.r2r.R2RjtablesawSelection;
 import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
@@ -20,7 +21,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import shared.contentimpl.factories.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
-import relational.operatorsimpl.r2r.R2RjtablesawImpl;
+import relational.operatorsimpl.r2r.R2RjtablesawJoin;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
@@ -29,6 +30,7 @@ import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -142,15 +144,12 @@ public class polyflowExample_AccumulateContent {
                         1000,
                         1000);
 
-        List<String> s2r_names = new ArrayList<>();
-        s2r_names.add(s2rOp_1.getName());
-        s2r_names.add(s2rOp_2.getName());
 
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "partial_1");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, Arrays.asList(s2rOp_2.getName(), "partial_1"),  "partial_2");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
@@ -178,8 +177,7 @@ public class polyflowExample_AccumulateContent {
         outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
-        //Thread.sleep(20_000);
-        //generator.stopStreaming();
+
     }
 
 
