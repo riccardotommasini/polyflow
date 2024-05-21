@@ -1,6 +1,6 @@
 package relational.examples;
 
-import operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -16,10 +16,10 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.content.FilterContentFactory;
+import shared.contentimpl.factories.FilterContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import operatorsimpl.r2r.DAG.DAGImpl;
-import relational.operatorsimpl.r2r.R2RjtablesawImpl;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
+import relational.operatorsimpl.r2r.R2RjtablesawJoin;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
@@ -125,8 +125,8 @@ public class polyflow_FilterContent {
             //TableWrapper because we need the interface convertible on the W generic type
             ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
-            StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
-                    new StreamToRelationOpImpl<>(
+            CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
+                    new CSPARQLStreamToRelationOpImpl<>(
                             tick,
                             instance,
                             "w1",
@@ -136,8 +136,8 @@ public class polyflow_FilterContent {
                             report,
                             1000,
                             1000);
-            StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
-                    new StreamToRelationOpImpl<>(
+            CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
+                    new CSPARQLStreamToRelationOpImpl<>(
                             tick,
                             instance,
                             "w2",
@@ -154,7 +154,7 @@ public class polyflow_FilterContent {
 
             CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-            RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+            RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, "partial");
 
             RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 

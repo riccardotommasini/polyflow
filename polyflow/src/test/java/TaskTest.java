@@ -7,7 +7,7 @@ import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
-import operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.apache.jena.graph.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -30,8 +30,8 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.content.AccumulatorContentFactory;
-import operatorsimpl.r2r.DAG.DAGImpl;
+import shared.contentimpl.factories.AccumulatorContentFactory;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import relational.stream.RowStream;
 
 import java.util.ArrayList;
@@ -83,7 +83,7 @@ public class TaskTest {
                 emptyContent
         );
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one =
-                new StreamToRelationOpImpl<>(
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
@@ -117,7 +117,7 @@ public class TaskTest {
 
         //Create a dummy S2R to check if the Task correctly throws an exception when an S2R with the same name is already present
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy =
-                new StreamToRelationOpImpl<>(
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",

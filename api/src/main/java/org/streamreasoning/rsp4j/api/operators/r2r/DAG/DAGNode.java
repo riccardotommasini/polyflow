@@ -1,6 +1,7 @@
 package org.streamreasoning.rsp4j.api.operators.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.List;
 
@@ -11,15 +12,6 @@ public interface DAGNode<R extends Iterable<?>> {
      */
     List<String> getOperandsNames();
 
-    /**
-     * Returns the operands of this DAG node
-     */
-    List<R> getOperands();
-
-    /**
-     * True if the DAG node contains a binary operations, false otherwise
-     */
-    boolean isBinary();
 
     /**
      * Returns the R2R operator associated with this DAG node
@@ -59,22 +51,12 @@ public interface DAGNode<R extends Iterable<?>> {
     /**
      * Computes the result for the current DAG Node
      **/
-    R eval();
+    R eval(long ts);
 
     /**
-     * Adds an operand to the current DAG Node
+     * Returns a lazy time varying that can be materialized later to compute the result
      */
-    void addOperand(R operand);
-
-    /**
-     * Clears the DAG node from previous computation's results
-     */
-    void clear();
-
-    /**
-     * Returns the name of the operation (selection, projection, join)
-     */
-    String getOpName();
+    TimeVarying<R> apply();
 
 
 }

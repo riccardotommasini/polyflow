@@ -44,9 +44,15 @@ public class TimeImpl implements Time {
 
     @Override
     public void addEvaluationTimeInstants(TimeInstant et) {
+
         //If we already inserted a 'computation time' bigger or equal than the one we want to insert, we avoid inserting the new one
         if(timeInstants.isEmpty() || timeInstants.getLast().t < et.t)
             timeInstants.add(et);
+        else if(timeInstants.getLast().t == et.t)
+            timeInstants.getLast().duplicates+=1;
+        else{
+            throw new UnsupportedOperationException("Out of order not handled");
+        }
     }
 
     public TimeInstant getEvaluationTime(){

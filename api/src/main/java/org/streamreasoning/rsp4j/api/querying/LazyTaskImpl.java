@@ -111,7 +111,7 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
     @Override
     public void initialize(){
         for(StreamToRelationOperator<I, W, R> operator: s2rOperators){
-            TimeVarying<R> tvg = operator.apply();
+            TimeVarying<R> tvg = operator.get();
             this.sds.add(tvg);
             if(tvg.named()){
                 this.sds.add(tvg.iri(), tvg);
@@ -119,24 +119,17 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
         }
 
 
-        for(RelationToRelationOperator<R> op : r2rOperators){
-            if(!op.isBinary()) {
-                for (String tvgName : op.getTvgNames()) {
-                    dag.addToDAG(Collections.singletonList(tvgName), op);
-                }
-            }
-            else {
-                //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
-                dag.addToDAG(op.getTvgNames(), op);
-            }
+        dag.addTVGs(sds.asTimeVaryingEs());
+        for (RelationToRelationOperator<R> op : r2rOperators){
+            dag.addToDAG(op);
         }
         dag.initialize();
 
     }
 
     @Override
-    public TimeVarying<R> getLazyEvaluation(){
-        return new LazyTimeVarying<>(this.sds, this.dag);
+    public TimeVarying<R> apply(){
+        return this.dag.apply();
     }
 
     @Override

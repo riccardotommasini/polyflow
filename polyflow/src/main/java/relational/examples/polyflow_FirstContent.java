@@ -1,18 +1,13 @@
 package relational.examples;
 
-import org.javatuples.Quartet;
-import relational.operatorsimpl.r2r.R2RjtablesawSelection;
-import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-import org.streamreasoning.rsp4j.api.querying.LazyTaskImpl;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
@@ -20,23 +15,24 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import shared.contentimpl.factories.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawJoin;
+import relational.operatorsimpl.r2r.R2RjtablesawSelection;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
+import shared.contentimpl.factories.FirstContentFactory;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class polyflow_LazyEvaluation {
-
+public class polyflow_FirstContent {
     public static void main(String [] args) throws InterruptedException {
 
         RowStreamGenerator generator = new RowStreamGenerator();
@@ -53,10 +49,9 @@ public class polyflow_LazyEvaluation {
         Tick tick = Tick.TIME_DRIVEN;
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
-        Time instance_2 = new TimeImpl(0);
         Table emptyContent = Table.create();
 
-        AccumulatorContentFactory<Tuple, Tuple, Table> accumulatorContentFactory = new AccumulatorContentFactory<>(
+        FirstContentFactory<Tuple, Tuple, Table> firstContentFactory = new FirstContentFactory<>(
                 t->t,
                 (t)->{
                     Table r = Table.create();
@@ -114,7 +109,6 @@ public class polyflow_LazyEvaluation {
                     }
                     return r;
                 },
-                (r1, r2)->r1.isEmpty()? r2:r1.append(r2),
                 emptyContent
 
         );
@@ -128,7 +122,7 @@ public class polyflow_LazyEvaluation {
                         tick,
                         instance,
                         "w1",
-                        accumulatorContentFactory,
+                        firstContentFactory,
                         tvFactory,
                         report_grain,
                         report,
@@ -137,53 +131,36 @@ public class polyflow_LazyEvaluation {
         CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
                 new CSPARQLStreamToRelationOpImpl<>(
                         tick,
-                        instance_2,
+                        instance,
                         "w2",
-                        accumulatorContentFactory,
+                        firstContentFactory,
                         tvFactory,
                         report_grain,
                         report,
                         1000,
                         1000);
 
-        String materializedViewName = "materialized";
         List<String> s2r_names = new ArrayList<>();
-        s2r_names.add(materializedViewName);
+        s2r_names.add(s2rOp_1.getName());
         s2r_names.add(s2rOp_2.getName());
 
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
         RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "partial_1");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, "partial_2");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, List.of(s2rOp_2.getName(), "partial_1"), "partial_2");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
-
-        Task<Tuple, Tuple, Table, Tuple> materializedView = new LazyTaskImpl<>();
-        materializedView = materializedView
-                .addS2ROperator(s2rOp_1, inputStream_1)
-                .addR2ROperator(r2rOp)
-                .addSDS(new SDSjtablesaw())
-                .addDAG(new DAGImpl<>())
-                .addTime(instance);
-        materializedView.initialize();
-
         Task<Tuple, Tuple, Table, Tuple> task = new TaskImpl<>();
-        task = task
+        task = task.addS2ROperator(s2rOp_1, inputStream_1)
                 .addS2ROperator(s2rOp_2, inputStream_2)
+                .addR2ROperator(r2rOp)
                 .addR2ROperator(r2rBinaryOp)
                 .addR2SOperator(r2sOp)
                 .addSDS(new SDSjtablesaw())
                 .addDAG(new DAGImpl<>())
-                .addTime(instance_2);
-
-        //Add the materialized view to the interested task
-
-        TimeVarying<Table> view = materializedView.apply();
-        view.setIri(materializedViewName);
-        task.getSDS().add(view);
-
+                .addTime(instance);
         task.initialize();
 
         List<DataStream<Tuple>> inputStreams = new ArrayList<>();
@@ -194,29 +171,12 @@ public class polyflow_LazyEvaluation {
         List<DataStream<Tuple>> outputStreams = new ArrayList<>();
         outputStreams.add(outStream);
 
-        cp.buildView(materializedView, Collections.singletonList(inputStream_1));
-        cp.buildTask(task, Collections.singletonList(inputStream_2), outputStreams);
+        cp.buildTask(task, inputStreams, outputStreams);
 
         outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
         //Thread.sleep(20_000);
         //generator.stopStreaming();
-
-//        cp.notify(inputStream_1, null, System.currentTimeMillis());
-
-        view.materialize(System.currentTimeMillis());
-        Table rows1 = view.get();
-
-        RelationToRelationOperator<Table> r2rOp2 = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "ricstuff");
-
-        TimeVarying<Table> apply = r2rOp2.apply(view);
-
-        apply.materialize(System.currentTimeMillis());
-        Table rows = view.get();
-
     }
-
-
-
 }

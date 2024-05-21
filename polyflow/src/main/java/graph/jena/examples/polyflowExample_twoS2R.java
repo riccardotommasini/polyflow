@@ -1,14 +1,15 @@
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.operatorsimpl.r2r.BinaryR2RJenaImpl;
+import graph.jena.operatorsimpl.r2r.UnaryR2RJenaImpl;
 import graph.jena.stream.JenaBindingStream;
 import graph.jena.stream.JenaStreamGenerator;
 import graph.jena.sds.SDSJena;
 import graph.jena.content.ValidatedGraph;
-import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
-import operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
@@ -31,10 +32,11 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.content.AccumulatorContentFactory;
-import operatorsimpl.r2r.DAG.DAGImpl;
+import shared.contentimpl.factories.AccumulatorContentFactory;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class polyflowExample_twoS2R {
@@ -90,7 +92,7 @@ public class polyflowExample_twoS2R {
         ContinuousProgram<Graph, Graph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
 
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one =
-                new StreamToRelationOpImpl<>(
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
@@ -102,7 +104,7 @@ public class polyflowExample_twoS2R {
                         1000);
 
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_two =
-                new StreamToRelationOpImpl<>(
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w2",
@@ -118,8 +120,9 @@ public class polyflowExample_twoS2R {
         s2r_names.add(s2rOp_one.getName());
         s2r_names.add(s2rOp_two.getName());
 
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, false, "selection", "empty");
-        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new R2RJenaImpl("", s2r_names, true, "empty", "concatenation");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp1 = new UnaryR2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp_one.getName()), "partial_1");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp2 = new UnaryR2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp_two.getName()), "partial_2");
+        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new BinaryR2RJenaImpl("", List.of("partial_1", "partial_2"), "partial_3");
 
 
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
@@ -127,7 +130,8 @@ public class polyflowExample_twoS2R {
         Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_one, inputStream)
                 .addS2ROperator(s2rOp_two, inputStream)
-                .addR2ROperator(r2rOp)
+                .addR2ROperator(r2rOp1)
+                .addR2ROperator(r2rOp2)
                 .addR2ROperator(r2rBinaryOp)
                 .addR2SOperator(r2sOp)
                 .addDAG(new DAGImpl<>())

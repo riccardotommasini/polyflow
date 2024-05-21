@@ -5,6 +5,7 @@ import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.op.OpBGP;
 import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.result.SolutionMapping;
 import org.streamreasoning.rsp4j.api.sds.SDS;
@@ -39,31 +40,37 @@ public class R2RJenaBGP implements RelationToRelationOperator<JenaOperandWrapper
     }
 
     @Override
+    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+        return null;
+    }
+
+
+    @Override
     public List<String> getTvgNames() {
         return tvgNames;
     }
 
     @Override
+    public String getResName() {
+        return null;
+    }
+
     public boolean isBinary() {
         return isBinary;
     }
 
-    @Override
     public String getUnaryOpName() {
         return unaryOpName;
     }
 
-    @Override
     public String getBinaryOpName() {
         return binaryOpName;
     }
 
-    @Override
     public JenaOperandWrapper eval(JenaOperandWrapper... datasets) {
         return null;
     }
 
-    @Override
     public JenaOperandWrapper evalUnary(JenaOperandWrapper dataset) {
 
         QueryIterator exec = Algebra.exec(bgp, dataset.getContent().content);
@@ -76,30 +83,5 @@ public class R2RJenaBGP implements RelationToRelationOperator<JenaOperandWrapper
 
         dataset.setResult(res);
         return dataset;
-    }
-
-    @Override
-    public JenaOperandWrapper evalBinary(JenaOperandWrapper dataset1, JenaOperandWrapper dataset2) {
-
-        JenaOperandWrapper result = new JenaOperandWrapper();
-        result.setResult(Stream.concat(dataset1.getResult().stream(), dataset2.getResult().stream()).collect(Collectors.toList()));
-
-        return result;
-
-    }
-
-    @Override
-    public TimeVarying<Collection<JenaOperandWrapper>> apply(SDS<JenaOperandWrapper> sds) {
-        return null;
-    }
-
-    @Override
-    public SolutionMapping<JenaOperandWrapper> createSolutionMapping(JenaOperandWrapper result) {
-        return null;
-    }
-
-    @Override
-    public Map<String, RelationToRelationOperator<JenaOperandWrapper>> getR2RComponents() {
-        return RelationToRelationOperator.super.getR2RComponents();
     }
 }

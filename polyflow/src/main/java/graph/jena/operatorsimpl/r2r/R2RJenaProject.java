@@ -35,33 +35,27 @@ public class R2RJenaProject implements RelationToRelationOperator<JenaOperandWra
     }
 
     @Override
+    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+        return null;
+    }
+
+    @Override
     public List<String> getTvgNames() {
         return tvgNames;
     }
 
     @Override
-    public boolean isBinary() {
-        return isBinary;
+    public String getResName() {
+        return null;
     }
 
-    @Override
-    public String getUnaryOpName() {
-        return unaryOpName;
-    }
 
-    @Override
-    public String getBinaryOpName() {
-        return binaryOpName;
-    }
-
-    @Override
     public JenaOperandWrapper evalUnary(JenaOperandWrapper dataset) {
 
         dataset.setResult(dataset.getResult().stream().map(b -> new BindingProject(proj.getVars(), b)).collect(Collectors.toList()));
         return dataset;
     }
 
-    @Override
     public JenaOperandWrapper evalBinary(JenaOperandWrapper dataset1, JenaOperandWrapper dataset2) {
 
         JenaOperandWrapper result = new JenaOperandWrapper();
@@ -71,12 +65,10 @@ public class R2RJenaProject implements RelationToRelationOperator<JenaOperandWra
 
     }
 
-    @Override
     public TimeVarying<Collection<JenaOperandWrapper>> apply(SDS<JenaOperandWrapper> sds) {
         return null;
     }
 
-    @Override
     public SolutionMapping<JenaOperandWrapper> createSolutionMapping(JenaOperandWrapper result) {
         return null;
     }

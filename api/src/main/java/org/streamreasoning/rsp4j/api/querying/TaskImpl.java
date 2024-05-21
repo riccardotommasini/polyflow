@@ -114,43 +114,22 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     @Override
     public void initialize(){
         for(StreamToRelationOperator<I, W, R> operator: s2rOperators){
-            TimeVarying<R> tvg = operator.apply();
+            TimeVarying<R> tvg = operator.get();
             this.sds.add(tvg);
             if(tvg.named()){
                 this.sds.add(tvg.iri(), tvg);
             }
         }
 
-       /*
-         here we assume that when we encounter a binary R2R operator, all of the previous operators in the dag of both operands have been already added to the DAG.
-         Moreover, after a binary operator, if more R2R needs to be computed, we add them as unary operators with the tvg name of the first operand of the
-         binary R2R, in order to be consistent with the DAG shape.
 
-         tableA: o -> o -> o -> \
-                                 O -> o this last 'o' will be a R2R operator with the tvg name tableA, so it will only be added once to the DAG
-         tableB: o -> o -> o -> /
-
-       */
-
-       for(RelationToRelationOperator<R> op : r2rOperators){
-           if(!op.isBinary()) {
-               for (String tvgName : op.getTvgNames()) {
-                   dag.addToDAG(Collections.singletonList(tvgName), op);
-               }
-           }
-           else {
-               //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
-               dag.addToDAG(op.getTvgNames(), op);
-           }
-       }
+        dag.addTVGs(sds.asTimeVaryingEs());
+        for (RelationToRelationOperator<R> op : r2rOperators){
+            dag.addToDAG(op);
+        }
        dag.initialize();
 
     }
 
-    @Override
-    public TimeVarying<R> getLazyEvaluation() {
-        throw new RuntimeException("Lazy evaluation not available for push queries");
-    }
 
     @Override
     public void evictWindows() {
@@ -183,15 +162,16 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     }
 
+    @Override
+    public TimeVarying<R> apply(){
+        return this.dag.apply();
+    }
+
     private R eval(long ts){
 
-        this.sds.materialize(ts);
         R result = null;
-        for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
-            dag.prepare(tvg.iri(), tvg.get());
-        }
-        result = dag.eval();
-        dag.clear();
+
+        result = dag.eval(ts);
         if(result == null){
             throw new RuntimeException("Result of DAG computation is null");
         }

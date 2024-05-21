@@ -1,39 +1,38 @@
 package relational.examples;
 
-import operatorsimpl.s2r.StreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
-
+import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
-import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.content.AccumulatorContentFactory;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import operatorsimpl.r2r.DAG.DAGImpl;
-import relational.operatorsimpl.r2r.R2RjtablesawImpl;
+import relational.operatorsimpl.r2r.R2RjtablesawJoin;
+import relational.operatorsimpl.r2r.R2RjtablesawSelection;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
+import shared.contentimpl.factories.LastContentFactory;
+import shared.operatorsimpl.r2r.DAG.DAGImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class polyflowExample_AccumulateContent {
-
+public class polyflow_LastContent {
     public static void main(String [] args) throws InterruptedException {
 
         RowStreamGenerator generator = new RowStreamGenerator();
@@ -52,7 +51,7 @@ public class polyflowExample_AccumulateContent {
         Time instance = new TimeImpl(0);
         Table emptyContent = Table.create();
 
-        AccumulatorContentFactory<Tuple, Tuple, Table> accumulatorContentFactory = new AccumulatorContentFactory<>(
+        LastContentFactory<Tuple, Tuple, Table> lastContentFactory = new LastContentFactory<>(
                 t->t,
                 (t)->{
                     Table r = Table.create();
@@ -110,7 +109,6 @@ public class polyflowExample_AccumulateContent {
                     }
                     return r;
                 },
-                (r1, r2)->r1.isEmpty()? r2:r1.append(r2),
                 emptyContent
 
         );
@@ -119,23 +117,23 @@ public class polyflowExample_AccumulateContent {
 
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
-        StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
-                new StreamToRelationOpImpl<>(
+        CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
-                        accumulatorContentFactory,
+                        lastContentFactory,
                         tvFactory,
                         report_grain,
                         report,
                         1000,
                         1000);
-        StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
-                new StreamToRelationOpImpl<>(
+        CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w2",
-                        accumulatorContentFactory,
+                        lastContentFactory,
                         tvFactory,
                         report_grain,
                         report,
@@ -149,8 +147,8 @@ public class polyflowExample_AccumulateContent {
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawImpl(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawImpl(join, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "partial_1");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, List.of(s2rOp_2.getName(), "partial_1" ), "partial_2");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
@@ -181,9 +179,4 @@ public class polyflowExample_AccumulateContent {
         //Thread.sleep(20_000);
         //generator.stopStreaming();
     }
-
-
 }
-
-
-

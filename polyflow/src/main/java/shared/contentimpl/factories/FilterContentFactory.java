@@ -1,8 +1,9 @@
-package relational.content;
+package shared.contentimpl.factories;
 
 import graph.jena.content.EmptyContent;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
+import shared.contentimpl.content.FilterContent;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
