@@ -1,4 +1,3 @@
-/*
 package relational.examples;
 
 import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
@@ -155,7 +154,7 @@ public class polyflow_FilterContent {
 
             CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-            RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, true, "empty", "join");
+            RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, "partial");
 
             RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
@@ -193,4 +192,3 @@ public class polyflow_FilterContent {
 
 
 
-*/

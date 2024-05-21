@@ -1,4 +1,3 @@
-/*
 package org.streamreasoning.rsp4j.api.sds.timevarying;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
@@ -18,11 +17,7 @@ public class LazyTimeVarying<R extends Iterable<?>> implements TimeVarying<R> {
 
     @Override
     public void materialize(long ts) {
-        this.sds.materialize(ts);
-        for(TimeVarying<R> tvg : sds.asTimeVaryingEs()){
-            dag.prepare(tvg.iri(), tvg.get());
-        }
-        content = dag.eval();
+        content = dag.eval(ts);
         dag.clear();
         if(content == null){
             throw new RuntimeException("Result of DAG computation is null");
@@ -49,4 +44,3 @@ public class LazyTimeVarying<R extends Iterable<?>> implements TimeVarying<R> {
         return true;
     }
 }
-*/

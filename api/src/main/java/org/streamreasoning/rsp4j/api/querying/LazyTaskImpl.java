@@ -1,4 +1,3 @@
-/*
 package org.streamreasoning.rsp4j.api.querying;
 
 import org.apache.log4j.Logger;
@@ -120,16 +119,9 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
         }
 
 
-        for(RelationToRelationOperator<R> op : r2rOperators){
-            if(!op.isBinary()) {
-                for (String tvgName : op.getTvgNames()) {
-                    dag.addToDAG(Collections.singletonList(tvgName), op);
-                }
-            }
-            else {
-                //We assume that each binary operator contains at most 2 tvg names, which are the names of its operands
-                dag.addToDAG(op.getTvgNames(), op);
-            }
+        dag.addTVGs(sds.asTimeVaryingEs());
+        for (RelationToRelationOperator<R> op : r2rOperators){
+            dag.addToDAG(op);
         }
         dag.initialize();
 
@@ -165,4 +157,3 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
 
     }
 }
-*/

@@ -62,15 +62,6 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
         }
     }
 
-
-    @Override
-    public void prepare(String tvgName, R operand) {
-        if(!root.containsKey(tvgName)){
-            throw new RuntimeException("No DAG is available for the specified tvg");
-        }
-        root.get(tvgName).addOperand(operand);
-    }
-
     @Override
     public void initialize(){
         DAGNode<R> tmp  = root.values().stream().findFirst().get();

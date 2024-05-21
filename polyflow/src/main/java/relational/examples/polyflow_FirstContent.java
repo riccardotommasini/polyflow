@@ -1,4 +1,3 @@
-/*
 package relational.examples;
 
 import org.javatuples.Tuple;
@@ -18,6 +17,7 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.operatorsimpl.r2r.CustomRelationalQuery;
 import relational.operatorsimpl.r2r.R2RjtablesawJoin;
+import relational.operatorsimpl.r2r.R2RjtablesawSelection;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
@@ -147,8 +147,8 @@ public class polyflow_FirstContent {
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawJoin(selection, Collections.singletonList(s2rOp_1.getName()), false, "selection", "empty");
-        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, true, "empty", "join");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "partial_1");
+        RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, List.of(s2rOp_2.getName(), "partial_1"), "partial_2");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
@@ -180,4 +180,3 @@ public class polyflow_FirstContent {
         //generator.stopStreaming();
     }
 }
-*/

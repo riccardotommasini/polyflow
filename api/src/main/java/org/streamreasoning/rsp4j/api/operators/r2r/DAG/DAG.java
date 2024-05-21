@@ -27,11 +27,6 @@ public interface DAG<R extends Iterable<?>> {
    R eval(long ts);
 
     /**
-     * Prepares the DAG by setting the starting value from which the computation starts (operand) for each path of the DAG
-     */
-   void prepare(String tvgName, R operand);
-
-    /**
      * Clears the DAG from previous computation's partial results
      */
    void clear();
