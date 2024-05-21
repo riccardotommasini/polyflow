@@ -9,6 +9,7 @@ import graph.jena.sds.SDSJena;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
+import org.apache.jena.sparql.graph.GraphFactory;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
@@ -38,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.apache.jena.rdf.model.ModelFactory.createModelForGraph;
+
 public class polyflowExample_twoStreams {
 
     public static void main(String [] args) throws InterruptedException {
@@ -57,30 +60,18 @@ public class polyflowExample_twoStreams {
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
 
-        Graph shapesGraph = RDFDataMgr.loadGraph(polyflowExample.class.getResource("/shapes.ttl").getPath());
-        Shapes shapes = Shapes.parse(shapesGraph);
 
-        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
-        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper(GraphFactory.createGraphMem());
 
         AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
                 (g)->g,
-                (g)->{
-                    JenaOperandWrapper r = new JenaOperandWrapper();
-                    r.setContent(new ValidatedGraph(g, g));
-                    return r;
-                },
+                (g)-> new JenaOperandWrapper(g),
                 (r1, r2)->{
-                    JenaOperandWrapper result = new JenaOperandWrapper();
-                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
-                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
+                    Model m1 = createModelForGraph(r1.getContent());
+                    Model m2 = createModelForGraph(r2.getContent());
                     Graph res_content = m1.union(m2).getGraph();
+                    return new JenaOperandWrapper(res_content);
 
-                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
-                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
-                    Graph res_report = m1.union(m2).getGraph();
-                    result.setContent(new ValidatedGraph(res_content, res_report ));
-                    return result;
                 },
                 emptyContent
         );

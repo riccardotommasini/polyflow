@@ -2,6 +2,7 @@ package graph.jena.datatypes;
 
 import graph.jena.content.ValidatedGraph;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.riot.other.G;
 import org.apache.jena.sparql.engine.binding.Binding;
 
 import java.util.Iterator;
@@ -10,17 +11,17 @@ import java.util.function.Consumer;
 
 public class JenaOperandWrapper implements Iterable<Binding> {
 
-    public JenaOperandWrapper() {
 
-    }
-
-    private ValidatedGraph content;
+    private Graph content;
     private List<Binding> result;
 
     public JenaOperandWrapper(Graph content) {
-        this.content = new ValidatedGraph(content, content);
+        this.content = content;
     }
 
+    public JenaOperandWrapper() {
+
+    }
 
     @Override
     public Iterator<Binding> iterator() {
@@ -33,7 +34,7 @@ public class JenaOperandWrapper implements Iterable<Binding> {
     }
 
 
-    public ValidatedGraph getContent() {
+    public Graph getContent() {
         return this.content;
     }
 
@@ -41,7 +42,7 @@ public class JenaOperandWrapper implements Iterable<Binding> {
         return this.result;
     }
 
-    public void setContent(ValidatedGraph content) {
+    public void setContent(Graph content) {
         this.content = content;
     }
 

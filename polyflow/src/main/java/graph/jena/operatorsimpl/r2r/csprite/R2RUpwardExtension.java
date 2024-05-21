@@ -69,7 +69,7 @@ public class R2RUpwardExtension implements RelationToRelationOperator<JenaOperan
     public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
         Graph graphMem = GraphFactory.createGraphMem();
         datasets.forEach(
-                g -> g.getContent().content.stream()
+                g -> g.getContent().stream()
                         .map(triple -> performUpwardExtension(triple))
                         .flatMap(Collection::stream)
                         .forEach(graphMem::add)

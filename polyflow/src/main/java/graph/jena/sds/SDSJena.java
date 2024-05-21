@@ -73,13 +73,13 @@ public class SDSJena implements SDS<JenaOperandWrapper>, Dataset {
         defs.stream().map(g -> {
                     g.materialize(ts);
                     return g.get();
-                }).map(r->r.getContent().content).flatMap(Graph::stream)
+                }).map(r->r.getContent()).flatMap(Graph::stream)
                 .forEach(t -> dg.add(def, t.getSubject(), t.getPredicate(), t.getObject()));
 
         tvgs.entrySet().stream()
                 .map(e -> {
                     e.getValue().materialize(ts);
-                    return new NamedGraph(e.getKey(), e.getValue().get().getContent().getContent());
+                    return new NamedGraph(e.getKey(), e.getValue().get().getContent());
                 }).forEach(n -> n.g.stream()
                         .forEach(o -> dg.add(n.name, o.getSubject(), o.getPredicate(), o.getObject())));
 

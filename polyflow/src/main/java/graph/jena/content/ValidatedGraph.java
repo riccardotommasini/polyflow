@@ -6,6 +6,7 @@ public class ValidatedGraph {
 
     public Graph report;
     public Graph content;
+
     public ValidatedGraph(Graph report, Graph content){
         this.report = report;
         this.content = content;

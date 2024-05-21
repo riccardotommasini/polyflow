@@ -37,7 +37,7 @@ public class FullQueryUnaryJena implements RelationToRelationOperator<JenaOperan
         q.getProjectVars();
         Node aDefault = NodeFactory.createURI("default");
         DatasetGraph dg = new DatasetGraphInMemory();
-        dg.addGraph(aDefault, dataset.getContent().content);
+        dg.addGraph(aDefault, dataset.getContent());
 
         QueryExecution queryExecution = QueryExecutionFactory.create(q, DatasetImpl.wrap(dg));
         ResultSet resultSet = queryExecution.execSelect();

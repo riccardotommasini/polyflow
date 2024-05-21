@@ -48,7 +48,7 @@ public class TP implements UnaryOperator<JenaOperandWrapper>, RelationToRelation
 
     public JenaOperandWrapper eval(JenaOperandWrapper dataset) {
 
-        QueryIterator exec = Algebra.exec(bgp, dataset.getContent().content);
+        QueryIterator exec = Algebra.exec(bgp, dataset.getContent());
 
         List<Binding> res = new ArrayList<>();
 

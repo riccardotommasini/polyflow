@@ -209,7 +209,7 @@ public class CSpriteTest {
         graph.add(create(createURI("S1"), a, createURI("O2")));
         graph.add(create(createURI("S1"), createURI("P1"), createURI("O2")));
 
-        Graph result = r2r.eval(List.of(new JenaOperandWrapper(graph))).getContent().content;
+        Graph result = r2r.eval(List.of(new JenaOperandWrapper(graph))).getContent();
 
         Graph expected = GraphFactory.createGraphMem();
 

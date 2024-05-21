@@ -1,7 +1,6 @@
-import graph.jena.content.ValidatedGraph;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.examples.polyflowExample;
-import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
+import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
@@ -13,6 +12,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.graph.GraphFactory;
 import org.junit.jupiter.api.Test;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -35,7 +35,6 @@ import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -45,7 +44,7 @@ public class TaskTest {
 
 
     @Test
-    public void initializeTask() {
+    public void testTaskUnary() {
 
         /*------INITIALIZATION OF COMPONENTS USED BY THE TASK------*/
 
@@ -57,58 +56,25 @@ public class TaskTest {
         Tick tick = Tick.TIME_DRIVEN;
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
-        Graph shapesGraph = RDFDataMgr.loadGraph(polyflowExample.class.getResource("/shapes.ttl").getPath());
-        Shapes shapes = Shapes.parse(shapesGraph);
-        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
-        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper(GraphFactory.createGraphMem());
         TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
 
-        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
-                (g) -> g,
-                (g) -> {
-                    JenaOperandWrapper r = new JenaOperandWrapper();
-                    r.setContent(new ValidatedGraph(g, g));
-                    return r;
-                },
-                (r1, r2) -> {
-                    JenaOperandWrapper result = new JenaOperandWrapper();
-                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
-                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
-                    Graph res_content = m1.union(m2).getGraph();
-
-                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
-                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
-                    Graph res_report = m1.union(m2).getGraph();
-                    result.setContent(new ValidatedGraph(res_content, res_report));
-                    return result;
-                },
-                emptyContent
-        );
-        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one =
-                new CSPARQLStreamToRelationOpImpl<>(
-                        tick,
-                        instance,
-                        "w1",
-                        accumulatorContentFactory,
-                        tvFactory,
-                        report_grain,
-                        report,
-                        1000,
-                        1000);
+        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>((g) -> g, (g) -> new JenaOperandWrapper(g), (r1, r2) -> {
+            Model m1 = ModelFactory.createModelForGraph(r1.getContent());
+            Model m2 = ModelFactory.createModelForGraph(r2.getContent());
+            Graph res_content = m1.union(m2).getGraph();
+            return new JenaOperandWrapper(res_content);
+        }, emptyContent);
+        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one = new CSPARQLStreamToRelationOpImpl<>(tick, instance, "w1", accumulatorContentFactory, tvFactory, report_grain, report, 1000, 1000);
 
 
         List<String> s2r_names = new ArrayList<>();
         s2r_names.add(s2rOp_one.getName());
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new FullQueryBinaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, "selection");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g {?s ?p ?o }}", s2r_names, "selection");
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
         Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
 
-        task.addS2ROperator(s2rOp_one, inputStreamColors)
-                .addR2ROperator(r2rOp)
-                .addR2SOperator(r2sOp)
-                .addDAG(new DAGImpl<>())
-                .addSDS(new SDSJena())
-                .addTime(instance);
+        task.addS2ROperator(s2rOp_one, inputStreamColors).addR2ROperator(r2rOp).addR2SOperator(r2sOp).addDAG(new DAGImpl<>()).addSDS(new SDSJena()).addTime(instance);
         task.initialize();
         /*-------------END OF INITIALIZATION----------------*/
 
@@ -116,17 +82,7 @@ public class TaskTest {
         /*---------------Test the addS2ROperator method-------------*/
 
         //Create a dummy S2R to check if the Task correctly throws an exception when an S2R with the same name is already present
-        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy =
-                new CSPARQLStreamToRelationOpImpl<>(
-                        tick,
-                        instance,
-                        "w1",
-                        accumulatorContentFactory,
-                        tvFactory,
-                        report_grain,
-                        report,
-                        500,
-                        500);
+        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy = new CSPARQLStreamToRelationOpImpl<>(tick, instance, "w1", accumulatorContentFactory, tvFactory, report_grain, report, 500, 500);
 
 
         noDuplicateTests(s2rOp_dummy, task);
@@ -142,6 +98,7 @@ public class TaskTest {
 
     }
 
+
     public void noDuplicateTests(StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy, Task<Graph, Graph, JenaOperandWrapper, Binding> task) {
 
         assertThrows(RuntimeException.class, () -> task.addS2ROperator(s2rOp_dummy, new RowStream<>("foo")));
@@ -150,17 +107,16 @@ public class TaskTest {
 
     public void elaborateElementTest(DataStream<Graph> inputStream, Graph g, RelationToRelationOperator<JenaOperandWrapper> r2r, Task<Graph, Graph, JenaOperandWrapper, Binding> task) {
 
-        JenaOperandWrapper dataset = new JenaOperandWrapper();
-        ValidatedGraph vg = new ValidatedGraph(g, g);
-        dataset.setContent(vg);
+        JenaOperandWrapper dataset1 = new JenaOperandWrapper(g);
+        JenaOperandWrapper dataset2 = new JenaOperandWrapper(g);
         //dataset will now hold a list of bindings, result of the computation of the R2R
-        r2r.eval(Collections.singletonList(dataset));
+        r2r.eval(List.of(dataset1,dataset2));
 
         //Insert element in window 0-1000
         task.elaborateElement(inputStream, g, 500);
         //Make window 0-1000 close and report result by adding an element at time 1200
         Collection<Collection<Binding>> result = task.elaborateElement(inputStream, Factory.createDefaultGraph(), 1200);
-        result.forEach(coll -> assertTrue(dataset.getResult().containsAll(coll)));
+        result.forEach(coll -> assertTrue(dataset1.getResult().containsAll(coll)));
 
     }
 }

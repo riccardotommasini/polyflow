@@ -3,20 +3,16 @@ package graph.jena.examples;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
 import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
+import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
+import graph.jena.sds.SDSJena;
+import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.stream.JenaBindingStream;
 import graph.jena.stream.JenaStreamGenerator;
-import graph.jena.sds.SDSJena;
-import graph.jena.content.ValidatedGraph;
-
-import graph.jena.sds.TimeVaryingFactoryJena;
-import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
-import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
-import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.graph.GraphFactory;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -32,9 +28,9 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import org.apache.jena.shacl.Shapes;
 import shared.contentimpl.factories.AccumulatorContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +38,7 @@ import java.util.List;
 
 public class polyflowExample {
 
-    public static void main(String [] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
 
         JenaStreamGenerator generator = new JenaStreamGenerator();
 
@@ -58,30 +54,16 @@ public class polyflowExample {
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
 
-        Graph shapesGraph = RDFDataMgr.loadGraph(polyflowExample.class.getResource("/shapes.ttl").getPath());
-        Shapes shapes = Shapes.parse(shapesGraph);
-
-        JenaOperandWrapper emptyContent = new JenaOperandWrapper();
-        emptyContent.setContent(new ValidatedGraph(Factory.createDefaultGraph(), Factory.createDefaultGraph()));
+        JenaOperandWrapper emptyContent = new JenaOperandWrapper(GraphFactory.createGraphMem());
 
         AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
-                (g)->g,
-                (g)->{
-                    JenaOperandWrapper r = new JenaOperandWrapper();
-                    r.setContent(new ValidatedGraph(g, g));
-                    return r;
-                },
-                (r1, r2)->{
-                    JenaOperandWrapper result = new JenaOperandWrapper();
-                    Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
-                    Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
+                (g) -> g,
+                (g) -> new JenaOperandWrapper(g),
+                (r1, r2) -> {
+                    Model m1 = ModelFactory.createModelForGraph(r1.getContent());
+                    Model m2 = ModelFactory.createModelForGraph(r2.getContent());
                     Graph res_content = m1.union(m2).getGraph();
-
-                    m1 = ModelFactory.createModelForGraph(r1.getContent().report);
-                    m2 = ModelFactory.createModelForGraph(r2.getContent().report);
-                    Graph res_report = m1.union(m2).getGraph();
-                    result.setContent(new ValidatedGraph(res_content, res_report ));
-                    return result;
+                    return new JenaOperandWrapper(res_content);
                 },
                 emptyContent
         );
@@ -111,7 +93,7 @@ public class polyflowExample {
 
         Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp, inputStream)
-                        .addR2ROperator(r2rOp1)
+                .addR2ROperator(r2rOp1)
                 .addR2ROperator(r2rOp2)
                 .addR2ROperator(r2rOp3)
                 .addR2SOperator(r2sOp)
@@ -129,7 +111,7 @@ public class polyflowExample {
 
         cp.buildTask(task, inputStreams, outputStreams);
 
-        outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
+        outStream.addConsumer((out, el, ts) -> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
         Thread.sleep(20_000);

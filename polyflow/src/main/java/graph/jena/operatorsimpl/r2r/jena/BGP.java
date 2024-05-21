@@ -36,7 +36,7 @@ public class BGP implements UnaryOperator<JenaOperandWrapper>, RelationToRelatio
 
     public JenaOperandWrapper eval(JenaOperandWrapper dataset) {
 
-        QueryIterator exec = Algebra.exec(bgp, dataset.getContent().content);
+        QueryIterator exec = Algebra.exec(bgp, dataset.getContent());
 
         List<Binding> res = new ArrayList<>();
 
