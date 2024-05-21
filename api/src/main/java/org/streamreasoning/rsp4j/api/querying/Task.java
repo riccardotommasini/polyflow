@@ -56,12 +56,6 @@ public interface Task<I, W, R extends Iterable<?>, O> {
      */
     void initialize();
 
-    /**
-     * Returns a Time Varying object representing the query result, which can be evaluated when needed
-     * Should be used with a Lazy Task, which represents a pull-query
-     */
-    TimeVarying<R> getLazyEvaluation();
-
     void evictWindows();
 
 
@@ -73,4 +67,9 @@ public interface Task<I, W, R extends Iterable<?>, O> {
      * @return Optional Collection of O, which is the output of the task after the computation. Empty if the element did not trigger a computation
      */
     Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp);
+
+    /**
+     * Returns a time varying that represents the lazy evaluation of the task, can be materialized when the result is needed
+     */
+    TimeVarying<R> apply();
 }

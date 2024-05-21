@@ -130,10 +130,6 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     }
 
-    @Override
-    public TimeVarying<R> getLazyEvaluation() {
-        throw new RuntimeException("Lazy evaluation not available for push queries");
-    }
 
     @Override
     public void evictWindows() {
@@ -164,6 +160,11 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
         return res;
 
+    }
+
+    @Override
+    public TimeVarying<R> apply(){
+        return this.dag.apply();
     }
 
     private R eval(long ts){
