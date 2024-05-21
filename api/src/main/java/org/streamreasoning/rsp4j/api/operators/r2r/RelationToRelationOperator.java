@@ -1,6 +1,7 @@
 package org.streamreasoning.rsp4j.api.operators.r2r;
 
 
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.querying.result.SolutionMapping;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
@@ -19,7 +20,10 @@ public interface RelationToRelationOperator<R extends Iterable<?>> {
     R eval(List<R> datasets);
 
 
-    TimeVarying<Collection<R>> apply(SDS<R> sds);
+    /**
+     * Takes as input a Dag Node and returns a time varying that can be later queried to compute the result of the operation
+     */
+    TimeVarying<R> apply(DAGNode<R> node);
 
     /**
      * Get the names of all the TVG on which this operator should be applied

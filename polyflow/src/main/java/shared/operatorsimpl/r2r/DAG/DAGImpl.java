@@ -15,27 +15,6 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
     DAGNode<R> tail;
 
 
-   /* @Override
-    public void addToDAG(List<String> tvgNames, RelationToRelationOperator<R> op) {
-
-        DAGNode<R> dagNode = new DAGNodeImpl<>(op, tvgNames, op.isBinary());
-
-        for(String tvg: tvgNames){
-            if(!root.containsKey(tvg)){
-                root.put(tvg, dagNode);
-            }
-            else{
-                DAGNode<R> node = root.get(tvg);
-                while(node.hasNext()){
-                    node = node.getNext();
-                }
-                node.setNext(dagNode);
-                dagNode.addPrev(node);
-            }
-        }
-
-    }*/
-
 
    @Override
    public void addToDAG(RelationToRelationOperator<R> op) {
@@ -77,14 +56,11 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
     }
 
     @Override
-    public void clear(){
-        for(DAGNode<R> node : root.values()){
-            node.clear();
-            while(node.hasNext()) {
-                node = node.getNext();
-                node.clear();
-            }
-        }
+    public TimeVarying<R> apply(){ return this.tail.apply();}
+
+    @Override
+    public DAGNode<R> getTail(){
+       return this.tail;
     }
 
     @Override

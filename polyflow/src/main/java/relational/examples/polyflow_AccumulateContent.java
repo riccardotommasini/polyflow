@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class polyflowExample_AccumulateContent {
+public class polyflow_AccumulateContent {
 
     public static void main(String [] args) throws InterruptedException {
 

@@ -2,8 +2,10 @@ package graph.jena.operatorsimpl.r2r;
 
 import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.Jena;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.SDS;
+import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.Collection;
@@ -41,8 +43,8 @@ public class BinaryR2RJenaImpl implements RelationToRelationOperator<JenaOperand
     }
 
     @Override
-    public TimeVarying<Collection<JenaOperandWrapper>> apply(SDS<JenaOperandWrapper> sds) {
-        return null;
+    public TimeVarying<JenaOperandWrapper> apply(DAGNode<JenaOperandWrapper> node) {
+        return new LazyTimeVarying<>(node);
     }
 
     @Override

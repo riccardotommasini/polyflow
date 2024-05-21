@@ -1,6 +1,7 @@
 package org.streamreasoning.rsp4j.api.operators.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.List;
 
@@ -53,19 +54,9 @@ public interface DAGNode<R extends Iterable<?>> {
     R eval(long ts);
 
     /**
-     * Adds an operand to the current DAG Node
+     * Returns a lazy time varying that can be materialized later to compute the result
      */
-    void addOperand(R operand);
-
-    /**
-     * Clears the DAG node from previous computation's results
-     */
-    void clear();
-
-    /**
-     * Returns the name of the operation (selection, projection, join)
-     */
-    String getOpName();
+    TimeVarying<R> apply();
 
 
 }

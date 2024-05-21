@@ -1,24 +1,23 @@
 package org.streamreasoning.rsp4j.api.sds.timevarying;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 
 public class LazyTimeVarying<R extends Iterable<?>> implements TimeVarying<R> {
 
-    SDS<R> sds;
-    DAG<R> dag;
+    DAGNode<R> dag;
     R content;
 
     String name;
-    public LazyTimeVarying(SDS<R> sds, DAG<R> dag){
-        this.sds = sds;
+
+    public LazyTimeVarying(DAGNode<R> dag){
         this.dag = dag;
     }
 
     @Override
     public void materialize(long ts) {
         content = dag.eval(ts);
-        dag.clear();
         if(content == null){
             throw new RuntimeException("Result of DAG computation is null");
         }

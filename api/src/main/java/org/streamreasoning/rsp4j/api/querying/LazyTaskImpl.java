@@ -129,7 +129,7 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
 
     @Override
     public TimeVarying<R> getLazyEvaluation(){
-        return new LazyTimeVarying<>(this.sds, this.dag);
+        return new LazyTimeVarying<>(this.dag.getTail());
     }
 
     @Override

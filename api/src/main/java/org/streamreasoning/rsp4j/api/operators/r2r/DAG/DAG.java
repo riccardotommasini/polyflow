@@ -27,9 +27,13 @@ public interface DAG<R extends Iterable<?>> {
    R eval(long ts);
 
     /**
-     * Clears the DAG from previous computation's partial results
+     * Returns a lazy time varying that can later be materialized to compute the result
      */
-   void clear();
+   TimeVarying<R> apply();
+    /**
+     * Returns the tail of the DAG
+     */
+   DAGNode<R> getTail();
     /**
      * Initializes the DAG by traversing it and storing the last element (tail) to begin the computation backwards efficiently
      */

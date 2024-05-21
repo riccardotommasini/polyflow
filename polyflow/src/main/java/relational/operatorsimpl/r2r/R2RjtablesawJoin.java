@@ -1,7 +1,10 @@
 package relational.operatorsimpl.r2r;
 
+import graph.jena.datatypes.JenaOperandWrapper;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.SDS;
+import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import tech.tablesaw.api.Table;
 
@@ -52,8 +55,8 @@ public class R2RjtablesawJoin implements RelationToRelationOperator<Table> {
     }
 
     @Override
-    public TimeVarying<Collection<Table>> apply(SDS<Table> sds) {
-        return null;
+    public TimeVarying<Table> apply(DAGNode<Table> node) {
+        return new LazyTimeVarying<>(node);
     }
 
 }

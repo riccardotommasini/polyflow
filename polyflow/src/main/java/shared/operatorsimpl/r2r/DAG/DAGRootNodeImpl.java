@@ -38,7 +38,7 @@ public class DAGRootNodeImpl<R extends Iterable<?>> implements DAGNode<R>{
 
     @Override
     public void addPrev(DAGNode<R> prev) {
-
+        throw new RuntimeException("Impossible to add a previous node to a dag root");
     }
 
     @Override
@@ -68,17 +68,8 @@ public class DAGRootNodeImpl<R extends Iterable<?>> implements DAGNode<R>{
     }
 
     @Override
-    public void addOperand(R operand) {
-
+    public TimeVarying<R> apply() {
+        throw new RuntimeException("Impossible to apply on a dag node root");
     }
 
-    @Override
-    public void clear() {
-
-    }
-
-    @Override
-    public String getOpName() {
-        return null;
-    }
 }

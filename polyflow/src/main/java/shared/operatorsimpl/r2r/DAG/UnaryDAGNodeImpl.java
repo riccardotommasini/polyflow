@@ -2,12 +2,12 @@ package shared.operatorsimpl.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UnaryDAGNodeImpl  <R extends Iterable<?>> implements DAGNode<R> {
-
+public class UnaryDAGNodeImpl <R extends Iterable<?>> implements DAGNode<R> {
 
     private RelationToRelationOperator<R> r2rOperator;
     private DAGNode<R> next;
@@ -65,17 +65,8 @@ public class UnaryDAGNodeImpl  <R extends Iterable<?>> implements DAGNode<R> {
     }
 
     @Override
-    public void addOperand(R operand) {
-
+    public TimeVarying<R> apply(){
+        return this.r2rOperator.apply(this);
     }
 
-    @Override
-    public void clear() {
-
-    }
-
-    @Override
-    public String getOpName() {
-        return null;
-    }
 }

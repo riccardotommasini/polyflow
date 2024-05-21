@@ -171,7 +171,6 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         R result = null;
 
         result = dag.eval(ts);
-        dag.clear();
         if(result == null){
             throw new RuntimeException("Result of DAG computation is null");
         }
