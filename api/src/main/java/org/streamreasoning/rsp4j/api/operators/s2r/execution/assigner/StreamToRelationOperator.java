@@ -15,7 +15,7 @@ import java.util.List;
  * W represents the variable type of the maintained status, e.g., BAG of RDF Triple, RDF Graph (set) or RELATION
  * */
 
-public interface StreamToRelationOperator<I, W, R> {
+public interface StreamToRelationOperator<I, W, R extends Iterable<?>> {
 
     Report report();
 
@@ -37,7 +37,6 @@ public interface StreamToRelationOperator<I, W, R> {
         return getName() != null;
     }
 
-    TimeVarying<R> apply();
 
     /**
      * Inserts the element in the windows it belongs. If needed, signals that the query result needs to be computed

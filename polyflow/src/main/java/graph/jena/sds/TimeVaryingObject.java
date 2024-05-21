@@ -5,7 +5,7 @@ import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
-public class TimeVaryingObject<R> implements TimeVarying<R> {
+public class TimeVaryingObject<R extends Iterable<?>> implements TimeVarying<R> {
 
     private final StreamToRelationOperator<?, ?, R> op;
     private IRI name;

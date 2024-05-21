@@ -19,9 +19,9 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class StreamToRelationOpImpl<I, W, R> implements StreamToRelationOperator<I, W, R> {
+public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
 
-    private static final Logger log = Logger.getLogger(StreamToRelationOpImpl.class);
+    private static final Logger log = Logger.getLogger(CSPARQLStreamToRelationOpImpl.class);
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
@@ -36,8 +36,8 @@ public class StreamToRelationOpImpl<I, W, R> implements StreamToRelationOperator
     private long t0;
     private long toi;
 
-    public StreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory,  ReportGrain grain, Report report,
-                                  long width, long slide){
+    public CSPARQLStreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report,
+                                         long width, long slide){
 
         this.tvFactory = tvFactory;
         this.tick = tick;
@@ -109,7 +109,7 @@ public class StreamToRelationOpImpl<I, W, R> implements StreamToRelationOperator
     @Override
     public List<Content<I, W, R>> getContents(long t_e) {
         return active_windows.keySet().stream()
-                .filter(w -> w.getO() <= t_e && t_e < w.getC())
+                .filter(w -> w.getO() < t_e && t_e < w.getC())
                 .map(active_windows::get).collect(Collectors.toList());
     }
 
@@ -165,12 +165,6 @@ public class StreamToRelationOpImpl<I, W, R> implements StreamToRelationOperator
                 .ifPresent(window -> ticker.tick(t_e, window));
     }
 
-
-    //TODO: Get and apply do the same thing
-    @Override
-    public TimeVarying<R> apply() {
-        return tvFactory.create(this, name);
-    }
 
     @Override
     public TimeVarying<R> get() {return tvFactory.create(this, name);}

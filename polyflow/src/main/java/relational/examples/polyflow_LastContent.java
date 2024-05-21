@@ -25,7 +25,7 @@ import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
 import shared.contentimpl.factories.LastContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
-import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
@@ -117,8 +117,8 @@ public class polyflow_LastContent {
 
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
-        StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
-                new StreamToRelationOpImpl<>(
+        CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
@@ -128,8 +128,8 @@ public class polyflow_LastContent {
                         report,
                         1000,
                         1000);
-        StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
-                new StreamToRelationOpImpl<>(
+        CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w2",

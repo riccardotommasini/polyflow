@@ -10,7 +10,7 @@ import graph.jena.content.ValidatedGraph;
 
 import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
-import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.rdf.model.Model;
@@ -37,7 +37,6 @@ import shared.contentimpl.factories.AccumulatorContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -92,7 +91,7 @@ public class polyflowExample {
         ContinuousProgram<Graph, Graph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
 
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp =
-                new StreamToRelationOpImpl<>(
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",

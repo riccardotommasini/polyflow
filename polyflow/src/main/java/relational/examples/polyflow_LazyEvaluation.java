@@ -1,7 +1,7 @@
 package relational.examples;
 
 import relational.operatorsimpl.r2r.R2RjtablesawSelection;
-import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
@@ -122,8 +122,8 @@ public class polyflow_LazyEvaluation {
 
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
-        StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
-                new StreamToRelationOpImpl<>(
+        CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",
@@ -133,8 +133,8 @@ public class polyflow_LazyEvaluation {
                         report,
                         1000,
                         1000);
-        StreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
-                new StreamToRelationOpImpl<>(
+        CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance_2,
                         "w2",

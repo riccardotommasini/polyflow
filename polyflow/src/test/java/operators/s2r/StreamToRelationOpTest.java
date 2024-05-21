@@ -3,7 +3,7 @@ package operators.s2r;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.sds.TimeVaryingFactoryJena;
-import shared.operatorsimpl.s2r.StreamToRelationOpImpl;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.apache.jena.graph.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -68,7 +68,7 @@ public class StreamToRelationOpTest {
         TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
 
         StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp =
-                new StreamToRelationOpImpl<>(
+                new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
                         "w1",

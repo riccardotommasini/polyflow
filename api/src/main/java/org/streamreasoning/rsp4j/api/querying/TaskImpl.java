@@ -114,7 +114,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     @Override
     public void initialize(){
         for(StreamToRelationOperator<I, W, R> operator: s2rOperators){
-            TimeVarying<R> tvg = operator.apply();
+            TimeVarying<R> tvg = operator.get();
             this.sds.add(tvg);
             if(tvg.named()){
                 this.sds.add(tvg.iri(), tvg);
