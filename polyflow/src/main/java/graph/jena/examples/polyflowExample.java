@@ -1,8 +1,8 @@
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaOperandWrapper;
-import graph.jena.operatorsimpl.r2r.BinaryR2RJenaImpl;
-import graph.jena.operatorsimpl.r2r.UnaryR2RJenaImpl;
+import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
+import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
 import graph.jena.stream.JenaBindingStream;
 import graph.jena.stream.JenaStreamGenerator;
 import graph.jena.sds.SDSJena;
@@ -102,9 +102,9 @@ public class polyflowExample {
                         1000,
                         1000);
 
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp1 = new UnaryR2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp2 = new UnaryR2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_2");
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp3 = new BinaryR2RJenaImpl("", List.of("partial_1", "partial_2"), "partial_3");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp1 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp2 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_2");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp3 = new FullQueryBinaryJena("", List.of("partial_1", "partial_2"), "partial_3");
 
 
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();

@@ -1,8 +1,8 @@
-package graph.jena.operatorsimpl.r2r;
+package graph.jena.operatorsimpl.r2r.jena;
 
 import graph.jena.datatypes.JenaOperandWrapper;
-import org.apache.jena.sparql.algebra.Algebra;
-import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.algebra.op.OpProject;
+import org.apache.jena.sparql.engine.binding.BindingProject;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.result.SolutionMapping;
 import org.streamreasoning.rsp4j.api.sds.SDS;
@@ -11,9 +11,12 @@ import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class R2RJenaJoin implements RelationToRelationOperator<JenaOperandWrapper> {
+public class Project implements RelationToRelationOperator<JenaOperandWrapper> {
 
+
+    private OpProject proj;
 
     private List<String> tvgNames;
 
@@ -22,7 +25,8 @@ public class R2RJenaJoin implements RelationToRelationOperator<JenaOperandWrappe
     private String unaryOpName;
     private String binaryOpName;
 
-    public R2RJenaJoin(List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName) {
+    public Project(OpProject proj, List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName) {
+        this.proj = proj;
         this.tvgNames = tvgNames;
         this.isBinary = isBinary;
         this.unaryOpName = unaryOpName;
@@ -45,41 +49,17 @@ public class R2RJenaJoin implements RelationToRelationOperator<JenaOperandWrappe
         return null;
     }
 
-    public boolean isBinary() {
-        return isBinary;
-    }
-
-    public String getUnaryOpName() {
-        return unaryOpName;
-    }
-
-    public String getBinaryOpName() {
-        return binaryOpName;
-    }
 
     public JenaOperandWrapper evalUnary(JenaOperandWrapper dataset) {
+
+        dataset.setResult(dataset.getResult().stream().map(b -> new BindingProject(proj.getVars(), b)).collect(Collectors.toList()));
         return dataset;
-    }
-
-    public JenaOperandWrapper eval(JenaOperandWrapper... datasets) {
-
-        List<Binding> collect = datasets[0].getResult().stream().flatMap(l -> datasets[1].getResult().stream().map(r -> Algebra.merge(l, r)))
-                .filter(b -> b != null).collect(Collectors.toList());
-
-        JenaOperandWrapper result = new JenaOperandWrapper();
-        result.setResult(collect);
-
-        return result;
-
     }
 
     public JenaOperandWrapper evalBinary(JenaOperandWrapper dataset1, JenaOperandWrapper dataset2) {
 
-        List<Binding> collect = dataset1.getResult().stream().flatMap(l -> dataset2.getResult().stream().map(r -> Algebra.merge(l, r)))
-                .filter(b -> b != null).collect(Collectors.toList());
-
         JenaOperandWrapper result = new JenaOperandWrapper();
-        result.setResult(collect);
+        result.setResult(Stream.concat(dataset1.getResult().stream(), dataset2.getResult().stream()).collect(Collectors.toList()));
 
         return result;
 

@@ -1,20 +1,13 @@
-package graph.jena.operatorsimpl.r2r;
+package graph.jena.operatorsimpl.r2r.jena;
 
 import graph.jena.datatypes.JenaOperandWrapper;
-import org.apache.jena.Jena;
-import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
-import org.streamreasoning.rsp4j.api.sds.SDS;
-import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BinaryR2RJenaImpl implements RelationToRelationOperator<JenaOperandWrapper> {
+public class FullQueryBinaryJena implements RelationToRelationOperator<JenaOperandWrapper> {
 
 
     private String query;
@@ -24,7 +17,7 @@ public class BinaryR2RJenaImpl implements RelationToRelationOperator<JenaOperand
     private String resName;
 
 
-    public BinaryR2RJenaImpl(String query, List<String> tvgNames, String resName) {
+    public FullQueryBinaryJena(String query, List<String> tvgNames, String resName) {
         this.query = query;
         this.tvgNames = tvgNames;
         this.resName = resName;

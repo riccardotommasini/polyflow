@@ -1,13 +1,12 @@
-import graph.jena.stream.JenaBindingStream;
-import graph.jena.stream.JenaStreamGenerator;
 import graph.jena.content.ValidatedGraph;
 import graph.jena.datatypes.JenaOperandWrapper;
 import graph.jena.examples.polyflowExample;
-import graph.jena.operatorsimpl.r2r.R2RJenaImpl;
+import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
-import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
+import graph.jena.stream.JenaBindingStream;
+import graph.jena.stream.JenaStreamGenerator;
 import org.apache.jena.graph.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -15,7 +14,6 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.shacl.Shapes;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -30,22 +28,26 @@ import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
+import relational.stream.RowStream;
 import shared.contentimpl.factories.AccumulatorContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
-import relational.stream.RowStream;
+import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TaskTest {
 
 
-
     @Test
-    public void initializeTask(){
+    public void initializeTask() {
 
-         /*------INITIALIZATION OF COMPONENTS USED BY THE TASK------*/
+        /*------INITIALIZATION OF COMPONENTS USED BY THE TASK------*/
 
         JenaStreamGenerator generator = new JenaStreamGenerator();
         DataStream<Graph> inputStreamColors = generator.getStream("http://test/stream1");
@@ -62,13 +64,13 @@ public class TaskTest {
         TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
 
         AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
-                (g)->g,
-                (g)->{
+                (g) -> g,
+                (g) -> {
                     JenaOperandWrapper r = new JenaOperandWrapper();
                     r.setContent(new ValidatedGraph(g, g));
                     return r;
                 },
-                (r1, r2)->{
+                (r1, r2) -> {
                     JenaOperandWrapper result = new JenaOperandWrapper();
                     Model m1 = ModelFactory.createModelForGraph(r1.getContent().content);
                     Model m2 = ModelFactory.createModelForGraph(r2.getContent().content);
@@ -77,7 +79,7 @@ public class TaskTest {
                     m1 = ModelFactory.createModelForGraph(r1.getContent().report);
                     m2 = ModelFactory.createModelForGraph(r2.getContent().report);
                     Graph res_report = m1.union(m2).getGraph();
-                    result.setContent(new ValidatedGraph(res_content, res_report ));
+                    result.setContent(new ValidatedGraph(res_content, res_report));
                     return result;
                 },
                 emptyContent
@@ -95,11 +97,9 @@ public class TaskTest {
                         1000);
 
 
-
-
         List<String> s2r_names = new ArrayList<>();
         s2r_names.add(s2rOp_one.getName());
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new R2RJenaImpl("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, false, "selection", "empty");
+        RelationToRelationOperator<JenaOperandWrapper> r2rOp = new FullQueryBinaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", s2r_names, "selection");
         RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
         Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
 
@@ -142,9 +142,9 @@ public class TaskTest {
 
     }
 
-    public void noDuplicateTests(StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy, Task<Graph, Graph, JenaOperandWrapper, Binding> task){
+    public void noDuplicateTests(StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_dummy, Task<Graph, Graph, JenaOperandWrapper, Binding> task) {
 
-        assertThrows(RuntimeException.class, ()->task.addS2ROperator(s2rOp_dummy, new RowStream<>("foo")));
+        assertThrows(RuntimeException.class, () -> task.addS2ROperator(s2rOp_dummy, new RowStream<>("foo")));
     }
 
 
@@ -154,7 +154,7 @@ public class TaskTest {
         ValidatedGraph vg = new ValidatedGraph(g, g);
         dataset.setContent(vg);
         //dataset will now hold a list of bindings, result of the computation of the R2R
-        r2r.evalUnary(dataset);
+        r2r.eval(Collections.singletonList(dataset));
 
         //Insert element in window 0-1000
         task.elaborateElement(inputStream, g, 500);

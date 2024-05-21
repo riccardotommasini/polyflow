@@ -1,4 +1,4 @@
-package graph.jena.operatorsimpl.r2r;
+package graph.jena.operatorsimpl.r2r.jena;
 
 import graph.jena.datatypes.JenaOperandWrapper;
 import org.apache.jena.graph.Node;
@@ -9,15 +9,12 @@ import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.sparql.core.ResultBinding;
 import org.apache.jena.sparql.core.mem.DatasetGraphInMemory;
 import org.apache.jena.sparql.engine.binding.Binding;
-import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
-import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UnaryR2RJenaImpl implements RelationToRelationOperator<JenaOperandWrapper> {
+public class FullQueryUnaryJena implements RelationToRelationOperator<JenaOperandWrapper> {
 
 
     private String query;
@@ -26,7 +23,7 @@ public class UnaryR2RJenaImpl implements RelationToRelationOperator<JenaOperandW
 
     private String resName;
 
-    public UnaryR2RJenaImpl(String query, List<String> tvgNames, String resName) {
+    public FullQueryUnaryJena(String query, List<String> tvgNames, String resName) {
         this.query = query;
         this.tvgNames = tvgNames;
         this.resName = resName;
