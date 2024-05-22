@@ -1,6 +1,6 @@
 package operators.r2r;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import graph.jena.operatorsimpl.r2r.jena.BGP;
 import graph.jena.operatorsimpl.r2r.jena.TP;
 import graph.jena.operatorsimpl.r2r.csprite.CSpriteR2R;
@@ -109,7 +109,7 @@ public class CSpriteTest {
         graph.add(create(createURI("g1"), a, createURI("http://test/Green")));
         graph.add(create(createURI("b1"), a, createURI("http://test/Blue")));
 
-        JenaOperandWrapper eval = tp.eval(cSpriteR2R.eval(Collections.singletonList(new JenaOperandWrapper(graph))));
+        JenaGraphOrBindings eval = tp.eval(cSpriteR2R.eval(Collections.singletonList(new JenaGraphOrBindings(graph))));
 
         List<Binding> result = eval.getResult();
 
@@ -136,7 +136,7 @@ public class CSpriteTest {
         Node blue = createURI("http://test/Blue");
         graph.add(create(createURI("b1"), a, blue));
 
-        JenaOperandWrapper eval = tp.eval(cSpriteR2R.eval(Collections.singletonList(new JenaOperandWrapper(graph))));
+        JenaGraphOrBindings eval = tp.eval(cSpriteR2R.eval(Collections.singletonList(new JenaGraphOrBindings(graph))));
 
         List<Binding> result = eval.getResult();
 
@@ -176,7 +176,7 @@ public class CSpriteTest {
         Node blue = createURI("http://test/Blue");
         graph.add(create(createURI("b1"), a, blue));
 
-        JenaOperandWrapper eval = bgp.eval(cSpriteR2R.eval(Collections.singletonList(new JenaOperandWrapper(graph))));
+        JenaGraphOrBindings eval = bgp.eval(cSpriteR2R.eval(Collections.singletonList(new JenaGraphOrBindings(graph))));
 
         List<Binding> result = eval.getResult();
 
@@ -202,14 +202,14 @@ public class CSpriteTest {
         schema.put("O2", Arrays.asList("O1", "O4"));
         schema.put("O3", Arrays.asList("O2", "O5"));
         schema.put("O5", Arrays.asList("O6"));
-        RelationToRelationOperator<JenaOperandWrapper> r2r = new R2RUpwardExtension(schema);
+        RelationToRelationOperator<JenaGraphOrBindings> r2r = new R2RUpwardExtension(schema);
 
         Graph graph = GraphFactory.createGraphMem();
         Node a = type.asNode();
         graph.add(create(createURI("S1"), a, createURI("O2")));
         graph.add(create(createURI("S1"), createURI("P1"), createURI("O2")));
 
-        Graph result = r2r.eval(List.of(new JenaOperandWrapper(graph))).getContent();
+        Graph result = r2r.eval(List.of(new JenaGraphOrBindings(graph))).getContent();
 
         Graph expected = GraphFactory.createGraphMem();
 
@@ -229,7 +229,7 @@ public class CSpriteTest {
         schema.put("O2", Arrays.asList("O1", "O4"));
         schema.put("O3", Arrays.asList("O2", "O5"));
         schema.put("O5", Arrays.asList("O6"));
-        RelationToRelationOperator<JenaOperandWrapper> r2r = new R2RUpwardExtension(schema);
+        RelationToRelationOperator<JenaGraphOrBindings> r2r = new R2RUpwardExtension(schema);
 
         Node a = type.asNode();
 
@@ -242,7 +242,7 @@ public class CSpriteTest {
         graph.add(create(createURI("S1"), a, createURI("O2")));
         graph.add(create(createURI("S1"), createURI("P1"), createURI("O2")));
 
-        List<Binding> result = tp.eval(r2r.eval(List.of(new JenaOperandWrapper(graph)))).getResult();
+        List<Binding> result = tp.eval(r2r.eval(List.of(new JenaGraphOrBindings(graph)))).getResult();
 
         Binding root = BindingRoot.create();
         Binding b1 = BindingFactory.binding(root, alloc("s"), createURI("S1"));

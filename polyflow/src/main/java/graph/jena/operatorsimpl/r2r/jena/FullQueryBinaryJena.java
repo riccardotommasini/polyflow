@@ -1,9 +1,12 @@
 package graph.jena.operatorsimpl.r2r.jena;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.compose.Union;
 import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.sparql.core.ResultBinding;
@@ -13,10 +16,8 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class FullQueryBinaryJena implements RelationToRelationOperator<JenaOperandWrapper> {
+public class FullQueryBinaryJena implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private String query;
@@ -34,38 +35,78 @@ public class FullQueryBinaryJena implements RelationToRelationOperator<JenaOpera
     }
 
 
-
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
+        JenaGraphOrBindings ds1 = datasets.get(0);
+        JenaGraphOrBindings ds2 = datasets.get(1);
 
-        JenaOperandWrapper dataset = datasets.get(0);
-        Query q = QueryFactory.create(query);
-        q.getProjectVars();
-        DatasetGraph dg = new DatasetGraphInMemory();
-        Node g0 = NodeFactory.createURI("g0");
-        dg.addGraph(g0, dataset.getContent());
+        if (query == null || query.isEmpty()) {
+            JenaGraphOrBindings res = new JenaGraphOrBindings();
+            List<Binding> resBinding = new ArrayList<>();
+            resBinding.addAll(ds1.getResult());
+            resBinding.addAll(ds2.getResult());
+            res.setResult(resBinding);
+            //  res.setContent(new Union(ds1.getContent(), ds2.getContent()));
+            return res;
+        } else {
+            if (ds1.getContent() == null || ds2.getContent() == null) {
 
-        q.getProjectVars();
-        Node g1 = NodeFactory.createURI("g1");
-        dg.addGraph(g1, datasets.get(1).getContent());
+                Graph g1 = ds1.getContent() == null ? ds2.getContent() : ds1.getContent();
+                List<Binding> bs = ds1.getResult() == null ? ds2.getResult() : ds1.getResult();
 
-        QueryExecution queryExecution = QueryExecutionFactory.create(q, DatasetImpl.wrap(dg));
-        ResultSet resultSet = queryExecution.execSelect();
+                Query q = QueryFactory.create(query);
 
-        List<Binding> res = new ArrayList<>();
+                DatasetGraph dg = new DatasetGraphInMemory();
+                Node g0 = NodeFactory.createURI("g0");
+                dg.addGraph(g0, g1);
 
-        while (resultSet.hasNext()) {
+                QueryExecution queryExecution = QueryExecutionFactory.create(q, DatasetImpl.wrap(dg));
+                ResultSet resultSet = queryExecution.execSelect();
 
-            ResultBinding rb = (ResultBinding) resultSet.next();
-            res.add(rb.getBinding());
+                List<Binding> res = new ArrayList<>();
+                res.addAll(bs);
 
+                while (resultSet.hasNext()) {
+
+                    ResultBinding rb = (ResultBinding) resultSet.next();
+                    res.add(rb.getBinding());
+                }
+
+                JenaGraphOrBindings bindings = new JenaGraphOrBindings();
+                bindings.setResult(res);
+                return bindings;
+
+            } else {
+                JenaGraphOrBindings dataset = ds1;
+                Query q = QueryFactory.create(query);
+                DatasetGraph dg = new DatasetGraphInMemory();
+                Node g0 = NodeFactory.createURI("g0");
+                dg.addGraph(g0, dataset.getContent());
+
+                q.getProjectVars();
+                Node g1 = NodeFactory.createURI("g1");
+                dg.addGraph(g1, ds2.getContent());
+
+                QueryExecution queryExecution = QueryExecutionFactory.create(q, DatasetImpl.wrap(dg));
+                ResultSet resultSet = queryExecution.execSelect();
+
+                List<Binding> res = new ArrayList<>();
+
+                while (resultSet.hasNext()) {
+
+                    ResultBinding rb = (ResultBinding) resultSet.next();
+                    res.add(rb.getBinding());
+
+                }
+
+
+                JenaGraphOrBindings bindings = new JenaGraphOrBindings(new Union(ds1.getContent(), ds2.getContent()));
+                bindings.setResult(res);
+                return bindings;
+            }
         }
-
-        dataset.setResult(res);
-
-        return dataset;
-
     }
+
 
     @Override
     public List<String> getTvgNames() {

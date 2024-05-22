@@ -1,6 +1,6 @@
 package graph.jena.operatorsimpl.r2r.jena;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.op.OpBGP;
 import org.apache.jena.sparql.algebra.op.OpTriple;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-public class BGP implements UnaryOperator<JenaOperandWrapper>, RelationToRelationOperator<JenaOperandWrapper> {
+public class BGP implements UnaryOperator<JenaGraphOrBindings>, RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private OpBGP bgp;
@@ -34,7 +34,7 @@ public class BGP implements UnaryOperator<JenaOperandWrapper>, RelationToRelatio
     }
 
 
-    public JenaOperandWrapper eval(JenaOperandWrapper dataset) {
+    public JenaGraphOrBindings eval(JenaGraphOrBindings dataset) {
 
         QueryIterator exec = Algebra.exec(bgp, dataset.getContent());
 
@@ -55,22 +55,22 @@ public class BGP implements UnaryOperator<JenaOperandWrapper>, RelationToRelatio
     }
 
     @Override
-    public JenaOperandWrapper apply(JenaOperandWrapper bindings) {
+    public JenaGraphOrBindings apply(JenaGraphOrBindings bindings) {
         return null;
     }
 
     @Override
-    public <V> Function<V, JenaOperandWrapper> compose(Function<? super V, ? extends JenaOperandWrapper> before) {
+    public <V> Function<V, JenaGraphOrBindings> compose(Function<? super V, ? extends JenaGraphOrBindings> before) {
         return UnaryOperator.super.compose(before);
     }
 
     @Override
-    public <V> Function<JenaOperandWrapper, V> andThen(Function<? super JenaOperandWrapper, ? extends V> after) {
+    public <V> Function<JenaGraphOrBindings, V> andThen(Function<? super JenaGraphOrBindings, ? extends V> after) {
         return UnaryOperator.super.andThen(after);
     }
 
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
         return eval(datasets.get(0));
     }
 

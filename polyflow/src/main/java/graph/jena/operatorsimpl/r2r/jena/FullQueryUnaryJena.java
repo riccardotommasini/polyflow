@@ -1,6 +1,6 @@
 package graph.jena.operatorsimpl.r2r.jena;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.*;
@@ -14,7 +14,7 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FullQueryUnaryJena implements RelationToRelationOperator<JenaOperandWrapper> {
+public class FullQueryUnaryJena implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private String query;
@@ -31,8 +31,8 @@ public class FullQueryUnaryJena implements RelationToRelationOperator<JenaOperan
     }
 
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
-        JenaOperandWrapper dataset = datasets.get(0);
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
+        JenaGraphOrBindings dataset = datasets.get(0);
         Query q = QueryFactory.create(query);
         q.getProjectVars();
         Node aDefault = NodeFactory.createURI("default");

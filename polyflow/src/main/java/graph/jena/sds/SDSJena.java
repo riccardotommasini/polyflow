@@ -1,8 +1,6 @@
 package graph.jena.sds;
 
-import graph.jena.content.ValidatedGraph;
-import graph.jena.datatypes.JenaOperandWrapper;
-import org.apache.commons.rdf.api.IRI;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -14,20 +12,17 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shared.Lock;
 import org.apache.jena.sparql.core.DatasetGraph;
-import org.apache.jena.sparql.core.Quad;
-import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.util.Context;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SDSJena implements SDS<JenaOperandWrapper>, Dataset {
+public class SDSJena implements SDS<JenaGraphOrBindings>, Dataset {
 
-    private final Set<TimeVarying<JenaOperandWrapper>> defs = new HashSet<>();
-    private final Map<Node, TimeVarying<JenaOperandWrapper>> tvgs = new HashMap<>();
+    private final Set<TimeVarying<JenaGraphOrBindings>> defs = new HashSet<>();
+    private final Map<Node, TimeVarying<JenaGraphOrBindings>> tvgs = new HashMap<>();
     private boolean materialized = false;
     private final Node def = NodeFactory.createURI("def");
 
@@ -35,18 +30,18 @@ public class SDSJena implements SDS<JenaOperandWrapper>, Dataset {
 
 
     @Override
-    public Collection<TimeVarying<JenaOperandWrapper>> asTimeVaryingEs() {
+    public Collection<TimeVarying<JenaGraphOrBindings>> asTimeVaryingEs() {
         return tvgs.values();
     }
 
 
     @Override
-    public void add(String iri, TimeVarying<JenaOperandWrapper> tvg) {
+    public void add(String iri, TimeVarying<JenaGraphOrBindings> tvg) {
         tvgs.put(NodeFactory.createURI(iri), tvg);
     }
 
     @Override
-    public void add(TimeVarying<JenaOperandWrapper> tvg) {
+    public void add(TimeVarying<JenaGraphOrBindings> tvg) {
         defs.add(tvg);
     }
 
@@ -56,7 +51,7 @@ public class SDSJena implements SDS<JenaOperandWrapper>, Dataset {
     }
 
     @Override
-    public SDS<JenaOperandWrapper> materialize(final long ts) {
+    public SDS<JenaGraphOrBindings> materialize(final long ts) {
         //TODO here applies the consolidation strategies
         //Default consolidation coaleces all the current
         //content graphs and produces the SDS to who execute the query.
@@ -88,7 +83,7 @@ public class SDSJena implements SDS<JenaOperandWrapper>, Dataset {
     }
 
     @Override
-    public Stream<JenaOperandWrapper> toStream() {
+    public Stream<JenaGraphOrBindings> toStream() {
         return null;
     }
 

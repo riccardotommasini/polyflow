@@ -1,6 +1,6 @@
 package operators.s2r;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import org.apache.jena.graph.*;
 import org.apache.jena.rdf.model.Model;
@@ -39,24 +39,24 @@ public class StreamToRelationOpTest {
         Time instance = new TimeImpl(0);
         Graph shapesGraph = RDFDataMgr.loadGraph(StreamToRelationOpTest.class.getResource("/shapes.ttl").getPath());
         Shapes shapes = Shapes.parse(shapesGraph);
-        JenaOperandWrapper emptyContent = new JenaOperandWrapper(GraphFactory.createGraphMem());
+        JenaGraphOrBindings emptyContent = new JenaGraphOrBindings(GraphFactory.createGraphMem());
 
 
-        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
+        AccumulatorContentFactory<Graph, Graph, JenaGraphOrBindings> accumulatorContentFactory = new AccumulatorContentFactory<>(
                 (g) -> g,
-                (g) -> new JenaOperandWrapper(g),
+                (g) -> new JenaGraphOrBindings(g),
                 (r1, r2) -> {
                     Model m1 = ModelFactory.createModelForGraph(r1.getContent());
                     Model m2 = ModelFactory.createModelForGraph(r2.getContent());
                     Graph res_content = m1.union(m2).getGraph();
-                    return new JenaOperandWrapper(res_content);
+                    return new JenaGraphOrBindings(res_content);
                 },
                 emptyContent
         );
 
-        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
+        TimeVaryingFactory<JenaGraphOrBindings> tvFactory = new TimeVaryingFactoryJena();
 
-        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp =
+        StreamToRelationOperator<Graph, Graph, JenaGraphOrBindings> s2rOp =
                 new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -68,7 +68,7 @@ public class StreamToRelationOpTest {
                         1000,
                         1000);
 
-        TimeVarying<JenaOperandWrapper> tvg = s2rOp.get();
+        TimeVarying<JenaGraphOrBindings> tvg = s2rOp.get();
 
         //CRAFT A GRAPH TO SIMULATE THE INPUT
         Graph graph1 = GraphMemFactory.createGraphMem();
@@ -96,9 +96,9 @@ public class StreamToRelationOpTest {
         //WHEN THE EVENT WITH TS=4000 ARRIVES, THE WINDOW [3000, 4000) DOES NOT CLOSE, BUT THE WINDOW [2000, 3000) CLOSES AND IT'S REPORTED WITH ITS CONTENT (GRAPH 1)
 
         tvg.materialize(4000);
-        Content<Graph, Graph, JenaOperandWrapper> content = accumulatorContentFactory.create();
+        Content<Graph, Graph, JenaGraphOrBindings> content = accumulatorContentFactory.create();
         content.add(graph1);
-        JenaOperandWrapper expected = content.coalesce();
+        JenaGraphOrBindings expected = content.coalesce();
 
         expected.getContent().stream().map(Triple.class::cast).forEach(triple ->
                 assertTrue(tvg.get().getContent().contains(triple)));

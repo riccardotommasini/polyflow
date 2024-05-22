@@ -1,7 +1,7 @@
 package graph.jena.operatorsimpl.r2r.csprite;
 
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class R2RUpwardExtension implements RelationToRelationOperator<JenaOperandWrapper> {
+public class R2RUpwardExtension implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private final Node RDFTYPE = RDF.type.asNode();
@@ -66,7 +66,7 @@ public class R2RUpwardExtension implements RelationToRelationOperator<JenaOperan
 
 
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
         Graph graphMem = GraphFactory.createGraphMem();
         datasets.forEach(
                 g -> g.getContent().stream()
@@ -74,7 +74,7 @@ public class R2RUpwardExtension implements RelationToRelationOperator<JenaOperan
                         .flatMap(Collection::stream)
                         .forEach(graphMem::add)
         );
-        return new JenaOperandWrapper(graphMem);
+        return new JenaGraphOrBindings(graphMem);
     }
 
     @Override

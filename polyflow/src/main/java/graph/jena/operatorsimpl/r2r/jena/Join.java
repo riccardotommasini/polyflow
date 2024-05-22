@@ -1,6 +1,6 @@
 package graph.jena.operatorsimpl.r2r.jena;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Join implements RelationToRelationOperator<JenaOperandWrapper> {
+public class Join implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private List<String> tvgNames;
@@ -31,7 +31,7 @@ public class Join implements RelationToRelationOperator<JenaOperandWrapper> {
     }
 
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
         return null;
     }
 
@@ -57,39 +57,39 @@ public class Join implements RelationToRelationOperator<JenaOperandWrapper> {
         return binaryOpName;
     }
 
-    public JenaOperandWrapper evalUnary(JenaOperandWrapper dataset) {
+    public JenaGraphOrBindings evalUnary(JenaGraphOrBindings dataset) {
         return dataset;
     }
 
-    public JenaOperandWrapper eval(JenaOperandWrapper... datasets) {
+    public JenaGraphOrBindings eval(JenaGraphOrBindings... datasets) {
 
         List<Binding> collect = datasets[0].getResult().stream().flatMap(l -> datasets[1].getResult().stream().map(r -> Algebra.merge(l, r)))
                 .filter(b -> b != null).collect(Collectors.toList());
 
-        JenaOperandWrapper result = new JenaOperandWrapper();
+        JenaGraphOrBindings result = new JenaGraphOrBindings();
         result.setResult(collect);
 
         return result;
 
     }
 
-    public JenaOperandWrapper evalBinary(JenaOperandWrapper dataset1, JenaOperandWrapper dataset2) {
+    public JenaGraphOrBindings evalBinary(JenaGraphOrBindings dataset1, JenaGraphOrBindings dataset2) {
 
         List<Binding> collect = dataset1.getResult().stream().flatMap(l -> dataset2.getResult().stream().map(r -> Algebra.merge(l, r)))
                 .filter(b -> b != null).collect(Collectors.toList());
 
-        JenaOperandWrapper result = new JenaOperandWrapper();
+        JenaGraphOrBindings result = new JenaGraphOrBindings();
         result.setResult(collect);
 
         return result;
 
     }
 
-    public TimeVarying<Collection<JenaOperandWrapper>> apply(SDS<JenaOperandWrapper> sds) {
+    public TimeVarying<Collection<JenaGraphOrBindings>> apply(SDS<JenaGraphOrBindings> sds) {
         return null;
     }
 
-    public SolutionMapping<JenaOperandWrapper> createSolutionMapping(JenaOperandWrapper result) {
+    public SolutionMapping<JenaGraphOrBindings> createSolutionMapping(JenaGraphOrBindings result) {
         return null;
     }
 }

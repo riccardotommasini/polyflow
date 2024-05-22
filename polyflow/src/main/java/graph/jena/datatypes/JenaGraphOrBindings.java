@@ -1,26 +1,28 @@
 package graph.jena.datatypes;
 
-import graph.jena.content.ValidatedGraph;
 import org.apache.jena.graph.Graph;
-import org.apache.jena.riot.other.G;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.graph.GraphFactory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class JenaOperandWrapper implements Iterable<Binding> {
+public class JenaGraphOrBindings implements Iterable<Binding> {
 
 
     private Graph content;
     private List<Binding> result;
 
-    public JenaOperandWrapper(Graph content) {
+    public JenaGraphOrBindings(Graph content) {
         this.content = content;
+        this.result = new ArrayList<>();
     }
 
-    public JenaOperandWrapper() {
-
+    public JenaGraphOrBindings() {
+        this.result = new ArrayList<>();
+        this.content = GraphFactory.createGraphMem();
     }
 
     @Override

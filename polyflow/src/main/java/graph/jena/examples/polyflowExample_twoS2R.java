@@ -1,6 +1,6 @@
 package graph.jena.examples;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
 import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
@@ -9,10 +9,9 @@ import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.stream.JenaBindingStream;
 import graph.jena.stream.JenaStreamGenerator;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.compose.Union;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.shacl.Shapes;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
@@ -57,25 +56,20 @@ public class polyflowExample_twoS2R {
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
 
-        JenaOperandWrapper emptyContent = new JenaOperandWrapper(GraphFactory.createGraphMem());
+        JenaGraphOrBindings emptyContent = new JenaGraphOrBindings(GraphFactory.createGraphMem());
 
-        AccumulatorContentFactory<Graph, Graph, JenaOperandWrapper> accumulatorContentFactory = new AccumulatorContentFactory<>(
+        AccumulatorContentFactory<Graph, Graph, JenaGraphOrBindings> accumulatorContentFactory = new AccumulatorContentFactory<>(
                 (g) -> g,
-                (g) -> new JenaOperandWrapper(g),
-                (r1, r2) -> {
-                    Model m1 = ModelFactory.createModelForGraph(r1.getContent());
-                    Model m2 = ModelFactory.createModelForGraph(r2.getContent());
-                    Graph res_content = m1.union(m2).getGraph();
-                    return new JenaOperandWrapper(res_content);
-                },
+                (g) -> new JenaGraphOrBindings(g),
+                (r1, r2) -> new JenaGraphOrBindings(new Union(r1.getContent(), r2.getContent())),
                 emptyContent
         );
 
-        TimeVaryingFactory<JenaOperandWrapper> tvFactory = new TimeVaryingFactoryJena();
+        TimeVaryingFactory<JenaGraphOrBindings> tvFactory = new TimeVaryingFactoryJena();
 
-        ContinuousProgram<Graph, Graph, JenaOperandWrapper, Binding> cp = new ContinuousProgram<>();
+        ContinuousProgram<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgram<>();
 
-        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_one =
+        StreamToRelationOperator<Graph, Graph, JenaGraphOrBindings> s2rOp_one =
                 new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -87,7 +81,7 @@ public class polyflowExample_twoS2R {
                         1000,
                         1000);
 
-        StreamToRelationOperator<Graph, Graph, JenaOperandWrapper> s2rOp_two =
+        StreamToRelationOperator<Graph, Graph, JenaGraphOrBindings> s2rOp_two =
                 new CSPARQLStreamToRelationOpImpl<>(
                         tick,
                         instance,
@@ -104,14 +98,14 @@ public class polyflowExample_twoS2R {
         s2r_names.add(s2rOp_one.getName());
         s2r_names.add(s2rOp_two.getName());
 
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp1 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp_one.getName()), "partial_1");
-        RelationToRelationOperator<JenaOperandWrapper> r2rOp2 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp_two.getName()), "partial_2");
-        RelationToRelationOperator<JenaOperandWrapper> r2rBinaryOp = new FullQueryBinaryJena("", List.of("partial_1", "partial_2"), "partial_3");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp_one.getName()), "partial_1");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp2 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp_two.getName()), "partial_2");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rBinaryOp = new FullQueryBinaryJena("", List.of("partial_1", "partial_2"), "partial_3");
 
 
-        RelationToStreamOperator<JenaOperandWrapper, Binding> r2sOp = new RelationToStreamOpImpl();
+        RelationToStreamOperator<JenaGraphOrBindings, Binding> r2sOp = new RelationToStreamOpImpl();
 
-        Task<Graph, Graph, JenaOperandWrapper, Binding> task = new TaskImpl<>();
+        Task<Graph, Graph, JenaGraphOrBindings, Binding> task = new TaskImpl<>();
         task = task.addS2ROperator(s2rOp_one, inputStream)
                 .addS2ROperator(s2rOp_two, inputStream)
                 .addR2ROperator(r2rOp1)

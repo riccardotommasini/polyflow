@@ -1,6 +1,6 @@
 package graph.jena.operatorsimpl.r2r.jena;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.op.OpTriple;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-public class TP implements UnaryOperator<JenaOperandWrapper>, RelationToRelationOperator<JenaOperandWrapper> {
+public class TP implements UnaryOperator<JenaGraphOrBindings>, RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private OpTriple bgp;
@@ -28,7 +28,7 @@ public class TP implements UnaryOperator<JenaOperandWrapper>, RelationToRelation
 
     }
 
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
         return null;
     }
 
@@ -46,7 +46,7 @@ public class TP implements UnaryOperator<JenaOperandWrapper>, RelationToRelation
         return unaryOpName;
     }
 
-    public JenaOperandWrapper eval(JenaOperandWrapper dataset) {
+    public JenaGraphOrBindings eval(JenaGraphOrBindings dataset) {
 
         QueryIterator exec = Algebra.exec(bgp, dataset.getContent());
 
@@ -61,7 +61,7 @@ public class TP implements UnaryOperator<JenaOperandWrapper>, RelationToRelation
     }
 
     @Override
-    public JenaOperandWrapper apply(JenaOperandWrapper bindings) {
+    public JenaGraphOrBindings apply(JenaGraphOrBindings bindings) {
         return null;
     }
 

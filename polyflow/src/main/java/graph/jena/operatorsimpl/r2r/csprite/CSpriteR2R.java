@@ -1,6 +1,6 @@
 package graph.jena.operatorsimpl.r2r.csprite;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import graph.jena.operatorsimpl.r2r.jena.BGP;
 import graph.jena.operatorsimpl.r2r.jena.TP;
 import org.apache.jena.vocabulary.RDF;
@@ -12,15 +12,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CSpriteR2R implements RelationToRelationOperator<JenaOperandWrapper> {
+public class CSpriteR2R implements RelationToRelationOperator<JenaGraphOrBindings> {
     private final HierarchySchema hierarchySchema;
-    private final RelationToRelationOperator<JenaOperandWrapper> r2r;
+    private final RelationToRelationOperator<JenaGraphOrBindings> r2r;
     private final UpwardExtension upwardExtension;
     private final R2RUpwardExtension r2rUpward;
     private Set<String> queriedTypes;
     private Set<String> queriedProperties;
 
-    public CSpriteR2R(RelationToRelationOperator<JenaOperandWrapper> relationOperator, HierarchySchema hierarchySchema) {
+    public CSpriteR2R(RelationToRelationOperator<JenaGraphOrBindings> relationOperator, HierarchySchema hierarchySchema) {
         this.r2r = relationOperator;
         this.hierarchySchema = hierarchySchema;
         this.queriedTypes = new HashSet<>();
@@ -73,7 +73,7 @@ public class CSpriteR2R implements RelationToRelationOperator<JenaOperandWrapper
     }
 
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
         return r2rUpward.eval(datasets);
     }
 

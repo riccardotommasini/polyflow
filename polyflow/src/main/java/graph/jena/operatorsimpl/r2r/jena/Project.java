@@ -1,6 +1,6 @@
 package graph.jena.operatorsimpl.r2r.jena;
 
-import graph.jena.datatypes.JenaOperandWrapper;
+import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.sparql.algebra.op.OpProject;
 import org.apache.jena.sparql.engine.binding.BindingProject;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Project implements RelationToRelationOperator<JenaOperandWrapper> {
+public class Project implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private OpProject proj;
@@ -35,7 +35,7 @@ public class Project implements RelationToRelationOperator<JenaOperandWrapper> {
     }
 
     @Override
-    public JenaOperandWrapper eval(List<JenaOperandWrapper> datasets) {
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
         return null;
     }
 
@@ -50,26 +50,26 @@ public class Project implements RelationToRelationOperator<JenaOperandWrapper> {
     }
 
 
-    public JenaOperandWrapper evalUnary(JenaOperandWrapper dataset) {
+    public JenaGraphOrBindings evalUnary(JenaGraphOrBindings dataset) {
 
         dataset.setResult(dataset.getResult().stream().map(b -> new BindingProject(proj.getVars(), b)).collect(Collectors.toList()));
         return dataset;
     }
 
-    public JenaOperandWrapper evalBinary(JenaOperandWrapper dataset1, JenaOperandWrapper dataset2) {
+    public JenaGraphOrBindings evalBinary(JenaGraphOrBindings dataset1, JenaGraphOrBindings dataset2) {
 
-        JenaOperandWrapper result = new JenaOperandWrapper();
+        JenaGraphOrBindings result = new JenaGraphOrBindings();
         result.setResult(Stream.concat(dataset1.getResult().stream(), dataset2.getResult().stream()).collect(Collectors.toList()));
 
         return result;
 
     }
 
-    public TimeVarying<Collection<JenaOperandWrapper>> apply(SDS<JenaOperandWrapper> sds) {
+    public TimeVarying<Collection<JenaGraphOrBindings>> apply(SDS<JenaGraphOrBindings> sds) {
         return null;
     }
 
-    public SolutionMapping<JenaOperandWrapper> createSolutionMapping(JenaOperandWrapper result) {
+    public SolutionMapping<JenaGraphOrBindings> createSolutionMapping(JenaGraphOrBindings result) {
         return null;
     }
 }
