@@ -15,7 +15,7 @@ public interface RelationToRelationOperator<R extends Iterable<?>> {
 
 
     /**
-     * Takes as input a Dag Node and returns a time varying that can be later queried to compute the result of the operation
+     * Takes as input a Time varying and returns a time varying that can be later queried to compute the result of the operation
      */
     default TimeVarying<R> apply(TimeVarying<R> node) {
         return new TimeVarying<R>() {
