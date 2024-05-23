@@ -5,7 +5,9 @@ import org.streamreasoning.rsp4j.api.operators.multimodal.s2s.StreamToStreamOper
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
+import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface Task2 <I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends Iterable<?>, O2>{
@@ -25,14 +27,17 @@ public interface Task2 <I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends I
 
     Task2<I1, W1, R1, O1, I2, W2, R2, O2> addS2SOperator(StreamToStreamOperator<I1, I2> s2s);
 
-    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2ROperator(RelationToRelationOperator<?> r2r);
+    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2ROperator(RelationToRelationOperator<R2> r2r);
 
-    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2SOperator(RelationToStreamOperator<?, ?> r2s);
+    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2SOperatorOne(RelationToStreamOperator<R2, O1> r2s);
+    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2SOperatorTwo(RelationToStreamOperator<R2, O2> r2s);
 
     Task2<I1, W1, R1, O1, I2, W2, R2, O2> addTime(Time time);
 
-
-
-
+    /**
+     * The method returns void because in a Task2 we can have two possible outputs, O1 and O2, so the Coordinator (ContinoutProgram2) will
+     * poll for the results it needs based on the output streams interested. The results of the computation are stored in the Task2 object
+     */
+    void elaborateElement(DataStream<?> inputStream, Object element, long timestamp);
 
 }

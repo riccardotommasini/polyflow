@@ -5,13 +5,11 @@ import org.streamreasoning.rsp4j.api.operators.multimodal.s2s.StreamToStreamOper
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
+import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends Iterable<?>, O2> implements Task2<I1, W1, R1, O1, I2, W2, R2, O2>{
 
@@ -24,8 +22,11 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
     ModelToModelOperator<R1, R2> m2mOperator;
     StreamToStreamOperator<I1, I2> s2sOperator;
     RelationToStreamOperator<R2, O1> r2sOperatorOne;
-    RelationToStreamOperator<R2, O2> r2sOperatorTwo; 
+    RelationToStreamOperator<R2, O2> r2sOperatorTwo;
     List<RelationToRelationOperator<R2>> r2rOperators;
+    Collection<Collection<O1>> outputOne;
+    Collection<Collection<O2>> outputTwo;
+
 
 
 
@@ -36,6 +37,8 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
         this.registeredTasksTwo = new HashMap<>();
         this.times = new ArrayList<>();
         this.r2rOperators = new ArrayList<>();
+        this.outputOne = new ArrayList<>();
+        this.outputTwo = new ArrayList<>();
     }
 
     @Override
@@ -70,36 +73,84 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
 
     @Override
     public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addTaskOne(Task<I1, W1, R1, O1> task) {
-        return null;
+        this.taskOneList.add(task);
+        return this;
     }
 
     @Override
     public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addTaskTwo(Task<I2, W2, R2, O2> task) {
-        return null;
+        this.taskTwoList.add(task);
+        return this;
     }
 
     @Override
     public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addM2MOperator(ModelToModelOperator<R1, R2> m2m) {
-        return null;
+        this.m2mOperator = m2m;
+        return this;
     }
 
     @Override
     public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addS2SOperator(StreamToStreamOperator<I1, I2> s2s) {
-        return null;
+        this.s2sOperator = s2s;
+        return this;
     }
 
     @Override
-    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2ROperator(RelationToRelationOperator<?> r2r) {
-        return null;
+    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2ROperator(RelationToRelationOperator<R2> r2r) {
+
+        this.r2rOperators.add(r2r);
+        return this;
     }
 
     @Override
-    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2SOperator(RelationToStreamOperator<?, ?> r2s) {
-        return null;
+    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2SOperatorOne(RelationToStreamOperator<R2, O1> r2s) {
+        this.r2sOperatorOne = r2s;
+        return this;
+    }
+
+    @Override
+    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addR2SOperatorTwo(RelationToStreamOperator<R2, O2> r2s) {
+        this.r2sOperatorTwo = r2s;
+        return this;
     }
 
     @Override
     public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addTime(Time time) {
-        return null;
+        this.times.add(time);
+        return this;
     }
+
+    public void elaborateElement(DataStream<?> inputStream, Object element, long timestamp){
+        if(registeredTasksOne.containsKey(inputStream)){
+            //The tasks should be LazyTasks, so that elaborateElement doesn't trigger any computation, it just updates the windows
+            registeredTasksOne.get(inputStream).forEach(t->t.elaborateElement((DataStream<I1>) inputStream, (I1) element, timestamp));
+        }
+        if(registeredTasksTwo.containsKey(inputStream)){
+            registeredTasksTwo.get(inputStream).forEach(t->t.elaborateElement((DataStream<I2>) inputStream, (I2) element, timestamp));
+        }
+        SortedSet<TimeInstant> sortedSet = new TreeSet<>((TimeInstant a, TimeInstant b)->{
+            if(a.t<b.t)
+                return -1;
+            if(a.t>b.t)
+                return 1;
+            return 0;
+        });
+        for(Time t: times){
+            while(t.hasEvaluationInstant())
+                sortedSet.add(t.getEvaluationTime());
+        }
+
+        for(TimeInstant t : sortedSet){
+            /*As in the classic task, we have a dag whose root nodes are the various TVGs. Assuming we wanna do the computations on the type R2
+            (so we want to convert R1 to R2), the root node that holds the TVG of type R1 will just apply the m2m operator and forward the result to
+            the next dag node, which will have an R2R of type R2
+             */
+            dag.eval(t.t);
+
+        }
+
+
+    }
+
+
 }

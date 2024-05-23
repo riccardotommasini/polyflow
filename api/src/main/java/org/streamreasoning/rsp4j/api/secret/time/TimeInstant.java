@@ -10,4 +10,14 @@ public class TimeInstant {
         this.t = t;
         this.duplicates = 1;
     }
+
+    @Override
+    public boolean equals(Object o){
+        return (o instanceof TimeInstant) && this.t == ((TimeInstant) o).t;
+    }
+
+    @Override
+    public int hashCode(){
+        return (int)(t ^ (t >>> 32));
+    }
 }
