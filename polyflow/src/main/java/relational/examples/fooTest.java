@@ -3,10 +3,7 @@ package relational.examples;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.stream.RowStream;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class fooTest {
 
@@ -26,5 +23,6 @@ public class fooTest {
         //m1.put(a, 3);
         System.out.println(m1.get(b));
         System.out.println(m1.get(a));
+
     }
 }

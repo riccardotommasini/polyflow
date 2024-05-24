@@ -2,8 +2,11 @@ package org.streamreasoning.rsp4j.api.querying;
 
 import org.streamreasoning.rsp4j.api.operators.multimodal.m2m.ModelToModelOperator;
 import org.streamreasoning.rsp4j.api.operators.multimodal.s2s.StreamToStreamOperator;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG2;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
+import org.streamreasoning.rsp4j.api.sds.SDS2;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
@@ -34,10 +37,27 @@ public interface Task2 <I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends I
 
     Task2<I1, W1, R1, O1, I2, W2, R2, O2> addTime(Time time);
 
+    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addDAG(DAG2<R1, R2> dag);
+
+    Task2<I1, W1, R1, O1, I2, W2, R2, O2> addSDS(SDS2<R1, R2> sds);
+
+    /**
+     * Clears the Task2 from results of previous computations
+     */
+    void clear();
+
+    /**
+     * Initializes the Task by creating the Time Varying Objects and the DAG of the Task.
+     * Adds the Time Varying Objects to the SDS
+     */
+    void initialize();
+
     /**
      * The method returns void because in a Task2 we can have two possible outputs, O1 and O2, so the Coordinator (ContinoutProgram2) will
      * poll for the results it needs based on the output streams interested. The results of the computation are stored in the Task2 object
      */
     void elaborateElement(DataStream<?> inputStream, Object element, long timestamp);
+
+
 
 }

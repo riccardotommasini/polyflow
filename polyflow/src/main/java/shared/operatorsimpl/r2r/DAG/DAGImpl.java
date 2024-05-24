@@ -35,6 +35,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
    }
 
+    @Override
     public void addTVGs(Collection<TimeVarying<R>> sds){
         for(TimeVarying<R> tvg : sds){
             root.put(tvg.iri(), new DAGRootNodeImpl<>(tvg));

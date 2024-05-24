@@ -2,14 +2,18 @@ package org.streamreasoning.rsp4j.api.querying;
 
 import org.streamreasoning.rsp4j.api.operators.multimodal.m2m.ModelToModelOperator;
 import org.streamreasoning.rsp4j.api.operators.multimodal.s2s.StreamToStreamOperator;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
+import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG2;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
+import org.streamreasoning.rsp4j.api.sds.SDS2;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends Iterable<?>, O2> implements Task2<I1, W1, R1, O1, I2, W2, R2, O2>{
 
@@ -26,6 +30,8 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
     List<RelationToRelationOperator<R2>> r2rOperators;
     Collection<Collection<O1>> outputOne;
     Collection<Collection<O2>> outputTwo;
+    DAG2<R1, R2> dag;
+    SDS2<R1, R2> sds;
 
 
 
@@ -120,6 +126,37 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
         return this;
     }
 
+    @Override
+    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addDAG(DAG2<R1,R2> dag){
+        this.dag = dag;
+        return this;
+    }
+
+    @Override
+    public Task2<I1, W1, R1, O1, I2, W2, R2, O2> addSDS(SDS2<R1,R2> sds){
+        this.sds = sds;
+        return this;
+    }
+    @Override
+    public void clear(){
+        this.outputOne = new ArrayList<>();
+        this.outputTwo = new ArrayList<>();
+    }
+
+    @Override
+    public void initialize(){
+        taskOneList.stream().map(Task::apply).forEach(tvg->sds.addToOne(tvg));
+        taskTwoList.stream().map(Task::apply).forEach(tvg->sds.addToTwo(tvg));
+
+        dag.addTVGs(sds.asTimeVaryingEsOne(), sds.asTimeVaryingEsTwo());
+        for (RelationToRelationOperator<R2> op : r2rOperators){
+            dag.addToDAG(op);
+        }
+        dag.initialize();
+
+    }
+
+    @Override
     public void elaborateElement(DataStream<?> inputStream, Object element, long timestamp){
         if(registeredTasksOne.containsKey(inputStream)){
             //The tasks should be LazyTasks, so that elaborateElement doesn't trigger any computation, it just updates the windows
@@ -140,14 +177,18 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
                 sortedSet.add(t.getEvaluationTime());
         }
 
+
         for(TimeInstant t : sortedSet){
             /*As in the classic task, we have a dag whose root nodes are the various TVGs. Assuming we wanna do the computations on the type R2
             (so we want to convert R1 to R2), the root node that holds the TVG of type R1 will just apply the m2m operator and forward the result to
-            the next dag node, which will have an R2R of type R2
-             */
-            dag.eval(t.t);
+            the next dag node, which will have an R2R of type R2*/
+            R2 res = dag.eval(t.t);
+            outputOne.add(r2sOperatorOne.eval(res, t.t).collect(Collectors.toList()));
+            outputTwo.add(r2sOperatorTwo.eval(res, t.t).collect(Collectors.toList()));
 
         }
+        taskOneList.forEach(Task::evictWindows);
+        taskTwoList.forEach(Task::evictWindows);
 
 
     }
