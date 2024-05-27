@@ -26,6 +26,7 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
        else //Unary R2R
             dagNode = new UnaryDAGNodeImpl<>(op);
 
+
        root.put(op.getResName(), dagNode);
        for(String prev : op.getTvgNames()){
            DAGNode<R> node = root.get(prev);

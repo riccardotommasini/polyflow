@@ -70,7 +70,7 @@ public class BinaryDAGNodeImpl<R extends Iterable<?>> implements DAGNode<R> {
 
     @Override
     public TimeVarying<R> apply() {
-        return new LazyTimeVarying<>(this);
+        return new LazyTimeVarying<>(this, resName);
     }
 
 }

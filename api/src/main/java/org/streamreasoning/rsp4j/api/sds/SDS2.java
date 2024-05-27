@@ -10,8 +10,6 @@ public interface SDS2<R1, R2> {
     Collection<TimeVarying<R1>> asTimeVaryingEsOne();
     Collection<TimeVarying<R2>> asTimeVaryingEsTwo();
 
-    void addToOne(String iri, TimeVarying<R1> tvg);
-    void addToTwo(String iri, TimeVarying<R2> tvg);
     void addToOne(TimeVarying<R1> tvg);
     void addToTwo(TimeVarying<R2> tvg);
 
