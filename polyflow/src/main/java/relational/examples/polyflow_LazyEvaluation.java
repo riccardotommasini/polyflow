@@ -146,7 +146,7 @@ public class polyflow_LazyEvaluation {
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "partial_1");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "materialized");
         RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, "partial_2");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
@@ -173,7 +173,7 @@ public class polyflow_LazyEvaluation {
         //Add the materialized view to the interested task
 
         TimeVarying<Table> view = materializedView.apply();
-        view.setIri(materializedViewName);
+        //view.setIri(materializedViewName);
         task.getSDS().add(view);
 
         task.initialize();
