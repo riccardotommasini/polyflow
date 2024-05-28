@@ -2,6 +2,7 @@ package shared.operatorsimpl.r2r.DAG;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public class DAGRootNodeImpl<R extends Iterable<?>> implements DAGNode<R>{
 
     @Override
     public TimeVarying<R> apply() {
-        throw new RuntimeException("Impossible to apply on a dag node root");
+        return new LazyTimeVarying<>(this, tvg.iri());
     }
 
 }

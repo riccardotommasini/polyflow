@@ -41,6 +41,10 @@ public interface Task2 <I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends I
 
     Task2<I1, W1, R1, O1, I2, W2, R2, O2> addSDS(SDS2<R1, R2> sds);
 
+    Collection<Collection<O1>> getOutputOne();
+    Collection<Collection<O2>> getOutputTwo();
+    void registerInputOne(DataStream<I1> dataStream, Task<I1, W1, R1, O1> task);
+    void registerInputTwo(DataStream<I2> dataStream, Task<I2, W2, R2, O2> task);
     /**
      * Clears the Task2 from results of previous computations
      */

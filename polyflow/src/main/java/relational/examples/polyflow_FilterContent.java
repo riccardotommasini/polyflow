@@ -1,5 +1,6 @@
 package relational.examples;
 
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
@@ -178,7 +179,7 @@ public class polyflow_FilterContent {
 
             cp.buildTask(task, inputStreams, outputStreams);
 
-            outStream.addConsumer((out, el, ts)-> System.out.println(el + " @ " + ts));
+            outStream.addConsumer((Consumer<Tuple>) (out, el, ts)-> System.out.println(el + " @ " + ts));
 
             generator.startStreaming();
             //Thread.sleep(20_000);

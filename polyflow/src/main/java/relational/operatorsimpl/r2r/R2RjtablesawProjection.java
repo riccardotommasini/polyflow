@@ -1,4 +1,3 @@
-/*
 package relational.operatorsimpl.r2r;
 
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
@@ -16,34 +15,24 @@ public class R2RjtablesawProjection implements RelationToRelationOperator<Table>
 
     private List<String> tvgNames;
 
-    private boolean isBinary;
+    private String resName;
 
-    private String unaryOpName;
-    private String binaryOpName;
 
-    public R2RjtablesawProjection(CustomRelationalQuery query, List<String> tvgNames, String unaryOpName, String binaryOpName){
+
+    public R2RjtablesawProjection(CustomRelationalQuery query, List<String> tvgNames, String resName){
         this.query = query;
         this.tvgNames = tvgNames;
-        this.isBinary = false;
-        this.unaryOpName = unaryOpName;
-        this.binaryOpName = binaryOpName;
+        this.resName = resName;
+
     }
     @Override
-    public Table evalUnary(Table dataset) {
-        if(dataset.isEmpty())
-            return dataset;
-        return dataset.selectColumns(query.projectionColumns);
+    public Table eval(List<Table> dataset) {
+        Table res = dataset.get(0);
+        if(!res.isEmpty())
+            return res.selectColumns(query.projectionColumns);
+        return res;
     }
 
-    @Override
-    public Table evalBinary(Table dataset1, Table dataset2) {
-        return null;
-    }
-
-    @Override
-    public TimeVarying<Collection<Table>> apply(SDS<Table> sds) {
-        return null;
-    }
 
     @Override
     public List<String> getTvgNames() {
@@ -51,23 +40,9 @@ public class R2RjtablesawProjection implements RelationToRelationOperator<Table>
     }
 
     @Override
-    public boolean isBinary() {
-        return isBinary;
+    public String getResName() {
+        return resName;
     }
 
-    @Override
-    public String getUnaryOpName() {
-        return unaryOpName;
-    }
 
-    @Override
-    public String getBinaryOpName() {
-        return binaryOpName;
-    }
-
-    @Override
-    public SolutionMapping<Table> createSolutionMapping(Table result) {
-        return null;
-    }
 }
-*/

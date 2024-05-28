@@ -19,6 +19,7 @@ import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
@@ -127,7 +128,7 @@ public class polyflowExample_twoS2R {
 
         cp.buildTask(task, inputStreams, outputStreams);
 
-        outStream.addConsumer((out, el, ts) -> System.out.println(el + " @ " + ts));
+        outStream.addConsumer((Consumer<Binding>) (out, el, ts) -> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
         Thread.sleep(20_000);

@@ -137,6 +137,15 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
         this.sds = sds;
         return this;
     }
+
+    @Override
+    public Collection<Collection<O1>> getOutputOne(){
+        return this.outputOne;
+    }
+    @Override
+    public Collection<Collection<O2>> getOutputTwo(){
+        return this.outputTwo;
+    }
     @Override
     public void clear(){
         this.outputOne = new ArrayList<>();
@@ -145,16 +154,36 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
 
     @Override
     public void initialize(){
+        taskOneList.forEach(t->times.add(t.getTime()));
+        taskTwoList.forEach(t->times.add(t.getTime()));
+
         taskOneList.stream().map(Task::apply).forEach(tvg->sds.addToOne(tvg));
         taskTwoList.stream().map(Task::apply).forEach(tvg->sds.addToTwo(tvg));
 
+        dag.addM2MToDAG(m2mOperator);
         dag.addTVGs(sds.asTimeVaryingEsOne(), sds.asTimeVaryingEsTwo());
         for (RelationToRelationOperator<R2> op : r2rOperators){
             dag.addToDAG(op);
         }
+
         dag.initialize();
 
     }
+
+    public void registerInputOne(DataStream<I1> dataStream, Task<I1, W1, R1, O1> task){
+        if(!registeredTasksOne.containsKey(dataStream)){
+            registeredTasksOne.put(dataStream, new ArrayList<>());
+        }
+        registeredTasksOne.get(dataStream).add(task);
+    }
+
+    public void registerInputTwo(DataStream<I2> dataStream, Task<I2, W2, R2, O2> task){
+        if(!registeredTasksTwo.containsKey(dataStream)){
+            registeredTasksTwo.put(dataStream, new ArrayList<>());
+        }
+        registeredTasksTwo.get(dataStream).add(task);
+    }
+
 
     @Override
     public void elaborateElement(DataStream<?> inputStream, Object element, long timestamp){
@@ -183,10 +212,13 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
             (so we want to convert R1 to R2), the root node that holds the TVG of type R1 will just apply the m2m operator and forward the result to
             the next dag node, which will have an R2R of type R2*/
             R2 res = dag.eval(t.t);
-            outputOne.add(r2sOperatorOne.eval(res, t.t).collect(Collectors.toList()));
-            outputTwo.add(r2sOperatorTwo.eval(res, t.t).collect(Collectors.toList()));
+            if(r2sOperatorOne!= null)
+                outputOne.add(r2sOperatorOne.eval(res, t.t).collect(Collectors.toList()));
+            if(r2sOperatorTwo!=null)
+                outputTwo.add(r2sOperatorTwo.eval(res, t.t).collect(Collectors.toList()));
 
         }
+
         taskOneList.forEach(Task::evictWindows);
         taskTwoList.forEach(Task::evictWindows);
 

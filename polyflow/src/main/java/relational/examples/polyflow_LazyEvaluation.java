@@ -6,6 +6,7 @@ import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.querying.LazyTaskImpl;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.querying.TaskImpl;
@@ -146,7 +147,7 @@ public class polyflow_LazyEvaluation {
         CustomRelationalQuery selection = new CustomRelationalQuery(4, "c3");
         CustomRelationalQuery join = new CustomRelationalQuery("c1");
 
-        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "partial_1");
+        RelationToRelationOperator<Table> r2rOp = new R2RjtablesawSelection(selection, Collections.singletonList(s2rOp_1.getName()), "materialized");
         RelationToRelationOperator<Table> r2rBinaryOp = new R2RjtablesawJoin(join, s2r_names, "partial_2");
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
@@ -173,7 +174,7 @@ public class polyflow_LazyEvaluation {
         //Add the materialized view to the interested task
 
         TimeVarying<Table> view = materializedView.apply();
-        view.setIri(materializedViewName);
+        //view.setIri(materializedViewName);
         task.getSDS().add(view);
 
         task.initialize();
@@ -189,7 +190,7 @@ public class polyflow_LazyEvaluation {
         cp.buildView(materializedView, Collections.singletonList(inputStream_1));
         cp.buildTask(task, Collections.singletonList(inputStream_2), outputStreams);
 
-        outStream.addConsumer((out, el, ts) -> System.out.println(el + " @ " + ts));
+        outStream.addConsumer((Consumer<Tuple>) (out, el, ts) -> System.out.println(el + " @ " + ts));
 
         generator.startStreaming();
         //Thread.sleep(20_000);
