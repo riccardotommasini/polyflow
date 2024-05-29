@@ -11,17 +11,17 @@ import java.util.*;
 public class ContinuousProgram2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends Iterable<?>, O2> implements Consumer2, ContinuousProgram2<I1, W1, R1,O1, I2, W2, R2, O2> {
 
     List<Task2<I1, W1, R1, O1, I2, W2, R2, O2>> taskList;
-    List<Task2<I1, W1, R1, O1, I2, W2, R2, O2>> viewList;
-    Map<DataStream<?>, List<Task2<I1, W1, R1, O1, I2, W2, R2, O2>>> registeredViews;
+   /* List<Task2<I1, W1, R1, O1, I2, W2, R2, O2>> viewList;
+    Map<DataStream<?>, List<Task2<I1, W1, R1, O1, I2, W2, R2, O2>>> registeredViews;*/
     Map<DataStream<?>, List<Task2<I1, W1, R1, O1, I2, W2, R2, O2>>> registeredTasks;
     Map<Task2<I1, W1, R1, O1, I2, W2, R2, O2>, List<DataStream<O1>>> taskToOutMapOne;
     Map<Task2<I1, W1, R1, O1, I2, W2, R2, O2>, List<DataStream<O2>>> taskToOutMapTwo;
 
     public ContinuousProgram2Impl(){
         this.taskList = new ArrayList<>();
-        this.viewList = new ArrayList<>();
+        //this.viewList = new ArrayList<>();
         this.registeredTasks = new HashMap<>();
-        this.registeredViews = new HashMap<>();
+        //this.registeredViews = new HashMap<>();
         this.taskToOutMapOne = new HashMap<>();
         this.taskToOutMapTwo = new HashMap<>();
     }
@@ -39,8 +39,8 @@ public class ContinuousProgram2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, 
 
     @Override
     public void buildInputsView(Task2<I1, W1, R1, O1, I2, W2, R2, O2> view, List<DataStream<?>> inputStreams) {
-        this.viewList.add(view);
-        inputStreams.forEach(input->addInputStreamViews(input, view));
+       /* this.viewList.add(view);
+        inputStreams.forEach(input->addInputStreamViews(input, view));*/
     }
 
     public void buildOutputOne(Task2<I1, W1, R1, O1, I2, W2, R2, O2> task, List<DataStream<O1>> outputStreams){
@@ -51,7 +51,7 @@ public class ContinuousProgram2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, 
         outputStreams.forEach(output->addOutputStreamTwo(output, task));
     }
 
-    public void addInputStreamViews(DataStream<?> inputStream,Task2<I1, W1, R1, O1, I2, W2, R2, O2> view){
+    /*public void addInputStreamViews(DataStream<?> inputStream,Task2<I1, W1, R1, O1, I2, W2, R2, O2> view){
         inputStream.addConsumer(this);
 
         if(!registeredViews.containsKey(inputStream)){
@@ -60,7 +60,7 @@ public class ContinuousProgram2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, 
         if(!registeredViews.get(inputStream).contains(view)){
             registeredViews.get(inputStream).add(view);
         }
-    }
+    }*/
 
     private void addInputStream(DataStream<?> inputStream, Task2<I1, W1, R1, O1, I2, W2, R2, O2> task) {
 
@@ -101,11 +101,11 @@ public class ContinuousProgram2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, 
     @Override
     public void notify(DataStream<?> inputStream, Object element, long timestamp) {
 
-        if(registeredViews.containsKey(inputStream)) {
+       /* if(registeredViews.containsKey(inputStream)) {
             for (Task2<I1, W1, R1, O1, I2, W2, R2, O2> v : registeredViews.get(inputStream)) {
                 v.elaborateElement(inputStream, element, timestamp);
             }
-        }
+        }*/
 
 
 
@@ -124,7 +124,7 @@ public class ContinuousProgram2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, 
                 }
             }
         }
-        registeredViews.values().forEach(l->l.forEach(Task2::clear));
+       // registeredViews.values().forEach(l->l.forEach(Task2::clear));
         registeredTasks.values().forEach(l->l.forEach(Task2::clear));
 
     }
