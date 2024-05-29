@@ -2,6 +2,7 @@ package multimodal.examples;
 
 import multimodal.operators.m2m.M2MDummy;
 import multimodal.operators.r2r.dag.DAG2Impl;
+import multimodal.operators.r2s.R2SDummy;
 import multimodal.operators.sds.SDS2Impl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
@@ -51,6 +52,7 @@ public class polyflow_MultimodalTask2 {
         DataStream<Tuple> inputStream_2 = generator.getStream("http://test/stream2");
         // define output stream
         DataStream<Tuple> outStream = new RowStream("out");
+        DataStream<Boolean> outStreamBool = new RowStream("out");
 
         // Engine properties
         Report report = new ReportImpl();
@@ -165,7 +167,7 @@ public class polyflow_MultimodalTask2 {
                 .addTime(instance1);
         task1.initialize();
 
-        Task<Tuple, Tuple, Table, Tuple> task2 = new LazyTaskImpl<>();
+        Task<Tuple, Tuple, Table, Boolean> task2 = new LazyTaskImpl<>();
         task2 = task2
                 .addS2ROperator(s2rOp_2, inputStream_2)
                 .addSDS(new SDSjtablesaw())
@@ -180,7 +182,7 @@ public class polyflow_MultimodalTask2 {
         List<DataStream<Tuple>> outputStreams = new ArrayList<>();
         outputStreams.add(outStream);
 
-        Task2<Tuple, Tuple, Table, Tuple, Tuple, Tuple, Table, Tuple> multimodal = new Task2Impl<>();
+        Task2<Tuple, Tuple, Table, Tuple, Tuple, Tuple, Table, Boolean> multimodal = new Task2Impl<>();
         multimodal = multimodal
                 .addTaskOne(task1)
                 .addTaskTwo(task2)
@@ -188,15 +190,21 @@ public class polyflow_MultimodalTask2 {
                 .addR2ROperator(r2rBinaryOp)
                 .addR2ROperator(r2rProj)
                 .addR2SOperatorOne(r2sOp)
+                .addR2SOperatorTwo(new R2SDummy())
                 .addSDS(new SDS2Impl<>())
                 .addDAG(new DAG2Impl<>());
         multimodal.registerInputOne(inputStream_1, task1);
         multimodal.registerInputTwo(inputStream_2, task2);
         multimodal.initialize();
-        ContinuousProgram2<Tuple, Tuple, Table, Tuple, Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram2Impl<>();
+
+        ContinuousProgram2<Tuple, Tuple, Table, Tuple, Tuple, Tuple, Table, Boolean> cp = new ContinuousProgram2Impl<>();
         cp.buildInputs(multimodal, inputStreams);
         cp.buildOutputOne(multimodal, outputStreams);
-        outStream.addConsumer((Consumer2) (out, el, ts) -> System.out.println(el + " @ " + ts));
+        cp.buildOutputTwo(multimodal, Collections.singletonList(outStreamBool));
+
+
+        outStream.addConsumer((Consumer2) (out, el, ts) -> System.out.println("Out Stream 1: "+el + " @ " + ts));
+        outStreamBool.addConsumer((Consumer2) (out, el, ts) -> System.out.println("Out Stream 2: "+el + " @ " + ts));
 
         generator.startStreaming();
     }
