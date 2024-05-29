@@ -23,6 +23,13 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
     Map<DataStream<I1>, List<Task<I1, W1, R1, O1>>> registeredTasksOne;
     Map<DataStream<I2>, List<Task<I2, W2, R2, O2>>> registeredTasksTwo;
     List<Time> times;
+    SortedSet<TaskTime> sortedSet = new TreeSet<>((TaskTime a, TaskTime b)->{
+        if(a.time.t<b.time.t)
+            return -1;
+        if(a.time.t>b.time.t)
+            return 1;
+        return 0;
+    });
     ModelToModelOperator<R1, R2> m2mOperator;
     StreamToStreamOperator<I1, I2> s2sOperator;
     RelationToStreamOperator<R2, O1> r2sOperatorOne;
@@ -34,7 +41,16 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
     SDS2<R1, R2> sds;
 
 
+    private class TaskTime{
+        public TimeInstant time;
+        public Task<?, ?, ? ,?> task;
 
+        public TaskTime(TimeInstant time, Task<?, ?, ?, ?> task){
+            this.time = time;
+            this.task = task;
+        }
+
+    }
 
     public Task2Impl(){
         this.taskOneList = new ArrayList<>();
@@ -194,33 +210,40 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
         if(registeredTasksTwo.containsKey(inputStream)){
             registeredTasksTwo.get(inputStream).forEach(t->t.elaborateElement((DataStream<I2>) inputStream, (I2) element, timestamp));
         }
-        SortedSet<TimeInstant> sortedSet = new TreeSet<>((TimeInstant a, TimeInstant b)->{
-            if(a.t<b.t)
-                return -1;
-            if(a.t>b.t)
-                return 1;
-            return 0;
-        });
-        for(Time t: times){
+
+        /*for(Time t: times){
             while(t.hasEvaluationInstant())
                 sortedSet.add(t.getEvaluationTime());
+        }*/
+
+        for(Task<I1, W1, R1, O1> task : taskOneList){
+            while(task.getTime().hasEvaluationInstant()){
+                sortedSet.add(new TaskTime(task.getTime().getEvaluationTime(), task));
+            }
+        }
+        for(Task<I2, W2, R2, O2> task : taskTwoList){
+            while(task.getTime().hasEvaluationInstant()){
+                sortedSet.add(new TaskTime(task.getTime().getEvaluationTime(), task));
+            }
         }
 
 
-        for(TimeInstant t : sortedSet){
+        for(TaskTime taskTime : sortedSet){
             /*As in the classic task, we have a dag whose root nodes are the various TVGs. Assuming we wanna do the computations on the type R2
             (so we want to convert R1 to R2), the root node that holds the TVG of type R1 will just apply the m2m operator and forward the result to
             the next dag node, which will have an R2R of type R2*/
-            R2 res = dag.eval(t.t);
+            R2 res = dag.eval(taskTime.time.t);
             if(r2sOperatorOne!= null)
-                outputOne.add(r2sOperatorOne.eval(res, t.t).collect(Collectors.toList()));
+                outputOne.add(r2sOperatorOne.eval(res, taskTime.time.t).collect(Collectors.toList()));
             if(r2sOperatorTwo!=null)
-                outputTwo.add(r2sOperatorTwo.eval(res, t.t).collect(Collectors.toList()));
+                outputTwo.add(r2sOperatorTwo.eval(res, taskTime.time.t).collect(Collectors.toList()));
+            taskTime.task.evictWindows();
 
         }
 
-        taskOneList.forEach(Task::evictWindows);
-        taskTwoList.forEach(Task::evictWindows);
+        /*taskOneList.forEach(Task::evictWindows);
+        taskTwoList.forEach(Task::evictWindows);*/
+        sortedSet.clear();
 
 
     }

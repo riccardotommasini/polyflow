@@ -3,6 +3,7 @@ package multimodal.operators.r2r.dag;
 import org.streamreasoning.rsp4j.api.operators.multimodal.m2m.ModelToModelOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAGNode;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
+import org.streamreasoning.rsp4j.api.sds.timevarying.LazyTimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import shared.operatorsimpl.r2r.DAG.DAGRootNodeImpl;
 
@@ -52,7 +53,7 @@ public class DAG2RootConvertibleNode<R1, R2 extends Iterable<?>> implements DAGN
 
     @Override
     public boolean hasNext() {
-        return this.next.isEmpty();
+        return !this.next.isEmpty();
     }
 
     @Override
@@ -69,6 +70,6 @@ public class DAG2RootConvertibleNode<R1, R2 extends Iterable<?>> implements DAGN
 
     @Override
     public TimeVarying<R2> apply() {
-        return null;
+        return new LazyTimeVarying<>(this, tvg.iri());
     }
 }
