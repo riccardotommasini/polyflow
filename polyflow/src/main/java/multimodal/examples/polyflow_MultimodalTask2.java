@@ -122,8 +122,6 @@ public class polyflow_MultimodalTask2 {
 
         TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
-        //ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
-
         CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
                 new CSPARQLStreamToRelationOpImpl<>(
                         tick,

@@ -34,7 +34,6 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
     private Map<Window, Content<I, W, R>> active_windows;
     private Set<Window> to_evict;
     private long t0;
-    private long toi;
 
     public CSPARQLStreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report,
                                          long width, long slide){
@@ -51,7 +50,6 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
         this.active_windows = new HashMap<>();
         this.to_evict = new HashSet<>();
         this.t0 = time.getScope();
-        this.toi = 0;
         this.ticker = TickerFactory.tick(tick, this);
 
     }
@@ -93,7 +91,6 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
     @Override
     public Content<I, W, R> content(long t_e) {
         Optional<Window> max = active_windows.keySet().stream()
-                //TODO: 09/04/24 qui c'era w.getC()<= t_e, ma è incoerente col report perché nel report se t_e == w.getC() la window non conta come chiusa, qui invece veniva reportata. Mettendo solo < è più coerente, prende la window che ha triggerato un report
                 .filter(w -> w.getO() < t_e && w.getC() < t_e)
                 .max(Comparator.comparingLong(Window::getC));
 
@@ -182,8 +179,6 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
         to_evict.forEach(w -> {
             log.debug("Evicting [" + w.getO() + "," + w.getC() + ")");
             active_windows.remove(w);
-            if (toi < w.getC())
-                toi = w.getC() + slide;
         });
         to_evict.clear();
     }
