@@ -1,13 +1,23 @@
 package graph.jena.stream;
 
+import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RDFParser;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.Quad;
 import org.apache.commons.rdf.api.RDF;
 import org.apache.jena.graph.*;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sparql.core.mem.DatasetGraphInMemory;
 import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
+import relational.stream.RowStreamGenerator;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -22,11 +32,29 @@ public class JenaStreamGenerator {
     private final Random randomGenerator;
     private AtomicLong streamIndexCounter;
 
+    private String prefixes;
+
+    private File file = new File(JenaStreamGenerator.class.getResource("/breathing.trig").getPath());
+    private Scanner s1;
+
+
+
     public JenaStreamGenerator() {
         this.streamIndexCounter = new AtomicLong(0);
         this.activeStreams = new HashMap<String, DataStream<Graph>>();
         this.isStreaming = new AtomicBoolean(false);
         randomGenerator = new Random(1336);
+        try {
+            s1 = new Scanner(file);
+        }catch(FileNotFoundException ignored){}
+
+       /* RDFParser.create()
+                .base("http://base/")
+                .source(FullQueryUnaryJena.class.getResourceAsStream("/breathing.trig"))
+                .checking(false)
+                .lang(RDFLanguages.TRIG)
+                .parse(input);
+        iterator = input.stream().iterator();*/
     }
 
     public static String getPREFIX() {
@@ -80,14 +108,28 @@ public class JenaStreamGenerator {
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "0"));
         }
         else if(stream.getName().equals("http://test/RDFstar")){
-            Triple triple1 = Triple.create(
+            String data = s1.nextLine();
+            if(prefixes == null)
+                prefixes = data;
+            else{
+                DatasetGraph ds = new DatasetGraphInMemory();
+                RDFParser.create()
+                        .base("http://base/")
+                        .source(new ByteArrayInputStream((prefixes + data).getBytes()))
+                        .checking(false)
+                        .lang(RDFLanguages.TRIG)
+                        .parse(ds);
+                ds.stream().forEach(g->graph.add(g.asTriple()));
+            }
+
+            /*Triple triple1 = Triple.create(
                     NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()),
                     p,
                     NodeFactory.createURI(PREFIX + selectRandomColor())
             );
             graph.add(triple1);
             graph.add(NodeFactory.createTripleNode(triple1), p, NodeFactory.createURI(PREFIX + "metadata"));
-
+*/
         }
         stream.put(graph, ts);
     }

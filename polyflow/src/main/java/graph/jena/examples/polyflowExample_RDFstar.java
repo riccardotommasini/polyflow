@@ -3,6 +3,7 @@ package graph.jena.examples;
 import graph.jena.datatypes.JenaGraphOrBindings;
 import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
 import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
+import graph.jena.operatorsimpl.r2r.jena.RSPQLstarQueryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
@@ -77,7 +78,7 @@ public class polyflowExample_RDFstar {
                         1000,
                         1000);
 
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
 
         RelationToStreamOperator<JenaGraphOrBindings, Binding> r2sOp = new RelationToStreamOpImpl();
 
