@@ -4,6 +4,7 @@ import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.*;
+import org.apache.jena.riot.RDFParser;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.sparql.core.ResultBinding;
@@ -32,6 +33,7 @@ public class FullQueryUnaryJena implements RelationToRelationOperator<JenaGraphO
 
     @Override
     public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
+
         JenaGraphOrBindings dataset = datasets.get(0);
         Query q = QueryFactory.create(query);
         q.getProjectVars();
@@ -53,6 +55,7 @@ public class FullQueryUnaryJena implements RelationToRelationOperator<JenaGraphO
 
         dataset.setResult(res);
         return dataset;
+
     }
 
 

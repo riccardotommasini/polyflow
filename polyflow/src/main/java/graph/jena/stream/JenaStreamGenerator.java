@@ -1,10 +1,7 @@
 package graph.jena.stream;
 
 import org.apache.commons.rdf.api.RDF;
-import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.GraphMemFactory;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.graph.*;
 import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
@@ -78,9 +75,19 @@ public class JenaStreamGenerator {
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + selectRandomColor()));
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "Black"));
         }
-        else{
+        else if(stream.getName().equals("http://test/stream2")){
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + randomGenerator.nextInt(10)));
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "0"));
+        }
+        else if(stream.getName().equals("http://test/RDFstar")){
+            Triple triple1 = Triple.create(
+                    NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()),
+                    p,
+                    NodeFactory.createURI(PREFIX + selectRandomColor())
+            );
+            graph.add(triple1);
+            graph.add(NodeFactory.createTripleNode(triple1), p, NodeFactory.createURI(PREFIX + "metadata"));
+
         }
         stream.put(graph, ts);
     }
