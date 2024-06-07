@@ -33,9 +33,11 @@ public class JenaStreamGenerator {
     private AtomicLong streamIndexCounter;
 
     private String prefixes;
+    private String [] fileNames = {"/activity.trig", "/location.trig", "/heart.trig", "/breathing.trig", "/oxygen.trig"};
+    private File file;
+    private List<Scanner> scanners = new ArrayList<>();
 
-    private File file = new File(JenaStreamGenerator.class.getResource("/breathing.trig").getPath());
-    private Scanner s1;
+
 
 
 
@@ -45,16 +47,13 @@ public class JenaStreamGenerator {
         this.isStreaming = new AtomicBoolean(false);
         randomGenerator = new Random(1336);
         try {
-            s1 = new Scanner(file);
+            for(int i = 0; i< fileNames.length; i++){
+                scanners.add(new Scanner(new File(JenaStreamGenerator.class.getResource(fileNames[i]).getPath())));
+                //Read prefixes from all files
+                prefixes = scanners.get(i).nextLine();
+            }
         }catch(FileNotFoundException ignored){}
 
-       /* RDFParser.create()
-                .base("http://base/")
-                .source(FullQueryUnaryJena.class.getResourceAsStream("/breathing.trig"))
-                .checking(false)
-                .lang(RDFLanguages.TRIG)
-                .parse(input);
-        iterator = input.stream().iterator();*/
     }
 
     public static String getPREFIX() {
@@ -77,7 +76,7 @@ public class JenaStreamGenerator {
                 while (this.isStreaming.get()) {
                     long finalTs = ts;
                     activeStreams.entrySet().forEach(e -> generateDataAndAddToStream(e.getValue(), finalTs));
-                    ts += 1000;
+                    ts += 200;
                     try {
                         Thread.sleep(TIMEOUT);
                     } catch (InterruptedException e) {
@@ -108,10 +107,10 @@ public class JenaStreamGenerator {
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "0"));
         }
         else if(stream.getName().equals("http://test/RDFstar")){
-            String data = s1.nextLine();
-            if(prefixes == null)
-                prefixes = data;
-            else{
+
+            for(Scanner s : scanners) {
+                String data = s.nextLine();
+                Graph tmp = GraphMemFactory.createGraphMem();
                 DatasetGraph ds = new DatasetGraphInMemory();
                 RDFParser.create()
                         .base("http://base/")
@@ -119,19 +118,13 @@ public class JenaStreamGenerator {
                         .checking(false)
                         .lang(RDFLanguages.TRIG)
                         .parse(ds);
-                ds.stream().forEach(g->graph.add(g.asTriple()));
+                ds.stream().forEach(g -> tmp.add(g.asTriple()));
+                stream.put(tmp, ts);
             }
 
-            /*Triple triple1 = Triple.create(
-                    NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()),
-                    p,
-                    NodeFactory.createURI(PREFIX + selectRandomColor())
-            );
-            graph.add(triple1);
-            graph.add(NodeFactory.createTripleNode(triple1), p, NodeFactory.createURI(PREFIX + "metadata"));
-*/
+
         }
-        stream.put(graph, ts);
+
     }
 
     private String selectRandomColor() {

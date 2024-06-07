@@ -9,8 +9,10 @@ import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.stream.JenaBindingStream;
 import graph.jena.stream.JenaStreamGenerator;
+import org.antlr.v4.runtime.misc.Utils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
+import org.apache.jena.query.QueryFactory;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
@@ -32,12 +34,15 @@ import shared.contentimpl.factories.AccumulatorContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class polyflowExample_RDFstar {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
 
         JenaStreamGenerator generator = new JenaStreamGenerator();
 
@@ -78,7 +83,15 @@ public class polyflowExample_RDFstar {
                         1000,
                         1000);
 
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("SELECT * WHERE {GRAPH ?g{?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
+
+        final String qString = new String(Utils.readFile(polyflowExample_RDFstar.class.getResource("/querytest.txt").getPath()));
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp.getName()), "partial_1");
+        //RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("SELECT * WHERE {GRAPH ?g{ ?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
+       /* RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("BASE <http://base/>\n" +
+                "PREFIX ex: <http://www.example.org/ontology#>\n" +
+                "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
+                "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT (AVG(?br) AS ?avgBr) WHERE {GRAPH ?g3 {?o3 a sosa:Observation ; sosa:featureOfInterest ?person . <<?o3 sosa:hasSimpleResult ?br>> ex:confidence ?c3 .FILTER(?c3 > 0.95)}}", Collections.singletonList(s2rOp.getName()), "partial_1");
+*/
 
         RelationToStreamOperator<JenaGraphOrBindings, Binding> r2sOp = new RelationToStreamOpImpl();
 
@@ -104,6 +117,6 @@ public class polyflowExample_RDFstar {
 
         generator.startStreaming();
         Thread.sleep(20_000);
-        generator.stopStreaming();
+        //generator.stopStreaming();
     }
 }
