@@ -32,7 +32,6 @@ WHERE {
               sosa:madeObservation <sensor/location/2>;
               sosa:hasSimpleResult ?loc  .
 
-
         }
 
     GRAPH ?g3 {
@@ -60,17 +59,7 @@ WHERE {
             FILTER(?c5 > 0.95)
 
         }
-    FILTER(?loc != ?home)
-    FILTER(?o2 != ?o1)
-    FILTER(?o3 != ?o2)
-    FILTER(?o3 != ?o1)
-    FILTER(?o4 != ?o3)
-    FILTER(?o4 != ?o2)
-    FILTER(?o4 != ?o1)
-    FILTER(?o5 != ?o4)
-    FILTER(?o5 != ?o3)
-    FILTER(?o5 != ?o2)
-    FILTER(?o5 != ?o1)
+
 
 }
 GROUP BY ?activity ?hrMax ?brMin ?oxMin ?oxMax

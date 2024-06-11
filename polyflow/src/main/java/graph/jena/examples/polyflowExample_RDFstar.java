@@ -84,7 +84,7 @@ public class polyflowExample_RDFstar {
                         1000);
 
 
-        final String qString = new String(Utils.readFile(polyflowExample_RDFstar.class.getResource("/querytest.txt").getPath()));
+        final String qString = new String(Utils.readFile(polyflowExample_RDFstar.class.getResource("/query.txt").getPath()));
         RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp.getName()), "partial_1");
         //RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("SELECT * WHERE {GRAPH ?g{ ?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
        /* RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("BASE <http://base/>\n" +

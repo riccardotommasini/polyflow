@@ -151,8 +151,10 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
         while(time.hasEvaluationInstant()){
             long t = time.getEvaluationTime().t;
-            log.debug("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            System.out.println("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            long begin_time = System.currentTimeMillis();
             R partialRes = eval(t);
+            System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
             res.add(r2sOperator.eval(partialRes, timestamp).collect(Collectors.toList()));
         }
 
@@ -175,6 +177,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         if(result == null){
             throw new RuntimeException("Result of DAG computation is null");
         }
+        System.out.println("Computation ended");
         return result;
 
 
