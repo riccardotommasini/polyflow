@@ -54,7 +54,7 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
         this.t0 = time.getScope();
         this.toi = 0;
         this.ticker = TickerFactory.tick(tick, this);
-        Logger.getRootLogger().setLevel(Level.OFF);
+        //Logger.getRootLogger().setLevel(Level.OFF);
     }
 
 
