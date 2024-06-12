@@ -34,7 +34,6 @@ public class JenaStreamGenerator {
 
     private String prefixes;
     private String [] fileNames = {"/activity.trig", "/location.trig", "/heart.trig", "/breathing.trig", "/oxygen.trig"};
-    private File file;
     private List<Scanner> scanners = new ArrayList<>();
 
 

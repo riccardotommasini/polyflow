@@ -19,7 +19,8 @@ WHERE {
        ex:expectedOxygenSaturation [ ex:lowerBound ?oxMin ; ex:upperBound ?oxMax ] .
 
      # Current activity, reported by the system
-        GRAPH ?g1 {
+
+    GRAPH ?g1 {
             ?o1 a sosa:Observation ;
               sosa:featureOfInterest ?person ;
               sosa:madeObservation <sensor/system>;
@@ -31,7 +32,6 @@ WHERE {
               sosa:featureOfInterest ?partner ;
               sosa:madeObservation <sensor/location/2>;
               sosa:hasSimpleResult ?loc  .
-
         }
 
     GRAPH ?g3 {
