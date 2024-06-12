@@ -58,6 +58,8 @@ public interface Task<I, W, R extends Iterable<?>, O> {
 
     void evictWindows();
 
+    void evictWindows(long ts);
+
 
     /**
      * This method passes an input element that just arrived from an input stream to the task in order to elaborate it

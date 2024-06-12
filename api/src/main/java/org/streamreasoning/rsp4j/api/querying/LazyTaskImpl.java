@@ -139,6 +139,13 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
         }
     }
 
+    @Override
+    public void evictWindows(long ts){
+        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+            s2r.evict(ts);
+        }
+    }
+
 
     @Override
     public Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp) {

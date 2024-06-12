@@ -137,6 +137,13 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
             s2r.evict();
         }
     }
+    @Override
+    public void evictWindows(long ts){
+        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+            s2r.evict(ts);
+        }
+    }
+
 
 
     @Override
@@ -156,9 +163,8 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
             R partialRes = eval(t);
             System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
             res.add(r2sOperator.eval(partialRes, timestamp).collect(Collectors.toList()));
+            evictWindows(t);
         }
-
-        evictWindows();
 
         return res;
 
@@ -177,7 +183,6 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         if(result == null){
             throw new RuntimeException("Result of DAG computation is null");
         }
-        System.out.println("Computation ended");
         return result;
 
 

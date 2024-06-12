@@ -101,10 +101,12 @@ public class JenaStreamGenerator {
         if(stream.getName().equals("http://test/stream1")) {
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + selectRandomColor()));
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "Black"));
+            stream.put(graph, ts);
         }
         else if(stream.getName().equals("http://test/stream2")){
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + randomGenerator.nextInt(10)));
             graph.add(NodeFactory.createURI(PREFIX + "S" + streamIndexCounter.incrementAndGet()), p, NodeFactory.createURI(PREFIX + "0"));
+            stream.put(graph, ts);
         }
         else if(stream.getName().equals("http://test/RDFstar")){
 

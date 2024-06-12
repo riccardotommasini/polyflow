@@ -164,4 +164,9 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
         to_evict.forEach(active_windows::remove);
         to_evict.clear();
     }
+    @Override
+    public void evict(long ts){
+        active_windows.keySet().forEach(w->{if(w.getC()<ts)to_evict.add(w);});
+        evict();
+    }
 }
