@@ -86,12 +86,7 @@ public class polyflowExample_RDFstar {
 
         final String qString = new String(Utils.readFile(polyflowExample_RDFstar.class.getResource("/query.txt").getPath()));
         RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp.getName()), "partial_1");
-        //RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("SELECT * WHERE {GRAPH ?g{ ?s ?p ?o }}", Collections.singletonList(s2rOp.getName()), "partial_1");
-       /* RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new RSPQLstarQueryJena("BASE <http://base/>\n" +
-                "PREFIX ex: <http://www.example.org/ontology#>\n" +
-                "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
-                "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT (AVG(?br) AS ?avgBr) WHERE {GRAPH ?g3 {?o3 a sosa:Observation ; sosa:featureOfInterest ?person . <<?o3 sosa:hasSimpleResult ?br>> ex:confidence ?c3 .FILTER(?c3 > 0.95)}}", Collections.singletonList(s2rOp.getName()), "partial_1");
-*/
+
 
         RelationToStreamOperator<JenaGraphOrBindings, Binding> r2sOp = new RelationToStreamOpImpl();
 

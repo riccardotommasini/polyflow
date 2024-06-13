@@ -16,24 +16,14 @@ public class Join implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private List<String> tvgNames;
+    private String resName;
 
-    private boolean isBinary;
 
-    private String unaryOpName;
-    private String binaryOpName;
-
-    public Join(List<String> tvgNames, boolean isBinary, String unaryOpName, String binaryOpName) {
+    public Join(List<String> tvgNames, String resName) {
         this.tvgNames = tvgNames;
-        this.isBinary = isBinary;
-        this.unaryOpName = unaryOpName;
-        this.binaryOpName = binaryOpName;
-
+        this.resName = resName;
     }
 
-    @Override
-    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
-        return null;
-    }
 
     @Override
     public List<String> getTvgNames() {
@@ -42,28 +32,14 @@ public class Join implements RelationToRelationOperator<JenaGraphOrBindings> {
 
     @Override
     public String getResName() {
-        return null;
+        return resName;
     }
 
-    public boolean isBinary() {
-        return isBinary;
-    }
 
-    public String getUnaryOpName() {
-        return unaryOpName;
-    }
+    @Override
+    public JenaGraphOrBindings eval(List<JenaGraphOrBindings> datasets) {
 
-    public String getBinaryOpName() {
-        return binaryOpName;
-    }
-
-    public JenaGraphOrBindings evalUnary(JenaGraphOrBindings dataset) {
-        return dataset;
-    }
-
-    public JenaGraphOrBindings eval(JenaGraphOrBindings... datasets) {
-
-        List<Binding> collect = datasets[0].getResult().stream().flatMap(l -> datasets[1].getResult().stream().map(r -> Algebra.merge(l, r)))
+        List<Binding> collect = datasets.get(0).getResult().stream().flatMap(l -> datasets.get(1).getResult().stream().map(r -> Algebra.merge(l, r)))
                 .filter(b -> b != null).collect(Collectors.toList());
 
         JenaGraphOrBindings result = new JenaGraphOrBindings();
@@ -73,23 +49,9 @@ public class Join implements RelationToRelationOperator<JenaGraphOrBindings> {
 
     }
 
-    public JenaGraphOrBindings evalBinary(JenaGraphOrBindings dataset1, JenaGraphOrBindings dataset2) {
-
-        List<Binding> collect = dataset1.getResult().stream().flatMap(l -> dataset2.getResult().stream().map(r -> Algebra.merge(l, r)))
-                .filter(b -> b != null).collect(Collectors.toList());
-
-        JenaGraphOrBindings result = new JenaGraphOrBindings();
-        result.setResult(collect);
-
-        return result;
-
-    }
 
     public TimeVarying<Collection<JenaGraphOrBindings>> apply(SDS<JenaGraphOrBindings> sds) {
         return null;
     }
 
-    public SolutionMapping<JenaGraphOrBindings> createSolutionMapping(JenaGraphOrBindings result) {
-        return null;
-    }
 }

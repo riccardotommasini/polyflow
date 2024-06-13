@@ -1,15 +1,14 @@
-/*
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaGraphOrBindings;
-import graph.jena.operatorsimpl.r2r.jena.RSPQLstarQueryJena;
+import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
+import graph.jena.operatorsimpl.r2r.jena.Join;
+import graph.jena.operatorsimpl.r2r.jena.JoinRSPQLstarQueryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
 import graph.jena.sds.TimeVaryingFactoryJena;
 import graph.jena.stream.JenaBindingStream;
-import graph.jena.stream.JenaStreamGenerator;
 import graph.jena.stream.JenaStreamRDFStarGenerator;
-import org.antlr.v4.runtime.misc.Utils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
 import org.apache.jena.sparql.engine.binding.Binding;
@@ -130,14 +129,57 @@ public class RDFstar_multiwindow {
                         1000);
 
 
-        final String qString = new String(Utils.readFile(polyflowExample_RDFstar.class.getResource("/query.txt").getPath()));
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_1 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp_1.getName()), "partial_1");
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_2 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp_2.getName()), "partial_2");
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_3 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp_3.getName()), "partial_3");
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_4 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp_4.getName()), "partial_4");
-        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_5 = new RSPQLstarQueryJena(qString, Collections.singletonList(s2rOp_5.getName()), "partial_5");
+        String prefix = "BASE <http://base/>\n" +
+                "PREFIX ex: <http://www.example.org/ontology#>\n" +
+                "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
+                "PREFIX sosa: <http://www.w3.org/ns/sosa/> ";
 
+        String q1 = prefix+"SELECT * WHERE {GRAPH ?g1 {\n" +
+                "            ?o1 a sosa:Observation ;\n" +
+                "              sosa:featureOfInterest ?person ;\n" +
+                "              sosa:madeObservation <sensor/system>;\n" +
+                "              sosa:hasSimpleResult ?activity  .\n" +
+                "        }}";
+        String q2 = prefix+"SELECT * WHERE {GRAPH ?g2 {\n" +
+                "            ?o2 a sosa:Observation ;\n" +
+                "              sosa:featureOfInterest ?partner ;\n" +
+                "              sosa:madeObservation <sensor/location/2>;\n" +
+                "              sosa:hasSimpleResult ?loc  .\n" +
+                "        }}";
+        String q3 = prefix+"SELECT * WHERE {GRAPH ?g3 {\n" +
+                "            ?o3 a sosa:Observation ;\n" +
+                "                sosa:madeObservation <sensor/heart_rate/1>;\n" +
+                "                sosa:featureOfInterest ?person .\n" +
+                "            <<?o3 sosa:hasSimpleResult ?hr>> ex:confidence ?c3 .\n" +
+                "            FILTER(?c3 > 0.95)\n" +
+                "        }}";
+        String q4 = prefix+"SELECT * WHERE {GRAPH ?g4 {\n" +
+                "            ?o4 a sosa:Observation ;\n" +
+                "            sosa:madeObservation <sensor/breathing_rate/1>;\n" +
+                "                sosa:featureOfInterest ?person .\n" +
+                "            <<?o4 sosa:hasSimpleResult ?br>> ex:confidence ?c4 .\n" +
+                "            FILTER(?c4 > 0.95)\n" +
+                "\n" +
+                "        }}";
+        String q5 = prefix+"SELECT * WHERE {GRAPH ?g5 {\n" +
+                "            ?o5 a sosa:Observation ;\n" +
+                "                sosa:madeObservation <sensor/oxygen/1>;\n" +
+                "                sosa:featureOfInterest ?person .\n" +
+                "            <<?o5 sosa:hasSimpleResult ?ox>> ex:confidence ?c5 .\n" +
+                "            FILTER(?c5 > 0.95)\n" +
+                "\n" +
+                "        }}";
 
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_1 = new FullQueryUnaryJena(q1, Collections.singletonList(s2rOp_1.getName()), "partial_1");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_2 = new FullQueryUnaryJena(q2, Collections.singletonList(s2rOp_2.getName()), "partial_2");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_3 = new FullQueryUnaryJena(q3, Collections.singletonList(s2rOp_3.getName()), "partial_3");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_4 = new FullQueryUnaryJena(q4, Collections.singletonList(s2rOp_4.getName()), "partial_4");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rOp_5 = new FullQueryUnaryJena(q5, Collections.singletonList(s2rOp_5.getName()), "partial_5");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rJoin_1 = new Join(List.of("partial_1", "partial_2"), "join_1");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rJoin_2 = new Join(List.of("join_1", "partial_3"), "join_2");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rJoin_3 = new Join(List.of("join_2", "partial_4"), "join_3");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rJoin_4 = new Join(List.of("join_3", "partial_5"), "join_4");
+        RelationToRelationOperator<JenaGraphOrBindings> r2rFinal = new JoinRSPQLstarQueryJena(Collections.singletonList("join_4"), "final");
 
 
 
@@ -149,8 +191,16 @@ public class RDFstar_multiwindow {
                 .addS2ROperator(s2rOp_3, heart)
                 .addS2ROperator(s2rOp_4, breathing)
                 .addS2ROperator(s2rOp_5, oxygen)
-
-                .addR2ROperator(r2rOp1)
+                .addR2ROperator(r2rOp_1)
+                .addR2ROperator(r2rOp_2)
+                .addR2ROperator(r2rOp_3)
+                .addR2ROperator(r2rOp_4)
+                .addR2ROperator(r2rOp_5)
+                .addR2ROperator(r2rJoin_1)
+                .addR2ROperator(r2rJoin_2)
+                .addR2ROperator(r2rJoin_3)
+                .addR2ROperator(r2rJoin_4)
+                .addR2ROperator(r2rFinal)
                 .addR2SOperator(r2sOp)
                 .addDAG(new DAGImpl<>())
                 .addSDS(new SDSJena())
@@ -158,7 +208,11 @@ public class RDFstar_multiwindow {
         task.initialize();
 
         List<DataStream<Graph>> inputStreams = new ArrayList<>();
-        inputStreams.add(inputStream);
+        inputStreams.add(activity);
+        inputStreams.add(location);
+        inputStreams.add(heart);
+        inputStreams.add(breathing);
+        inputStreams.add(oxygen);
 
 
         List<DataStream<Binding>> outputStreams = new ArrayList<>();
@@ -173,4 +227,3 @@ public class RDFstar_multiwindow {
         //generator.stopStreaming();
     }
 }
-*/
