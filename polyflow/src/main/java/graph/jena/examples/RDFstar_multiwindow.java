@@ -134,41 +134,41 @@ public class RDFstar_multiwindow {
                 "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" +
                 "PREFIX sosa: <http://www.w3.org/ns/sosa/> ";
 
-        String q1 = prefix+"SELECT * WHERE {GRAPH ?g1 {\n" +
+        String q1 = prefix+"SELECT ?person ?activity WHERE {GRAPH ?g1 {\n" +
                 "            ?o1 a sosa:Observation ;\n" +
                 "              sosa:featureOfInterest ?person ;\n" +
                 "              sosa:madeObservation <sensor/system>;\n" +
                 "              sosa:hasSimpleResult ?activity  .\n" +
-                "        }}";
-        String q2 = prefix+"SELECT * WHERE {GRAPH ?g2 {\n" +
+                "        }}GROUP BY ?person ?activity";
+        String q2 = prefix+"SELECT ?partner ?loc WHERE {GRAPH ?g2 {\n" +
                 "            ?o2 a sosa:Observation ;\n" +
                 "              sosa:featureOfInterest ?partner ;\n" +
                 "              sosa:madeObservation <sensor/location/2>;\n" +
                 "              sosa:hasSimpleResult ?loc  .\n" +
-                "        }}";
-        String q3 = prefix+"SELECT * WHERE {GRAPH ?g3 {\n" +
+                "        }}GROUP BY ?partner ?loc";
+        String q3 = prefix+"SELECT ?person (AVG(?hr) AS ?avgHr) WHERE {GRAPH ?g3 {\n" +
                 "            ?o3 a sosa:Observation ;\n" +
                 "                sosa:madeObservation <sensor/heart_rate/1>;\n" +
                 "                sosa:featureOfInterest ?person .\n" +
                 "            <<?o3 sosa:hasSimpleResult ?hr>> ex:confidence ?c3 .\n" +
                 "            FILTER(?c3 > 0.95)\n" +
-                "        }}";
-        String q4 = prefix+"SELECT * WHERE {GRAPH ?g4 {\n" +
+                "        }} GROUP BY ?person";
+        String q4 = prefix+"SELECT ?person (AVG(?br) AS ?avgBr) WHERE {GRAPH ?g4 {\n" +
                 "            ?o4 a sosa:Observation ;\n" +
                 "            sosa:madeObservation <sensor/breathing_rate/1>;\n" +
                 "                sosa:featureOfInterest ?person .\n" +
                 "            <<?o4 sosa:hasSimpleResult ?br>> ex:confidence ?c4 .\n" +
                 "            FILTER(?c4 > 0.95)\n" +
                 "\n" +
-                "        }}";
-        String q5 = prefix+"SELECT * WHERE {GRAPH ?g5 {\n" +
+                "        }}GROUP BY ?person";
+        String q5 = prefix+"SELECT ?person (AVG(?ox) AS ?avgOx) WHERE {GRAPH ?g5 {\n" +
                 "            ?o5 a sosa:Observation ;\n" +
                 "                sosa:madeObservation <sensor/oxygen/1>;\n" +
                 "                sosa:featureOfInterest ?person .\n" +
                 "            <<?o5 sosa:hasSimpleResult ?ox>> ex:confidence ?c5 .\n" +
                 "            FILTER(?c5 > 0.95)\n" +
                 "\n" +
-                "        }}";
+                "        }}GROUP BY ?person";
 
         RelationToRelationOperator<JenaGraphOrBindings> r2rOp_1 = new FullQueryUnaryJena(q1, Collections.singletonList(s2rOp_1.getName()), "partial_1");
         RelationToRelationOperator<JenaGraphOrBindings> r2rOp_2 = new FullQueryUnaryJena(q2, Collections.singletonList(s2rOp_2.getName()), "partial_2");

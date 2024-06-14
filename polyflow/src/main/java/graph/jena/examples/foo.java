@@ -3,15 +3,23 @@ package graph.jena.examples;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.GraphMemFactory;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.algebra.Algebra;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.Table;
 import org.apache.jena.sparql.algebra.TableFactory;
 import org.apache.jena.sparql.algebra.op.OpJoin;
 import org.apache.jena.sparql.algebra.op.OpTable;
+import org.apache.jena.sparql.core.ResultBinding;
+import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.QueryIterator;
+import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.iterator.QueryIterPlainWrapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class foo {
 
@@ -33,9 +41,18 @@ public class foo {
             System.out.println(iter.next());
         }*/
         QueryIterator i1 = Algebra.exec(op1, graph);
-        QueryIterator i2 = Algebra.exec(op2, graph2);
-        while(i1.hasNext() && i2.hasNext()){
-          //  System.out.println(Algebra.merge(i1.next(), i2.next()));
+        //QueryIterator i2 = Algebra.exec(op2, graph2);
+        while(i1.hasNext()){
+
+            QuerySolution qs = new ResultBinding(ModelFactory.createDefaultModel(),i1.next());
+            QueryExecution.model(ModelFactory.createDefaultModel()).query(q1).initialBinding(i1.next());
+            QueryExecution qe = QueryExecutionFactory.create(q1, ModelFactory.createDefaultModel(), qs);
+
+            ResultSet foo = qe.execSelect();
+            while(foo.hasNext()){
+                ResultBinding rb = (ResultBinding)foo.next();
+                System.out.println(rb.getBinding());
+            }
         }
 
     }
