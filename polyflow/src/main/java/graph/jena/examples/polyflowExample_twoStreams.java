@@ -93,10 +93,6 @@ public class polyflowExample_twoStreams {
                         500);
 
 
-        List<String> s2r_names = new ArrayList<>();
-        s2r_names.add(s2rOp_one.getName());
-        s2r_names.add(s2rOp_two.getName());
-
         RelationToRelationOperator<JenaGraphOrBindings> r2rOp1 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g {?s ?p ?o }}", Collections.singletonList(s2rOp_one.getName()), "partial_1");
         RelationToRelationOperator<JenaGraphOrBindings> r2rOp2 = new FullQueryUnaryJena("SELECT * WHERE {GRAPH ?g {?s ?p ?o }}", Collections.singletonList(s2rOp_two.getName()), "partial_2");
 
@@ -115,7 +111,7 @@ public class polyflowExample_twoStreams {
                 .addSDS(new SDSJena())
                 .addTime(instance);
         task.initialize();
-        task.getDAG().printDAG();
+
         List<DataStream<Graph>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStreamColors);
         inputStreams.add(inputStreamNumbers);
