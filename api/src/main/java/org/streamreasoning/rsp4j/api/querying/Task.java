@@ -62,13 +62,26 @@ public interface Task<I, W, R extends Iterable<?>, O> {
 
 
     /**
-     * This method passes an input element that just arrived from an input stream to the task in order to elaborate it
+     * This method passes an input element that just entered an input stream to the Task in order to update its windows
      * @param inputStream InputStream that generated the element
      * @param element Element that arrived from the stream
      * @param timestamp Event time
-     * @return Optional Collection of O, which is the output of the task after the computation. Empty if the element did not trigger a computation
      */
-    Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp);
+    void elaborateElement(DataStream<I> inputStream, I element, long timestamp);
+
+    /**
+     * Starts the computation associated with the Task and returns the result.
+     * The Task will check if some computation time instants are present, and if so, it will proceed to compute the result.
+     * @return Collection of Collection of O. Each inner Collection<O> is the result of a computation at a given time.
+     */
+    Collection<Collection<O>> compute();
+    /**
+     * Starts the computation associated with the Task at the given timestamp and returns the result.
+     * The Task's windows will not be evicted since this is supposed to be a "computation on demand", not a computation triggered by
+     * an event entering the input stream.
+     * @return Optional Collection of O, which is the output of the task after the computation.
+     */
+    Collection<O> computeLazy(long ts);
 
     /**
      * Returns a time varying that represents the lazy evaluation of the task, can be materialized when the result is needed

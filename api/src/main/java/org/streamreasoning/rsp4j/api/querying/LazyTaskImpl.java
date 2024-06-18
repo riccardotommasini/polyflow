@@ -1,3 +1,4 @@
+/*
 package org.streamreasoning.rsp4j.api.querying;
 
 import org.apache.log4j.Logger;
@@ -148,7 +149,7 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
 
 
     @Override
-    public Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
+    public void elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
 
         if(registeredS2R.get(inputStream).isEmpty()){
             throw new RuntimeException("No S2R operator interested in the Stream");
@@ -164,3 +165,4 @@ public class LazyTaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, 
 
     }
 }
+*/
