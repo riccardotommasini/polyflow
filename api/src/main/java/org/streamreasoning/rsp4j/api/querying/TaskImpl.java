@@ -172,7 +172,6 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     }
 
     public Collection<O> computeLazy(long ts){
-        Collection<O> res = new ArrayList<>();
         System.out.println("Evaluating computation explicitly requested at time t= "+ts+", R2R computation will begin");
         long begin_time = System.currentTimeMillis();
         R result = eval(ts);

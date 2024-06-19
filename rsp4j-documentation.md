@@ -58,20 +58,19 @@ In this section we dive deep in our custom implementations to make it easier to 
 ### Continuous Program
 Our implementation of the Continuous Program keeps the Java generics defined in the respective interface. It has the following attributes: 
 - `List<Task<I, W, R, O>> taskList`: List of all defined Tasks. 
-- `List<Task<I, W, R, O>> viewList`: List of all defined Views.
-- `Map<DataStream<I>, List<Task<I, W, R, O>>> registeredViews`: Maps an input stream to the interested Views.
 - `Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks`: Maps an input stream to the interested Tasks.
 - `Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap`: Maps a Task to the interested output streams.\
-The difference between a Task and a View is that a Task can 'push' a result when ready, while a View must be explicitely queried in order to trigger a computation and obtain a result. A user can define a View and use it as part of another query.
+
+A Task can represent both a push query (automatically outputs the result when it's ready) or a pull query (wait for an external request before performing any computation):
+if an Output Stream is associated with a Task in the `taskToOutMap` attribute, then it's treated as a push query, otherwise it's treated as a pull query. The concept of Materialized
+Views is realized through the use of pull queries.
 
 Our default Continuous Program overrides three methods, two are used to populate the data structures mentioned above, and one is a method it inherits from the interface `Consumer`, which is the `notify(InputStream<I>, I element, long timestamp)`, used by an `InputStream` to notify the Continuous Program that a new event entered the stream.\
-The logic of the latter is pretty simple: when a new event enters the stream, the first to be notified are the Views, then the Tasks. The reason is simple, by notifying a Task we might trigger a computation, and the computation might involve a View, which is yet to be updated. By notifying the Views first, we make sure that they are up to date, and we can then proceed to notify the Tasks.\
-After a computation occurred, we take the result and send it to the interested output streams through the `taskToOutMap` object defined above.
+The logic of the latter is pretty simple: when a new event enters the stream, all the Tasks are notified and their windows are updated. Then, all the Tasks with an associated output stream (push queries)
+are asked to perform a computation (if any is required) and the (possibly empty) results are sent to the interested streams through the `taskToOutMap` object.
 ### Task
-For the Task interface, we came up with two default implementations that provide a different logic: Task and Lazy Task.\
-A normal Task represents a push query, it will output the results of computations automatically after they're ready.\
-A Lazy Task can conceptually be seen (but is not limited to) a View: when it receives a new event, it just updates its windows and nothing more. To obtain results, it should be directly queried by materializing the Time Varying Relation associated to it.\
-Both Tasks present the following attributes:
+For the Task interface, we came up with a single default implementation, which can represent both a push query or a pull query.\
+The attributes of the Task are the following:
 - `List<StreamToRelationOperator<I, W, R>> s2rOperators`: List of all the S2R operators associated with the Task (basically, its windows).
 - `List<RelationToRelationOperator<R>> r2rOperators`: List of all the R2R operators, it will be used to create the DAG.
 - `Map<DataStream<I>, List<StreamToRelationOperator<I, W, R>>> registeredS2R`: Maps an input stream to all the S2R operators interested in it (windows over that stream)
@@ -82,8 +81,11 @@ Both Tasks present the following attributes:
 The most interesting methods (ignoring getters, setters etc..) are three: 
 - `void initialize()`: This method is used to build the SDS and the DAG of a Task, there is not much logic in here, most of it is found inside the DAG, so it will be explained later on.
 - `TimeVarying<R> apply()`: This is an abuse of notation w.r.t. the explanation given earlier when talking about Time Varying for the first time. By definition, the application of an operator over a stream of data should return a Time Varying Relation. Here, instead, we use this 'apply' method to return a Time Varying Relation associated with the Task, without an explicit 'application of an operator'. In the end, anyways, we end up with a Time Varying Relation that can be queried as needed to obtain the result of the computation in a 'pull' fashion, given a timestamp. This is the logic behind a possible 'Lazy Evaluation'.
-- `Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp)`: This is the method called by the Continuous Program when an Input Stream emits an event and a Task is registered to it. The reason why result is a `Collection<Collection<O>>` is the following: the innermost `Collection<O>` represents the result of a computation (a 'stream' of elements of type O), while the outer `Collection` is present because, for a single computation, we might want to report multiple results (for example, if an event makes N windows close, we might want to report all of them, and each window can be seen as an independent result).\
-This is where the Task and Lazy Task implementations differ: a Lazy Task, after receiving an event, just updates its windows, it does not perform the operations specified by its DAG. A normal Task executes an extra step: if a computation needs to occurr, it performs it and returns the result to the Continuous Program. The time at which the computation needs to occurr, if present, can be found in the Time object of the Task (shared between the Task and all its S2R operators).
+- `void elaborateElement(DataStream<I> inputStream, I element, long timestamp)`: This is the method called by the Continuous Program when an Input Stream emits an event and a Task is registered to it. The responsibility of the method is to update all the windows and checking if a computation needs to occur. 
+- `Collection<Collection<O>> compute()`: This method is the one responsible of performing a computation (if the `Time` attribute contains some Evaluation Time Instants). It's currently called by the Continuous Program only on push queries (Tasks with an associated output stream).
+  The reason why result is a `Collection<Collection<O>>` is the following: the innermost `Collection<O>` represents the result of a computation (a 'stream' of elements of type O), while the outer `Collection` is present because, for a single computation, we might want to report multiple results (for example, if an event makes N windows close, we might want to report all of them, and each window can be seen as an independent result).\
+- `Collection<O> computeLazy(long ts)`: This method is used to query the Task at an arbitrary timestamp and obtain the result as a collection of output elements. It does not update any window, it just performs a computation at the given timestamp.
+
 
 ### Operators
 This next section explores the various implementations of different operators (S2R, R2R, R2S). These components are highly customizable, especially the R2R operators, whose logic depends on the data model we're working with.
