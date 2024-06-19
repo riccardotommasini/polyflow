@@ -32,6 +32,7 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
     protected Report report;
     private final long a;
     private Map<Window, Content<I, W, R>> active_windows;
+    private List<Window> reported_windows;
     private Set<Window> to_evict;
     private Map<I, Long> r_stream;
     private Map<I, Long> d_stream;
@@ -49,6 +50,7 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
         this.report = report;
         this.a = a;
         this.active_windows = new HashMap<>();
+        this.reported_windows = new ArrayList<>();
         this.to_evict = new HashSet<>();
         this.r_stream = new HashMap<>();
         this.d_stream = new HashMap<>();
@@ -88,21 +90,36 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
 
     @Override
     public Content<I, W, R> content(long t_e) {
-        Optional<Window> max = active_windows.keySet().stream()
-                .filter(w -> w.getO() < t_e && w.getC() < t_e)
-                .max(Comparator.comparingLong(Window::getC));
+        // If some windows matched the report clause, return the last one that did so
+        if(!reported_windows.isEmpty()){
+            return reported_windows.stream()
+                    .max(Comparator.comparingLong(Window::getC))
+                    .map(w->(active_windows.get(w))).get();
+        }
+        //Else return the last window closed
+        else {
+            Optional<Window> max = active_windows.keySet().stream()
+                    .filter(w -> w.getO() < t_e && w.getC() < t_e)
+                    .max(Comparator.comparingLong(Window::getC));
 
-        if (max.isPresent())
-            return active_windows.get(max.get());
+            if (max.isPresent())
+                return active_windows.get(max.get());
 
-        return cf.createEmpty();
+            return cf.createEmpty();
+        }
     }
 
     @Override
     public List<Content<I, W, R>> getContents(long t_e) {
-        return active_windows.keySet().stream()
-                .filter(w -> w.getO() < t_e && t_e < w.getC())
-                .map(active_windows::get).collect(Collectors.toList());
+        if(!reported_windows.isEmpty()){
+            return reported_windows.stream()
+                    .max(Comparator.comparingLong(Window::getC))
+                    .map(w->Collections.singletonList(active_windows.get(w))).get();
+        }
+        else
+            return active_windows.keySet().stream()
+                    .filter(w -> w.getO() < t_e && t_e < w.getC())
+                    .map(active_windows::get).collect(Collectors.toList());
     }
 
 
@@ -138,6 +155,7 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
 
         if (report.report(active, content, t_e, System.currentTimeMillis())) {
             ticker.tick(t_e, active);
+            reported_windows.add(active);
         }
 
 
@@ -163,6 +181,7 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
     public void evict() {
         to_evict.forEach(active_windows::remove);
         to_evict.clear();
+        reported_windows = new ArrayList<>();
     }
     @Override
     public void evict(long ts){
