@@ -4,7 +4,10 @@ import graph.jena.datatypes.JenaGraphOrBindings;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.*;
+import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.lang.LangTriG;
+import org.apache.jena.riot.lang.LangTurtle;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.sparql.core.ResultBinding;
@@ -15,7 +18,7 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FullQueryUnaryJena implements RelationToRelationOperator<JenaGraphOrBindings> {
+public class RSPQLstarQueryJena implements RelationToRelationOperator<JenaGraphOrBindings> {
 
 
     private String query;
@@ -23,11 +26,18 @@ public class FullQueryUnaryJena implements RelationToRelationOperator<JenaGraphO
     private List<String> tvgNames;
 
     private String resName;
+    DatasetGraph knowledge = new DatasetGraphInMemory();
 
-    public FullQueryUnaryJena(String query, List<String> tvgNames, String resName) {
+    public RSPQLstarQueryJena(String query, List<String> tvgNames, String resName) {
         this.query = query;
         this.tvgNames = tvgNames;
         this.resName = resName;
+        RDFParser.create()
+                .base("http://base/")
+                .source(FullQueryUnaryJena.class.getResourceAsStream("/base-data.ttl"))
+                .checking(false)
+                .lang(RDFLanguages.TRIG)
+                .parse(knowledge);
 
     }
 
@@ -39,7 +49,9 @@ public class FullQueryUnaryJena implements RelationToRelationOperator<JenaGraphO
         q.getProjectVars();
         Node aDefault = NodeFactory.createURI("default");
         DatasetGraph dg = new DatasetGraphInMemory();
+
         dg.addGraph(aDefault, dataset.getContent());
+        dg.addAll(knowledge);
 
         QueryExecution queryExecution = QueryExecutionFactory.create(q, DatasetImpl.wrap(dg));
         ResultSet resultSet = queryExecution.execSelect();

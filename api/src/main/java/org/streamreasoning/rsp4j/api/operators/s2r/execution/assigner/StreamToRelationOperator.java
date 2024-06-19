@@ -50,5 +50,10 @@ public interface StreamToRelationOperator<I, W, R extends Iterable<?>> {
      */
     void evict();
 
+    /**
+     * Clears all the windows with closing time smaller than the parameter ts
+     */
+    void evict(long ts);
+
 
 }

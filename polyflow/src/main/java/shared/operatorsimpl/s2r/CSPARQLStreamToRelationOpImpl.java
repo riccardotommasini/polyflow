@@ -1,5 +1,6 @@
 package shared.operatorsimpl.s2r;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -32,6 +33,7 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
     protected Report report;
     private final long width, slide;
     private Map<Window, Content<I, W, R>> active_windows;
+    private List<Window> reported_windows;
     private Set<Window> to_evict;
     private long t0;
 
@@ -48,10 +50,11 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
         this.width = width;
         this.slide = slide;
         this.active_windows = new HashMap<>();
+        this.reported_windows = new ArrayList<>();
         this.to_evict = new HashSet<>();
         this.t0 = time.getScope();
         this.ticker = TickerFactory.tick(tick, this);
-
+        //Logger.getRootLogger().setLevel(Level.OFF);
     }
 
 
@@ -90,14 +93,23 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
      */
     @Override
     public Content<I, W, R> content(long t_e) {
-        Optional<Window> max = active_windows.keySet().stream()
-                .filter(w -> w.getO() < t_e && w.getC() < t_e)
-                .max(Comparator.comparingLong(Window::getC));
+        // If some windows matched the report clause, return the last one that did so
+        if(!reported_windows.isEmpty()){
+            return reported_windows.stream()
+                    .max(Comparator.comparingLong(Window::getC))
+                    .map(w->(active_windows.get(w))).get();
+        }
+        //Else return the last window closed
+        else {
+            Optional<Window> max = active_windows.keySet().stream()
+                    .filter(w -> w.getO() < t_e && w.getC() < t_e)
+                    .max(Comparator.comparingLong(Window::getC));
 
-        if (max.isPresent())
-            return active_windows.get(max.get());
+            if (max.isPresent())
+                return active_windows.get(max.get());
 
-        return cf.createEmpty();
+            return cf.createEmpty();
+        }
     }
 
     /**
@@ -105,9 +117,15 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
      */
     @Override
     public List<Content<I, W, R>> getContents(long t_e) {
-        return active_windows.keySet().stream()
-                .filter(w -> w.getO() < t_e && t_e < w.getC())
-                .map(active_windows::get).collect(Collectors.toList());
+        if(!reported_windows.isEmpty()){
+            return reported_windows.stream()
+                    .max(Comparator.comparingLong(Window::getC))
+                    .map(w->Collections.singletonList(active_windows.get(w))).get();
+        }
+        else
+            return active_windows.keySet().stream()
+                    .filter(w -> w.getO() < t_e && t_e < w.getC())
+                    .map(active_windows::get).collect(Collectors.toList());
     }
 
     /**
@@ -159,7 +177,10 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
         active_windows.keySet().stream()
                 .filter(w -> report.report(w, getWindowContent(w), t_e, System.currentTimeMillis()))
                 .max(Comparator.comparingLong(Window::getC))
-                .ifPresent(window -> ticker.tick(t_e, window));
+                .ifPresent(window ->{
+                    reported_windows.add(window);
+                    ticker.tick(t_e, window);
+                });
     }
 
 
@@ -181,6 +202,13 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
             active_windows.remove(w);
         });
         to_evict.clear();
+        reported_windows = new ArrayList<>();
+    }
+
+    @Override
+    public void evict(long ts){
+        active_windows.keySet().forEach(w->{if(w.getC()<ts)to_evict.add(w);});
+        evict();
     }
 
 

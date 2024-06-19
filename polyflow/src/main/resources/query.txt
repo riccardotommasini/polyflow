@@ -1,0 +1,66 @@
+BASE <http://base/>
+PREFIX ex: <http://www.example.org/ontology#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+
+SELECT ?activity (AVG(?hr) AS ?avgHr) (AVG(?br) AS ?avgBr) (AVG(?ox) AS ?avgOx)
+
+WHERE {
+    ?person a foaf:Person ;
+       foaf:name "Rut" ;
+       ex:home ?home ;
+       ex:partner ?partner .
+
+    [] a ex:NormalSituation ;
+       ex:forPerson ?person ;
+       ex:forActivity ?activity ;
+       ex:expectedHeartRate [ ex:upperBound ?hrMax ] ;
+       ex:expectedBreathingRate [ ex:lowerBound ?brMin ] ;
+       ex:expectedOxygenSaturation [ ex:lowerBound ?oxMin ; ex:upperBound ?oxMax ] .
+
+     # Current activity, reported by the system
+
+    GRAPH ?g1 {
+            ?o1 a sosa:Observation ;
+              sosa:featureOfInterest ?person ;
+              sosa:madeObservation <sensor/system>;
+              sosa:hasSimpleResult ?activity  .
+        }
+
+    GRAPH ?g2 {
+            ?o2 a sosa:Observation ;
+              sosa:featureOfInterest ?partner ;
+              sosa:madeObservation <sensor/location/2>;
+              sosa:hasSimpleResult ?loc  .
+        }
+
+    GRAPH ?g3 {
+            ?o3 a sosa:Observation ;
+                sosa:madeObservation <sensor/heart_rate/1>;
+                sosa:featureOfInterest ?person .
+            <<?o3 sosa:hasSimpleResult ?hr>> ex:confidence ?c3 .
+            FILTER(?c3 > 0.95)
+        }
+
+    GRAPH ?g4 {
+            ?o4 a sosa:Observation ;
+            sosa:madeObservation <sensor/breathing_rate/1>;
+                sosa:featureOfInterest ?person .
+            <<?o4 sosa:hasSimpleResult ?br>> ex:confidence ?c4 .
+            FILTER(?c4 > 0.95)
+
+        }
+
+    GRAPH ?g5 {
+            ?o5 a sosa:Observation ;
+                sosa:madeObservation <sensor/oxygen/1>;
+                sosa:featureOfInterest ?person .
+            <<?o5 sosa:hasSimpleResult ?ox>> ex:confidence ?c5 .
+            FILTER(?c5 > 0.95)
+
+        }
+
+
+}
+GROUP BY ?activity ?hrMax ?brMin ?oxMin ?oxMax
+HAVING(?avgHr > ?hrMax && ?avgBr < ?brMin && ?oxMin <= ?avgOx && ?avgOx <= ?oxMax)

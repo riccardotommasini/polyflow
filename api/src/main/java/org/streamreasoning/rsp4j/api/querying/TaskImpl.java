@@ -137,28 +137,47 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
             s2r.evict();
         }
     }
+    @Override
+    public void evictWindows(long ts){
+        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+            s2r.evict(ts);
+        }
+    }
+
 
 
     @Override
-    public Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
-
-        Collection<Collection<O>> res = new ArrayList<>();
+    public void elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
         if(registeredS2R.containsKey(inputStream)) {
             for (StreamToRelationOperator<I, W, R> s2r : registeredS2R.get(inputStream)) {
                 s2r.windowing(element, timestamp);
             }
         }
 
+    }
+
+    public Collection<Collection<O>> compute(){
+        Collection<Collection<O>> res = new ArrayList<>();
         while(time.hasEvaluationInstant()){
             long t = time.getEvaluationTime().t;
-            log.debug("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            System.out.println("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            long begin_time = System.currentTimeMillis();
             R partialRes = eval(t);
-            res.add(r2sOperator.eval(partialRes, timestamp).collect(Collectors.toList()));
+            System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
+            res.add(r2sOperator.eval(partialRes, t).collect(Collectors.toList()));
+            evictWindows(t);
         }
 
-        evictWindows();
-
         return res;
+    }
+
+    public Collection<O> computeLazy(long ts){
+        System.out.println("Evaluating computation explicitly requested at time t= "+ts+", R2R computation will begin");
+        long begin_time = System.currentTimeMillis();
+        R result = eval(ts);
+        System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
+        return r2sOperator.eval(result, ts).collect(Collectors.toList());
+        //We do not evict windows since it was an on-demand query
 
     }
 

@@ -1,5 +1,6 @@
 # Polyflow4J Documentation
-The goal of this document is to give a high level overview of the system as well as a deep explanation of the implementation details of the current system. We will first begin with the goal of Polyflow4J, the interfaces and the high-level communication between 
+
+The goal of this document is to give a high level overview of the system as well as a deep explanation of the implementation details of the current system. We will first begin with the goal of RSP4J, the interfaces and the high-level communication between
 components. After that, we will dive in the technical details of each available implementation.
 
 - [Introduction](#introduction)
@@ -18,8 +19,9 @@ components. After that, we will dive in the technical details of each available 
     - [DAG and DAGNode](#dag-and-dagnode)
 
 ## Introduction
-Polyflow4J is a library that allows to create Stream Processing Engines in a transparent way with respect to the selected data models. In its essence, it's composed by a set of interfaces that split the system in various components, each with its own responsibility. \
-The advantages of this library can be found in the [RSP4J paper](https://www.researchgate.net/publication/352796292_Web_stream_processing_with_RSP4J), from which the Polyflow4J idea was born (although it was an old iteration of the system, the reasonings are still valid). Some of the advantages include fair benchmarking among different stream engines and fast prototyping.\
+RSP4j is a library that allows to create Stream Processing Engines in a transparent way with respect to the selected data models. In its essence, it's composed by a set of interfaces that split the system in various components, each with its own responsibility. \
+The advantages of this library can be found in the [RSP4J paper](https://www.researchgate.net/publication/352796292_Web_stream_processing_with_RSP4J), although it was an old iteration of the system, the reasonings are still valid. Some of the advantages include fair benchmarking among different stream engines and fast prototyping.\
+
 Let's see how the system works from a high-level perspective.
 ## System overview
 ### Interfaces
@@ -28,9 +30,10 @@ The generics used are: `I`, `W`, `R` and `O`.\
 `I` Represents the type of the elements in the input stream (tuples, graphs, documents etc..).\
 `W` Represents the type of the elements in the windows. Usually `W`=`I`, but it's not always the case.\
 `R` Represents a type on which is defined a relational algebra (it is possible to apply a chain of operations on it).\
-`O` Represents the type of the elements in the output stream.\
+`O` Represents the type of the elements in the output stream.
 
- We will dive deep in each component of the system in the following sections, but we can start to give a general view of the responisibilities:
+ We will dive deep in each component of the system in the following sections, but we can start to give a general overview of the responisibilities:
+
 - `ContinuousProgram<I, W, R, O>`:  Acts as the coordinator of the system, manages the queries and the input/output streams.
 - `Task<I, W, R, O>`: Represents a query, contains the needed operators to answer it.
 - `StreamToRelationOperator<I, W, R>`: An operator that represents a bridge between the streaming world and the static world, commonly implemented as a windowing operator.
@@ -38,8 +41,8 @@ The generics used are: `I`, `W`, `R` and `O`.\
 - `RelationToStreamOperator<R, O>`: An operator that transforms static data back to a stream of data.
 - `DAG<R>`: Directed acyclic graph, used to represent a chain of Relation to Relation operators
 - `DAGNode<R>`: Building blocks of the DAG
-- `TimeVarying<R>`: As explained in the [CQL paper](https://www.researchgate.net/publication/2901127_The_CQL_Continuous_Query_Language_Semantic_Foundations_and_Query_Execution), "the application of an operator over a stream of data returns a function, called Time-Varying Relation" (a relation that changes with time).\
-    To make it simple, a Time-Varying Relation is a function that, given a timestamp, returns a Relation. We defined two of such functions by applying the concept to windowing and queries. The first one materializes a window on the data stream (a Relation), while the second one materializes the result of a query (still a Relation). The latter is obtained by chaining the materialization of a window (first function) with a set of Relation to Relation operators.\
+- `TimeVarying<R>`: As explained in the [CQL paper](https://www.researchgate.net/publication/2901127_The_CQL_Continuous_Query_Language_Semantic_Foundations_and_Query_Execution), "the application of an S2R operator over a stream of data returns a function, called Time-Varying Relation" (a relation that changes with time).\
+    To make it simple, a Time-Varying Relation is a function that, given a timestamp, returns a Relation. We defined two of such functions by applying the concept to windowing and queries. The first one materializes a window on the data stream (a Relation), while the second one materializes the result of a query (still a Relation). The latter is obtained by chaining the materialization of a window (first function) with a set of Relation to Relation operators.
  
 
 ### Components Interaction
@@ -57,21 +60,20 @@ That being said, we provide some (fully generic) default implementations to show
 In this section we dive deep in our custom implementations to make it easier to understand how the system works without reading thousands of lines of code.
 ### Continuous Program
 Our implementation of the Continuous Program keeps the Java generics defined in the respective interface. It has the following attributes: 
-- `List<Task<I, W, R, O>> taskList`: List of all defined Tasks. 
-- `List<Task<I, W, R, O>> viewList`: List of all defined Views.
-- `Map<DataStream<I>, List<Task<I, W, R, O>>> registeredViews`: Maps an input stream to the interested Views.
+- `List<Task<I, W, R, O>> taskList`: List of all defined Tasks.
 - `Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks`: Maps an input stream to the interested Tasks.
 - `Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap`: Maps a Task to the interested output streams.\
-The difference between a Task and a View is that a Task can 'push' a result when ready, while a View must be explicitely queried in order to trigger a computation and obtain a result. A user can define a View and use it as part of another query.
+
+A Task can represent both a push query (automatically outputs the result when it's ready) or a pull query (wait for an external request before performing any computation):
+if an Output Stream is associated with a Task in the `taskToOutMap` attribute, then it's treated as a push query, otherwise it's treated as a pull query. The concept of Materialized
+Views is realized through the use of pull queries.
 
 Our default Continuous Program overrides three methods, two are used to populate the data structures mentioned above, and one is a method it inherits from the interface `Consumer`, which is the `notify(InputStream<I>, I element, long timestamp)`, used by an `InputStream` to notify the Continuous Program that a new event entered the stream.\
-The logic of the latter is pretty simple: when a new event enters the stream, the first to be notified are the Views, then the Tasks. The reason is simple, by notifying a Task we might trigger a computation, and the computation might involve a View, which is yet to be updated. By notifying the Views first, we make sure that they are up to date, and we can then proceed to notify the Tasks.\
-After a computation occurred, we take the result and send it to the interested output streams through the `taskToOutMap` object defined above.
+The logic of the latter is pretty simple: when a new event enters the stream, all the Tasks are notified and their windows are updated. Then, all the Tasks with an associated output stream (push queries)
+are asked to perform a computation (if any is required) and the (possibly empty) results are sent to the interested streams through the `taskToOutMap` object.
 ### Task
-For the Task interface, we came up wiht two default implementations that provide a different logic: Task and Lazy Task.\
-A normal Task represents a push query, it will output the results of computations automatically after they're ready.\
-A Lazy Task can conceptually be seen (but is not limited to) a View: when it receives a new event, it just updates its windows and nothing more. To obtain results, it should be directly queried by materializing the Time Varying Relation associated to it.\
-Both Tasks present the following attributes:
+For the Task interface, we came up with a single default implementation, which can represent both a push query or a pull query.\
+The attributes of the Task are the following:
 - `List<StreamToRelationOperator<I, W, R>> s2rOperators`: List of all the S2R operators associated with the Task (basically, its windows).
 - `List<RelationToRelationOperator<R>> r2rOperators`: List of all the R2R operators, it will be used to create the DAG.
 - `Map<DataStream<I>, List<StreamToRelationOperator<I, W, R>>> registeredS2R`: Maps an input stream to all the S2R operators interested in it (windows over that stream)
@@ -82,14 +84,18 @@ Both Tasks present the following attributes:
 The most interesting methods (ignoring getters, setters etc..) are three: 
 - `void initialize()`: This method is used to build the SDS and the DAG of a Task, there is not much logic in here, most of it is found inside the DAG, so it will be explained later on.
 - `TimeVarying<R> apply()`: This is an abuse of notation w.r.t. the explanation given earlier when talking about Time Varying for the first time. By definition, the application of an operator over a stream of data should return a Time Varying Relation. Here, instead, we use this 'apply' method to return a Time Varying Relation associated with the Task, without an explicit 'application of an operator'. In the end, anyways, we end up with a Time Varying Relation that can be queried as needed to obtain the result of the computation in a 'pull' fashion, given a timestamp. This is the logic behind a possible 'Lazy Evaluation'.
-- `Collection<Collection<O>> elaborateElement(DataStream<I> inputStream, I element, long timestamp)`: This is the method called by the Continuous Program when an Input Stream emits an event and a Task is registered to it. The reason why result is a `Collection<Collection<O>>` is the following: the innermost `Collection<O>` represents the result of a computation (a 'stream' of elements of type O), while the outer `Collection` is present because, for a single computation, we might want to report multiple results (for example, if an event makes N windows close, we might want to report all of them, and each window can be seen as an independent result).\
-This is where the Task and Lazy Task implementations differ: a Lazy Task, after receiving an event, just updates its windows, it does not perform the operations specified by its DAG. A normal Task executes an extra step: if a computation needs to occurr, it performs it and returns the result to the Continuous Program. The time at which the computation needs to occurr, if present, can be found in the Time object of the Task (shared between the Task and all its S2R operators).
+- `void elaborateElement(DataStream<I> inputStream, I element, long timestamp)`: This is the method called by the Continuous Program when an Input Stream emits an event and a Task is registered to it. The responsibility of the method is to update all the windows and checking if a computation needs to occur. 
+- `Collection<Collection<O>> compute()`: This method is the one responsible of performing a computation (if the `Time` attribute contains some Evaluation Time Instants). It's currently called by the Continuous Program only on push queries (Tasks with an associated output stream).
+  The reason why result is a `Collection<Collection<O>>` is the following: the innermost `Collection<O>` represents the result of a computation (a 'stream' of elements of type O), while the outer `Collection` is present because, for a single computation, we might want to report multiple results (for example, if an event makes N windows close, we might want to report all of them, and each window can be seen as an independent result).\
+- `Collection<O> computeLazy(long ts)`: This method is used to query the Task at an arbitrary timestamp and obtain the result as a collection of output elements. It does not update any window, it just performs a computation at the given timestamp.
 
 ### Operators
 This next section explores the various implementations of different operators (S2R, R2R, R2S). These components are highly customizable, especially the R2R operators, whose logic depends on the data model we're working with.
 #### Stream To Relation
 There are currently two S2R implementations, CQELS and CSPARQL. We will focus on the latter to give an example of how to implement the methods offered by the Stream To Relation interface.\
-Let's first make a clarification, the Stream To Relation operator represents a window over the input stream (for example, a window of size 10 seconds sliding every 2 seconds). Does that mean that, for every window over the same input stream, we have multiple Stream To Relation operators? No, not in our implementation. Inside our Stream To Relation operator you will find multiple "window" objects, which represents the various windows with an opening and closing time, each with its own content. The Stream To Relation operator gives the 'blueprint' of the window, then as the time passes, multiple window objects are created inside the S2R, representing the (possibly) multiple active windows. This is the reason why you will find a `Map<Window, Content<I, W, R>>` in our S2R implementation.
+
+Let's first make a clarification, the Stream To Relation operator represents a window over the input stream (for example, a window of size 10 seconds sliding every 2 seconds). Does that mean that, for every window over the same input stream, we have multiple Stream To Relation operators? No, not in our implementation. Inside our Stream To Relation operator you will find multiple "window" objects, which represent the various windows with an opening and closing time, each with its own content. The Stream To Relation operator gives the 'blueprint' of the window, then as the time passes, multiple window objects are created inside the S2R, representing the (possibly) multiple active windows. This is the reason why you will find a `Map<Window, Content<I, W, R>>` in our S2R implementation.
+
 - `Ticker ticker`: This object represents the Tick dimension as identified in the [SECRET Paper](https://www.researchgate.net/publication/220538262_SECRET_A_Model_for_Analysis_of_the_Execution_Semantics_of_Stream_Processing_Systems). The responsibility of a Ticker (for example, the Time Ticker) is to add to the Time object the time at which a computation must occurr.
 - `Tick tick`: This represents the type of Tick (time driven, batch driven or tuple driven).
 - `Time time`: The same type object instance that the Task object and its S2R operators share.
@@ -114,11 +120,10 @@ It has a `R eval(List<R> operands)` method, which takes as input your operands a
 #### Relation To Stream
 As for the R2R opeator, the R2S operator is also dependent on the specific types we use in our systems. Indeed, its job is to transform an object of type `R` in a Collection of objects of type `O`, which represent the output stream. 
 ### Time Varying
-So far we've mentioned multiple times the Time Varying objects, and we gave a brief explanation of what they are in the [Interfaces](#interfaces) section. We now see two different implementation of Time Varying objects: one oriented towards retrieving data from a window given a timestamp, and the other oriented towards materializing the results of a full computation given a timestamp.\
-**TODO: mettere un time varying generico nelle API, per ora sono separati perché jena usa gli IRI e il relazionale usa le stringhe diretto.**\
+So far we've mentioned multiple times the Time Varying objects, and we gave a brief explanation of what they are in the [Interfaces](#interfaces) section. We now see two different implementations of Time Varying objects: one oriented towards retrieving data from a window given a timestamp, and the other oriented towards materializing the results of a full computation given a timestamp.\
 The Time Varying object used to materialized the content of a window at a specific time instant is implemented as follows:
 - `StreamToRelationOperator<?, ?, R> op`: The operator from which we want to materialize a given window.
-- `String name`: The name of the Time Varying, with should correspond to the name of the S2R associated to it.
+- `String name`: The name of the Time Varying, which should correspond to the name of the S2R associated to it.
 - `R content`: The materialized content of the window we retrieved at a certain time instant.
 
 The most important methods are: 
@@ -166,7 +171,7 @@ We defined three different implementations of the `DAGNode` interface, and they 
 - `UnaryDAGNodeImpl`: a node of the DAG that holds a unary R2R operator.
 - `BinaryDAGNodeImpl`: a node of the DAG that holds a binary R2R operator.
 
-The computation starts at the end of the DAG (by definition, a well-formed `DAG` will converge to a single last `DAGNode`), this last node is (usually) a `UnaryDAGNodeImpl` or a `BinaryDAGNodeImpl`.\
+The computation starts at the end of the DAG (by definition, a well-formed `DAG` will converge to a single last `DAGNode`), this last node is a `UnaryDAGNodeImpl` or a `BinaryDAGNodeImpl`.\
 The `eval(long ts)` method of this two type of nodes is implemented as follows:
 - `R eval(long ts) {return this.r2rOperator.eval(List.of(prev.get(0).eval(ts)));}`
 - `R eval(long ts) {return this.r2rOperator.eval(List.of(prev.get(0).eval(ts), prev.get(1).eval(ts)));}`
