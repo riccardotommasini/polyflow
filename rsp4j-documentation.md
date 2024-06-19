@@ -102,6 +102,7 @@ Let's first make a clarification, the Stream To Relation operator represents a w
 - `Report report`: Represents the Report dimension of the [SECRET Paper](https://www.researchgate.net/publication/220538262_SECRET_A_Model_for_Analysis_of_the_Execution_Semantics_of_Stream_Processing_Systems). It is a set of conditions that must be fullfilled in order for a window to be ready to report its content, thus triggering a computation.
 - `long width, slide`: Width of the window (in this case, a time width) and sliding parameter (distance between the opening time of two windows, also represented as a time).
 - `Map<Window, Content<I, W, R>> active_windows`: Map representing the currently active windows. Each `Window` object has an opening time and a closing time, and has a Content associated to it, which holds the data belonging to that window.
+- `List<Window> reported_windows`: List of the windows that are ready to report (computation is needed)
 - `Set<Window> to_evict`: Windows that need to be evicted ('expired' windows).
 - `long t0`: Time at which the first window opens.
 
