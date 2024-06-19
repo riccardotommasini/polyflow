@@ -10,17 +10,13 @@ import java.util.*;
 public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
 
     List<Task<I, W, R, O>> taskList;
-    List<Task<I, W, R, O>> viewList;
-    Map<DataStream<I>, List<Task<I, W, R, O>>> registeredViews;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
     Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap;
 
 
     public ContinuousProgram(){
         this.taskList = new ArrayList<>();
-        this.viewList = new ArrayList<>();
         this.registeredTasks = new HashMap<>();
-        this.registeredViews = new HashMap<>();
         this.taskToOutMap = new HashMap<>();
     }
 
@@ -37,19 +33,10 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
     }
 
     public void buildView(Task<I, W, R, O> view, List<DataStream<I>> inputStreams){
-        this.viewList.add(view);
-        inputStreams.forEach(input->addInputStreamViews(input, view));
+        this.taskList.add(view);
+        inputStreams.forEach(input->addInputStream(input, view));
     }
 
-    private void addInputStreamViews(DataStream<I> inputStream, Task<I, W, R, O> view){
-        inputStream.addConsumer(this);
-        if(!registeredViews.containsKey(inputStream)){
-            registeredViews.put(inputStream, new ArrayList<>());
-        }
-        if(!registeredViews.get(inputStream).contains(view)){
-            registeredViews.get(inputStream).add(view);
-        }
-    }
 
     /**
      * Maps a task to the inputStream it's interested in and adds the Continuous program as a consumer of the input stream
@@ -94,30 +81,23 @@ public class ContinuousProgram<I,W, R extends Iterable<?>, O> implements Continu
     @Override
     public void notify(DataStream<I> inputStream, I element, long timestamp) {
 
-        if(registeredViews.containsKey(inputStream)) {
-            for (Task<I, W, R, O> v : registeredViews.get(inputStream)) {
-                v.elaborateElement(inputStream, element, timestamp);
-            }
-        }
-
-
-
         if(registeredTasks.containsKey(inputStream)) {
             for (Task<I, W, R, O> t : registeredTasks.get(inputStream)) {
-                //elaborateElement will transform R to Collection<O> using the task's r2s operators
-                Collection<Collection<O>> result = t.elaborateElement(inputStream, element, timestamp);
-                if (!taskToOutMap.containsKey(t)) {
-                    throw new RuntimeException("Task has no associated output stream");
-                } else {
-                    //If the element triggered a computation and a result is available, insert it in every interested output stream
+                //Update all the windows for all the interested tasks
+                t.elaborateElement(inputStream, element, timestamp);
+            }
+            for(Task<I, W, R, O> t : registeredTasks.get(inputStream)){
+                //If a Task has an associated output stream --> it's a push query, not a view, so we proceed with the computation
+                if (taskToOutMap.containsKey(t)) {
+                    Collection<Collection<O>> result;
+                    result = t.compute();
                     result.forEach(coll -> coll.forEach(o -> taskToOutMap.get(t).forEach(out -> out.put(o, timestamp))));
-
                 }
             }
         }
 
         //Evict the windows of the views for memory efficiency
-        for(Task<I, W, R, O> v : viewList){
+        for(Task<I, W, R, O> v : taskList){
             v.evictWindows();
         }
 
