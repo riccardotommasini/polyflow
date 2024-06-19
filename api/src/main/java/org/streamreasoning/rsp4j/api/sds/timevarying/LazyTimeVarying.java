@@ -15,10 +15,6 @@ public class LazyTimeVarying<R extends Iterable<?>> implements TimeVarying<R> {
         this.dag = dag;
         this.name = name;
     }
-    public LazyTimeVarying(DAGNode<R> dag, String name){
-        this.dag = dag;
-        this.name = name;
-    }
 
     @Override
     public void materialize(long ts) {

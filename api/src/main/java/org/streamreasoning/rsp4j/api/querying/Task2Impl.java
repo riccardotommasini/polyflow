@@ -245,7 +245,7 @@ public class Task2Impl<I1, W1, R1 extends Iterable<?>, O1, I2, W2, R2 extends It
                 outputOne.add(r2sOperatorOne.eval(res, time).collect(Collectors.toList()));
             if(r2sOperatorTwo!=null)
                 outputTwo.add(r2sOperatorTwo.eval(res, time).collect(Collectors.toList()));
-            toEvict.get(time).forEach(Task::evictWindows);
+            toEvict.get(time).forEach(task->task.evictWindows(time));
 
         }
 

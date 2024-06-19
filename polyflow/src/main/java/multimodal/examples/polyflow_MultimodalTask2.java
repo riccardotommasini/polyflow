@@ -156,7 +156,7 @@ public class polyflow_MultimodalTask2 {
 
         RelationToStreamOperator<Table, Tuple> r2sOp = new RelationToStreamjtablesawImpl();
 
-        Task<Tuple, Tuple, Table, Tuple> task1 = new LazyTaskImpl<>();
+        Task<Tuple, Tuple, Table, Tuple> task1 = new TaskImpl<>();
         task1 = task1
                 .addS2ROperator(s2rOp_1, inputStream_1)
                 .addR2ROperator(r2rOp)
@@ -165,7 +165,7 @@ public class polyflow_MultimodalTask2 {
                 .addTime(instance1);
         task1.initialize();
 
-        Task<Tuple, Tuple, Table, Boolean> task2 = new LazyTaskImpl<>();
+        Task<Tuple, Tuple, Table, Boolean> task2 = new TaskImpl<>();
         task2 = task2
                 .addS2ROperator(s2rOp_2, inputStream_2)
                 .addSDS(new SDSjtablesaw())
