@@ -18,6 +18,10 @@ public class WindowImpl implements Window {
         return o;
     }
 
+    public void setC(long ts){
+        this.c = ts;
+    }
+
     @Override
     public boolean equals(Object o1) {
         if (this == o1) return true;
