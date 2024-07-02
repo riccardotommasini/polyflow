@@ -17,10 +17,13 @@ import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
-public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
+public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
 
 
     private static final Logger log = Logger.getLogger(CSPARQLStreamToRelationOpImpl.class);
@@ -32,15 +35,11 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
     protected final TimeVaryingFactory<R> tvFactory;
     protected ReportGrain grain;
     protected Report report;
-    private final long min_size;
     private Window active_window;
     private Content<I, W, R> active_content;
-    private List<Window> reported_windows;
-    private Set<Window> to_evict;
-    private Predicate<I> threshold;
+    private boolean toReport;
 
-    public ThresholdWindowOp(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report,
-                             long min_size, Predicate<I> threshold){
+    public FrameOp(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report){
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -48,12 +47,8 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
         this.tvFactory = tvFactory;
         this.grain = grain;
         this.report = report;
-        this.threshold = threshold;
-        this.min_size = min_size;
-        this.reported_windows = new ArrayList<>();
-        this.to_evict = new HashSet<>();
         this.ticker = TickerFactory.tick(tick, this);
-
+        this.toReport = false;
     }
 
     @Override
@@ -78,19 +73,16 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
 
     @Override
     public Content<I, W, R> content(long t_e) {
-        if(!reported_windows.isEmpty()){
+        if(toReport)
             return active_content;
-        }
-        return cf.createEmpty();
-
+        else return cf.createEmpty();
     }
 
     @Override
     public List<Content<I, W, R>> getContents(long t_e) {
-        if(!reported_windows.isEmpty()){
+        if(toReport)
             return Collections.singletonList(active_content);
-        }
-        return Collections.singletonList(cf.createEmpty());
+        else return Collections.singletonList(cf.createEmpty());
     }
 
     @Override
@@ -103,24 +95,21 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
 
-        if(threshold.test(arg)){
-            if(active_window != null){
-                active_content.add(arg);
-            }
-            else{
-                active_window = new WindowImpl(ts, -1); //Closing time is not known at priori
-                active_content = cf.create();
-                active_content.add(arg);
-            }
+        if(active_window != null){
+            active_content.add(arg);
         }
         else{
-            if(active_window != null){
-                active_window.setC(t_e); //When an event does not match the threshold, we close the current window
-                reported_windows.add(active_window);
-                time.addEvaluationTimeInstants(new TimeInstant(t_e));
-                time.setAppTime(t_e);
-            }
+            active_window = new WindowImpl(ts, -1);
+            active_content = cf.create();
+            active_content.add(arg);
         }
+        toReport = report.report(active_window, active_content, t_e, System.currentTimeMillis());
+        if(toReport) {
+            time.addEvaluationTimeInstants(new TimeInstant(t_e));
+            active_window.setC(t_e); //If a frame needs to be reported, then it must also be closed
+        }
+
+        time.setAppTime(t_e);
     }
 
     @Override
@@ -130,17 +119,16 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
 
     @Override
     public String getName() {
-        return this.name;
+        return name;
     }
-
-
 
     @Override
     public void evict() {
-       if(active_window != null && active_window.getC() != -1) {
-           active_window = null;
-           reported_windows = new ArrayList<>();
-       }
+        if(toReport){
+            toReport = false;
+            active_window = null;
+            active_content = null;
+        }
     }
 
     @Override

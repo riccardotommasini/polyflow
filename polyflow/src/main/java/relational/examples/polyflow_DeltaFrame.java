@@ -4,7 +4,6 @@ import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
-import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
@@ -12,31 +11,51 @@ import org.streamreasoning.rsp4j.api.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
-import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
+import org.streamreasoning.rsp4j.api.secret.report.strategies.OnStateReady;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
-import relational.operatorsimpl.r2r.CustomRelationalQuery;
-import relational.operatorsimpl.r2r.R2RjtablesawJoin;
-import relational.operatorsimpl.r2r.R2RjtablesawSelection;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
 import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
-import shared.contentimpl.factories.AccumulatorContentFactory;
+import shared.contentimpl.factories.StatefulContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
-import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
-import shared.operatorsimpl.s2r.ThresholdWindowOp;
+import shared.operatorsimpl.s2r.FrameOp;
 import tech.tablesaw.api.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-public class polyflow_ThresholdWindow {
+public class polyflow_DeltaFrame {
     public static void main(String [] args) throws InterruptedException {
+
+        class InnerState{
+            private int firstElement;
+            private int lastElement;
+
+            private boolean hasFirstElement = false;
+
+            private boolean hasLastElement = false;
+            public void setFirstElement(int element){
+                this.firstElement = element;
+                this.hasFirstElement = true;
+            }
+            public void setLastElement(int element){
+                this.lastElement = element;
+                this.hasLastElement = true;
+            }
+            public boolean hasFirstElement(){
+                return this.hasFirstElement;
+            }
+            public boolean hasLatElement(){
+                return this.hasLastElement;
+            }
+            public int getDiff(){
+                return lastElement - firstElement;
+            }
+        }
 
         RowStreamGenerator generator = new RowStreamGenerator();
 
@@ -46,14 +65,31 @@ public class polyflow_ThresholdWindow {
 
         // Engine properties
         Report report = new ReportImpl();
-        report.add(new OnWindowClose());
+        report.add(new OnStateReady());
 
         Tick tick = Tick.TIME_DRIVEN;
         ReportGrain report_grain = ReportGrain.SINGLE;
         Time instance = new TimeImpl(0);
         Table emptyContent = Table.create();
 
-        AccumulatorContentFactory<Tuple, Tuple, Table> accumulatorContentFactory = new AccumulatorContentFactory<>(
+        StatefulContentFactory<Tuple, Tuple, Table> statefulContentFactory = new StatefulContentFactory<>(
+                ()-> new InnerState(),
+                (t, s)-> {
+                    InnerState state = (InnerState)s;
+                    if(!state.hasFirstElement()){
+                        state.setFirstElement((Integer)t.getValue(2));
+                    }
+                    else{
+                        state.setLastElement((Integer)t.getValue(2));
+                    }
+                    return state;
+                    },
+                (s)->{
+                    InnerState state = (InnerState)s;
+                    if(!state.hasLatElement())
+                        return false;
+                    return state.getDiff() > 3;
+                },
                 t->t,
                 (t)->{
                     Table r = Table.create();
@@ -121,16 +157,14 @@ public class polyflow_ThresholdWindow {
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
         StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_1 =
-                new ThresholdWindowOp<>(
+                new FrameOp<>(
                         tick,
                         instance,
                         "w1",
-                        accumulatorContentFactory,
+                        statefulContentFactory,
                         tvFactory,
                         report_grain,
-                        report,
-                        3,
-                        (t->(int)t.getValue(2)>4));
+                        report);
 
 
 
