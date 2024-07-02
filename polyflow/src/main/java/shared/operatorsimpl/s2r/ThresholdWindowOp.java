@@ -33,7 +33,8 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
     protected ReportGrain grain;
     protected Report report;
     private final long min_size;
-    private Map<Window, Content<I, W, R>> active_windows;
+    private Window active_window;
+    private Content<I, W, R> active_content;
     private List<Window> reported_windows;
     private Set<Window> to_evict;
     private Predicate<I> threshold;
@@ -78,7 +79,7 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
     @Override
     public Content<I, W, R> content(long t_e) {
         if(!reported_windows.isEmpty()){
-            return active_windows.get(reported_windows.get(0));
+            return active_content;
         }
         return cf.createEmpty();
 
@@ -87,7 +88,7 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
     @Override
     public List<Content<I, W, R>> getContents(long t_e) {
         if(!reported_windows.isEmpty()){
-            return Collections.singletonList(active_windows.get(reported_windows.get(0)));
+            return Collections.singletonList(active_content);
         }
         return Collections.singletonList(cf.createEmpty());
     }
@@ -103,22 +104,19 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
         }
 
         if(threshold.test(arg)){
-            if(!active_windows.isEmpty()){
-                active_windows.values().stream().findFirst().get().add(arg);
+            if(active_window != null){
+                active_content.add(arg);
             }
             else{
-                Window w = new WindowImpl(ts, -1); //Closing time is not known at priori
-                Content<I, W, R> content = cf.create();
-                content.add(arg);
-                active_windows.put(w, content);
+                active_window = new WindowImpl(ts, -1); //Closing time is not known at priori
+                active_content = cf.create();
+                active_content.add(arg);
             }
         }
         else{
-            if(!active_windows.isEmpty()){
-                Window to_close = active_windows.keySet().stream().findFirst().get();
-                to_close.setC(t_e); //When an event does not match the threshold, we close the current window
-                reported_windows.add(to_close);
-                to_evict.add(to_close);
+            if(active_window != null){
+                active_window.setC(t_e); //When an event does not match the threshold, we close the current window
+                reported_windows.add(active_window);
                 time.addEvaluationTimeInstants(new TimeInstant(t_e));
                 time.setAppTime(t_e);
             }
@@ -139,17 +137,14 @@ public class ThresholdWindowOp<I, W, R extends Iterable<?>> implements StreamToR
 
     @Override
     public void evict() {
-        to_evict.forEach(w -> {
-            log.debug("Evicting [" + w.getO() + "," + w.getC() + ")");
-            active_windows.remove(w);
-        });
-        to_evict.clear();
-        reported_windows = new ArrayList<>();
+       if(active_window != null && active_window.getC() != -1) {
+           active_window = null;
+           reported_windows = new ArrayList<>();
+       }
     }
 
     @Override
     public void evict(long ts) {
-        active_windows.keySet().forEach(w->{if(w.getC() != -1)to_evict.add(w);});
         evict();
     }
 }

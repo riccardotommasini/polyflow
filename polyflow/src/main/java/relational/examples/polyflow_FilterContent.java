@@ -1,5 +1,6 @@
 package relational.examples;
 
+import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 import org.javatuples.Tuple;
 import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
@@ -125,7 +126,7 @@ public class polyflow_FilterContent {
             //TableWrapper because we need the interface convertible on the W generic type
             ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
 
-            CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_1 =
+            StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_1 =
                     new CSPARQLStreamToRelationOpImpl<>(
                             tick,
                             instance,
@@ -136,7 +137,7 @@ public class polyflow_FilterContent {
                             report,
                             1000,
                             1000);
-            CSPARQLStreamToRelationOpImpl<Tuple, Tuple, Table> s2rOp_2 =
+            StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_2 =
                     new CSPARQLStreamToRelationOpImpl<>(
                             tick,
                             instance,
