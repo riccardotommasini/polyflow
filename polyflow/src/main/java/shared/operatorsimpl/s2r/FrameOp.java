@@ -37,6 +37,8 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     protected Report report;
     private Window active_window;
     private Content<I, W, R> active_content;
+    private Window reported_window;
+    private Content<I, W, R> reported_content;
     private boolean toReport;
 
     public FrameOp(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report){
@@ -74,14 +76,14 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     @Override
     public Content<I, W, R> content(long t_e) {
         if(toReport)
-            return active_content;
+            return reported_content;
         else return cf.createEmpty();
     }
 
     @Override
     public List<Content<I, W, R>> getContents(long t_e) {
         if(toReport)
-            return Collections.singletonList(active_content);
+            return Collections.singletonList(reported_content);
         else return Collections.singletonList(cf.createEmpty());
     }
 
@@ -107,6 +109,11 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
         if(toReport) {
             time.addEvaluationTimeInstants(new TimeInstant(t_e));
             active_window.setC(t_e); //If a frame needs to be reported, then it must also be closed
+            reported_window = active_window;
+            reported_content = active_content;
+            active_window = new WindowImpl(ts, -1);
+            active_content = cf.create();
+            active_content.add(arg);
         }
 
         time.setAppTime(t_e);
@@ -126,8 +133,8 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     public void evict() {
         if(toReport){
             toReport = false;
-            active_window = null;
-            active_content = null;
+            reported_window = null;
+            reported_content = null;
         }
     }
 
