@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 public class SDSjtablesaw implements SDS<Table> {
 
     private final List<TimeVarying<Table>> tvgs = new ArrayList<>();
-    private boolean materialized = false;
 
     @Override
     public Collection<TimeVarying<Table>> asTimeVaryingEs() {
@@ -36,13 +35,7 @@ public class SDSjtablesaw implements SDS<Table> {
         for(TimeVarying<Table> tvg : tvgs){
             tvg.materialize(ts);
         }
-        materialized();
         return this;
-    }
-
-    @Override
-    public void materialized() {
-        this.materialized = true;
     }
 
     @Override

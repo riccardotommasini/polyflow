@@ -23,7 +23,6 @@ public class SDSJena implements SDS<JenaGraphOrBindings>, Dataset {
 
     private final Set<TimeVarying<JenaGraphOrBindings>> defs = new HashSet<>();
     private final Map<Node, TimeVarying<JenaGraphOrBindings>> tvgs = new HashMap<>();
-    private boolean materialized = false;
     private final Node def = NodeFactory.createURI("def");
 
     private static Dataset dataset = DatasetFactory.createGeneral();
@@ -45,10 +44,6 @@ public class SDSJena implements SDS<JenaGraphOrBindings>, Dataset {
         defs.add(tvg);
     }
 
-    @Override
-    public void materialized() {
-        this.materialized = true;
-    }
 
     @Override
     public SDS<JenaGraphOrBindings> materialize(final long ts) {
@@ -78,7 +73,6 @@ public class SDSJena implements SDS<JenaGraphOrBindings>, Dataset {
                 }).forEach(n -> n.g.stream()
                         .forEach(o -> dg.add(n.name, o.getSubject(), o.getPredicate(), o.getObject())));
 
-        materialized();
         return this;
     }
 

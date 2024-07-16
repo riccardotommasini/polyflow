@@ -51,7 +51,10 @@ public interface StreamToRelationOperator<I, W, R extends Iterable<?>> {
     void evict();
 
     /**
-     * Clears all the windows with closing time smaller than the parameter ts
+     * Clears all the windows with closing time smaller than the parameter ts.
+     * Can be used when multiple windows are active at the same time and they need
+     * to be synchronized (if one window receives an event at time t, the time
+     * of all the other windows advances as well and they get evicted even if they did not receive an event directly)
      */
     void evict(long ts);
 

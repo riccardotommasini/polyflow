@@ -26,7 +26,7 @@ import relational.sds.TimeVaryingFactoryjtablesaw;
 import shared.contentimpl.factories.AccumulatorContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
-import shared.sds.DefaultSDS;
+import shared.sds.SDSDefault;
 
 import java.util.ArrayList;
 
@@ -86,7 +86,7 @@ public class document_example {
         task = task.addS2ROperator(s2rOp_1, inputStream_1)
                 .addR2ROperator(r2rOp)
                 .addR2SOperator(r2sOp)
-                .addSDS(new DefaultSDS<>())
+                .addSDS(new SDSDefault<>())
                 .addDAG(new DAGImpl<>())
                 .addTime(instance);
         task.initialize();
