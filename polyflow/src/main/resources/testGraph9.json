@@ -1,0 +1,58 @@
+{
+  "timestamp": 1,
+  "nodes": [
+    {
+      "id": 8,
+      "labels": [
+        "Station"
+      ],
+      "properties": {
+        "station_id": 8
+      }
+    },
+    {
+      "id": 7,
+      "labels": [
+        "Bike"
+      ],
+      "properties": {
+        "bike_id": 7
+      }
+    },
+    {
+      "id": 8,
+      "labels": [
+        "Bike"
+      ],
+      "properties": {
+        "bike_id": 8
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": 8,
+      "to": 8,
+      "labels": [
+        "returnedAt"
+      ],
+      "properties": {
+        "user_id": 5678,
+        "permitted": "compliant",
+        "val_time": 54900000
+      }
+    },
+    {
+      "from": 7,
+      "to": 8,
+      "labels": [
+        "rentedAt"
+      ],
+      "properties": {
+        "user_id": 5678,
+        "permitted": "compliant",
+        "val_time": 55080000
+      }
+    }
+  ]
+}

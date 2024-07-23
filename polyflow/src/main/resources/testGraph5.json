@@ -1,0 +1,27 @@
+{
+  "timestamp" : 1,
+  "nodes" : [
+    {
+      "id" : 4,
+      "labels" : ["Station"],
+      "properties" : {"station_id" : 4 }
+    },
+    {
+      "id" : 7,
+      "labels" : ["Bike"],
+      "properties" : {"bike_id" : 7 }
+    }
+  ],
+  "edges" : [
+    {
+      "from" : 7,
+      "to" : 4,
+      "labels" : ["returnedAt"],
+      "properties" : {
+        "user_id" : 5678,
+        "permitted" : "illegal",
+        "val_time" : 56100000
+      }
+    }
+  ]
+}

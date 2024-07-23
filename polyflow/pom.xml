@@ -73,6 +73,17 @@
             <version>2.9.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+            <version>5.16.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j.community</groupId>
+            <artifactId>it-test-support</artifactId>
+            <version>5.16.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

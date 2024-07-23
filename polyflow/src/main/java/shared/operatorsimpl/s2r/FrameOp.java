@@ -1,6 +1,8 @@
 package shared.operatorsimpl.s2r;
 
+import graph.jena.sds.TimeVaryingObject;
 import org.apache.log4j.Logger;
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.exceptions.OutOfOrderElementException;
@@ -8,7 +10,6 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRe
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
@@ -17,11 +18,8 @@ import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
 
 public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
 
@@ -32,7 +30,6 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     protected final Time time;
     protected final String name;
     protected final ContentFactory<I, W, R> cf;
-    protected final TimeVaryingFactory<R> tvFactory;
     protected ReportGrain grain;
     protected Report report;
     private Window active_window;
@@ -41,12 +38,11 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     private Content<I, W, R> reported_content;
     private boolean toReport;
 
-    public FrameOp(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report){
+    public FrameOp(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, ReportGrain grain, Report report){
         this.tick = tick;
         this.time = time;
         this.name = name;
         this.cf = cf;
-        this.tvFactory = tvFactory;
         this.grain = grain;
         this.report = report;
         this.ticker = TickerFactory.tick(tick, this);
@@ -121,7 +117,7 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
 
     @Override
     public TimeVarying<R> get() {
-        return tvFactory.create(this, name);
+        return new TimeVaryingObject<>(this, RDFUtils.createIRI(name));
     }
 
     @Override

@@ -12,7 +12,6 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 
 import shared.querying.TaskImpl;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
@@ -26,7 +25,6 @@ import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawJoin;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
-import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.*;
@@ -119,8 +117,6 @@ public class polyflow_AccumulateContent {
 
         );
 
-        TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
-
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_1 =
@@ -129,7 +125,6 @@ public class polyflow_AccumulateContent {
                         instance,
                         "w1",
                         accumulatorContentFactory,
-                        tvFactory,
                         report_grain,
                         report,
                         1000,
@@ -140,7 +135,6 @@ public class polyflow_AccumulateContent {
                         instance,
                         "w2",
                         accumulatorContentFactory,
-                        tvFactory,
                         report_grain,
                         report,
                         1000,

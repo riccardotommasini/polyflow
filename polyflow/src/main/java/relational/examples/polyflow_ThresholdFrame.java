@@ -9,7 +9,6 @@ import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import shared.querying.TaskImpl;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnStateReady;
@@ -18,7 +17,6 @@ import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
-import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
 import shared.contentimpl.factories.StatefulContentFactory;
@@ -113,7 +111,6 @@ public class polyflow_ThresholdFrame {
 
         );
 
-        TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
         ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
 
@@ -123,7 +120,6 @@ public class polyflow_ThresholdFrame {
                         instance,
                         "w1",
                         statefulContentFactory,
-                        tvFactory,
                         report_grain,
                         report);
 

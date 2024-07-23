@@ -15,7 +15,6 @@ import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import shared.querying.TaskImpl;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
@@ -23,7 +22,6 @@ import org.streamreasoning.rsp4j.api.secret.time.Time;
 import org.streamreasoning.rsp4j.api.secret.time.TimeImpl;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 
-import relational.sds.TimeVaryingFactoryjtablesaw;
 import shared.contentimpl.factories.AccumulatorContentFactory;
 import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
@@ -62,7 +60,6 @@ public class document_example {
                 emptyContent
         );
 
-        TimeVaryingFactory<DocumentCollection> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
         ContinuousProgram<String, String, DocumentCollection, String> cp = new ContinuousProgramImpl<>();
 
@@ -72,7 +69,6 @@ public class document_example {
                         instance,
                         "w1",
                         accumulatorContentFactory,
-                        tvFactory,
                         report_grain,
                         report,
                         1000,

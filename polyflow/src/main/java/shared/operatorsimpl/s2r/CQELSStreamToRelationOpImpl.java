@@ -1,6 +1,8 @@
 package shared.operatorsimpl.s2r;
 
+import graph.jena.sds.TimeVaryingObject;
 import org.apache.log4j.Logger;
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.exceptions.OutOfOrderElementException;
@@ -8,7 +10,6 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRe
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
@@ -27,7 +28,6 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
     protected final Time time;
     protected final String name;
     protected final ContentFactory<I, W, R> cf;
-    protected final TimeVaryingFactory<R> tvFactory;
     protected ReportGrain grain;
     protected Report report;
     private final long a;
@@ -38,10 +38,9 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
     private Map<I, Long> d_stream;
 
 
-    public CQELSStreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report,
+    public CQELSStreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, ReportGrain grain, Report report,
                                          long a){
 
-        this.tvFactory = tvFactory;
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -85,7 +84,10 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
 
 
     @Override
-    public TimeVarying<R> get() {return tvFactory.create(this, name);}
+    public TimeVarying<R> get() {
+        return new TimeVaryingObject<>(this, RDFUtils.createIRI(name));
+    }
+
 
 
     @Override

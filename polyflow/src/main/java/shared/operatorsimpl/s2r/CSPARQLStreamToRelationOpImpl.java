@@ -1,7 +1,8 @@
 package shared.operatorsimpl.s2r;
 
-import org.apache.log4j.Level;
+import graph.jena.sds.TimeVaryingObject;
 import org.apache.log4j.Logger;
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.exceptions.OutOfOrderElementException;
@@ -9,7 +10,6 @@ import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRe
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.content.Content;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
@@ -28,7 +28,6 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
     protected final Time time;
     protected final String name;
     protected final ContentFactory<I, W, R> cf;
-    protected final TimeVaryingFactory<R> tvFactory;
     protected ReportGrain grain;
     protected Report report;
     private final long width, slide;
@@ -38,10 +37,9 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
     private long t0;
     private long toi;
 
-    public CSPARQLStreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, TimeVaryingFactory<R> tvFactory, ReportGrain grain, Report report,
+    public CSPARQLStreamToRelationOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf,  ReportGrain grain, Report report,
                                          long width, long slide){
 
-        this.tvFactory = tvFactory;
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -187,7 +185,10 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
 
 
     @Override
-    public TimeVarying<R> get() {return tvFactory.create(this, name);}
+    public TimeVarying<R> get() {
+        return new TimeVaryingObject<>(this, RDFUtils.createIRI(name));
+    }
+
 
     private Content<I, W, R> getWindowContent(Window w) {
         return active_windows.containsKey(w) ? active_windows.get(w) : cf.createEmpty();

@@ -11,7 +11,6 @@ import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import shared.querying.TaskImpl;
-import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
 import org.streamreasoning.rsp4j.api.secret.report.strategies.OnWindowClose;
@@ -24,7 +23,6 @@ import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import relational.operatorsimpl.r2r.R2RjtablesawJoin;
 import relational.operatorsimpl.r2s.RelationToStreamjtablesawImpl;
 import relational.sds.SDSjtablesaw;
-import relational.sds.TimeVaryingFactoryjtablesaw;
 import relational.stream.RowStream;
 import relational.stream.RowStreamGenerator;
 import tech.tablesaw.api.*;
@@ -122,7 +120,6 @@ public class polyflow_FilterContent {
                     }
             );
 
-            TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
             //TableWrapper because we need the interface convertible on the W generic type
             ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
@@ -133,7 +130,6 @@ public class polyflow_FilterContent {
                             instance,
                             "w1",
                             filterContentFactory,
-                            tvFactory,
                             report_grain,
                             report,
                             1000,
@@ -144,7 +140,6 @@ public class polyflow_FilterContent {
                             instance,
                             "w2",
                             filterContentFactory,
-                            tvFactory,
                             report_grain,
                             report,
                             1000,

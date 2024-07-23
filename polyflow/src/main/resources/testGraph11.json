@@ -1,0 +1,154 @@
+{
+  "timestamp": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "labels": [
+        "Station"
+      ],
+      "properties": {
+        "station_id": 1
+      }
+    },
+    {
+      "id": 2,
+      "labels": [
+        "Station"
+      ],
+      "properties": {
+        "station_id": 2
+      }
+    },
+    {
+      "id": 4,
+      "labels": [
+        "Station"
+      ],
+      "properties": {
+        "station_id": 4
+      }
+    },
+    {
+      "id": 3,
+      "labels": [
+        "Station"
+      ],
+      "properties": {
+        "station_id": 3
+      }
+    },
+    {
+      "id": 7,
+      "labels": [
+        "Bike"
+      ],
+      "properties": {
+        "bike_id": 7
+      }
+    },
+    {
+      "id": 8,
+      "labels": [
+        "Bike"
+      ],
+      "properties": {
+        "bike_id": 8
+      }
+    },
+    {
+      "id": 5,
+      "labels": [
+        "Bike"
+      ],
+      "properties": {
+        "bike_id": 5
+      },
+    {
+      "id": 6,
+      "labels": [
+        "Bike"
+      ],
+      "properties": {
+        "bike_id": 6
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": 5,
+      "to": 1,
+      "labels": [
+        "rentedAt"
+      ],
+      "properties": {
+        "user_id": 1234,
+        "val_time": 56100000
+      }
+    },
+    {
+      "from": 5,
+      "to": 2,
+      "labels": [
+        "returnedAt"
+      ],
+      "properties": {
+        "user_id": 1234,
+        "val_time": 56150000
+      }
+    },
+    {
+      "from": 6,
+      "to": 2,
+      "labels": [
+        "rentedAt"
+      ],
+      "properties": {
+        "user_id": 1234,
+        "val_time": 57150000
+      }
+    },
+    {
+      "from": 8,
+      "to": 2,
+      "labels": [
+        "rentedAt"
+      ],
+      "properties": {
+        "user_id": 5678,
+        "val_time": 57100000
+      }
+    },
+    {
+      "from": 8,
+      "to": 3,
+      "labels": [
+        "returnedAt"
+      ],
+      "properties": {
+        "user_id": 5678,
+        "val_time": 57150000
+      },
+    {
+      "from": 7,
+      "to": 3,
+      "labels": [
+        "rentedAt"
+      ],
+      "properties": {
+        "user_id": 5678,
+        "val_time": 57200000
+      }
+    },
+    {
+      "from": 7,
+      "to": 4,
+      "labels": [
+        "returnedAt"
+      ],
+      "properties": {
+        "user_id": 5678,
+        "val_time": 57350000
+      }
+    }
+  ]
+}
