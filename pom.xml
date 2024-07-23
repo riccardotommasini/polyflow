@@ -15,8 +15,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>api</module>
-        <module>io</module>
-        <module>web</module>
         <module>polyflow</module>
     </modules>
 
