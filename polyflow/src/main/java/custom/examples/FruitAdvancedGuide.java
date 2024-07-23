@@ -4,6 +4,7 @@ import custom.customdatatypes.Fruit;
 import custom.customdatatypes.FruitBasket;
 import custom.customdatatypes.FruitDataStream;
 import custom.customoperators.*;
+import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
@@ -148,7 +149,7 @@ public class FruitAdvancedGuide {
         /*------------Continuous Program definition------------*/
 
         //Define the Continuous Program, which acts as the coordinator of the whole system
-        ContinuousProgramImpl<Fruit, Fruit, FruitBasket, Fruit> cp = new ContinuousProgramImpl<>();
+        ContinuousProgram<Fruit, Fruit, FruitBasket, Fruit> cp = new ContinuousProgramImpl<>();
 
         List<DataStream<Fruit>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStreamFruit_one);

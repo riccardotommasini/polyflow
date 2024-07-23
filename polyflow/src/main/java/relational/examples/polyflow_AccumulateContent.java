@@ -1,5 +1,6 @@
 package relational.examples;
 
+import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import relational.operatorsimpl.r2r.R2RjtablesawSelection;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
@@ -120,7 +121,7 @@ public class polyflow_AccumulateContent {
 
         TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
-        ContinuousProgramImpl<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
+        ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_1 =
                 new CSPARQLStreamToRelationOpImpl<>(

@@ -12,6 +12,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.graph.GraphFactory;
+import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -64,7 +65,7 @@ public class polyflowExample_RDFstar {
 
         TimeVaryingFactory<JenaGraphOrBindings> tvFactory = new TimeVaryingFactoryJena();
 
-        ContinuousProgramImpl<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgramImpl<>();
+        ContinuousProgram<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Graph, Graph, JenaGraphOrBindings> s2rOp =
                 new CSPARQLStreamToRelationOpImpl<>(

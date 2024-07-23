@@ -6,6 +6,7 @@ import custom.customdatatypes.FruitDataStream;
 import custom.customoperators.CustomTumblingWindow;
 import custom.customoperators.FilterFruitByRipeOp;
 import custom.customoperators.RelationToStreamFruitOp;
+import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
@@ -120,7 +121,7 @@ public class FruitStepByStepGuide {
         /*------------Continuous Program definition------------*/
 
         //Define the Continuous Program, which acts as the coordinator of the whole system
-        ContinuousProgramImpl<Fruit, Fruit, FruitBasket, Fruit> cp = new ContinuousProgramImpl<>();
+        ContinuousProgram<Fruit, Fruit, FruitBasket, Fruit> cp = new ContinuousProgramImpl<>();
 
         List<DataStream<Fruit>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStreamFruit);

@@ -1,6 +1,7 @@
 package relational.examples;
 
 import org.javatuples.Tuple;
+import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
@@ -116,7 +117,7 @@ public class polyflow_LastContent {
 
         TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
-        ContinuousProgramImpl<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
+        ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_1 =
                 new CSPARQLStreamToRelationOpImpl<>(
