@@ -6,14 +6,14 @@ import document.operatorsimpl.r2s.RelationToStreamDocument;
 import document.stream.DocumentStream;
 import document.stream.DocumentStreamGenerator;
 
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
+import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
-import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import shared.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
@@ -63,7 +63,7 @@ public class document_example {
 
         TimeVaryingFactory<DocumentCollection> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
-        ContinuousProgram<String, String, DocumentCollection, String> cp = new ContinuousProgram<>();
+        ContinuousProgramImpl<String, String, DocumentCollection, String> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<String, String, DocumentCollection> s2rOp_1 =
                 new CSPARQLStreamToRelationOpImpl<>(

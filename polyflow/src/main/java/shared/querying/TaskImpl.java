@@ -1,10 +1,11 @@
-package org.streamreasoning.rsp4j.api.querying;
+package shared.querying;
 
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2r.DAG.DAG;
+import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.sds.SDS;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
@@ -13,7 +14,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O>{
+public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O> {
 
 
     private static final Logger log = Logger.getLogger(TaskImpl.class);

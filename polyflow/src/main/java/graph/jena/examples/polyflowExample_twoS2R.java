@@ -10,18 +10,16 @@ import graph.jena.stream.JenaBindingStream;
 import graph.jena.stream.JenaStreamGenerator;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.graph.GraphFactory;
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
+import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
-import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import shared.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
@@ -67,7 +65,7 @@ public class polyflowExample_twoS2R {
 
         TimeVaryingFactory<JenaGraphOrBindings> tvFactory = new TimeVaryingFactoryJena();
 
-        ContinuousProgram<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgram<>();
+        ContinuousProgramImpl<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Graph, Graph, JenaGraphOrBindings> s2rOp_one =
                 new CSPARQLStreamToRelationOpImpl<>(

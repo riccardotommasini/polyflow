@@ -1,14 +1,14 @@
 package relational.examples;
 
 import org.javatuples.Tuple;
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
+import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
-import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import shared.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
@@ -113,7 +113,7 @@ public class polyflow_LazyEvaluation {
 
         TimeVaryingFactory<Table> tvFactory = new TimeVaryingFactoryjtablesaw<>();
 
-        ContinuousProgram<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgram<>();
+        ContinuousProgramImpl<Tuple, Tuple, Table, Tuple> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Tuple, Tuple, Table> s2rOp_1 =
                 new CSPARQLStreamToRelationOpImpl<>(

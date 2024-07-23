@@ -1,8 +1,6 @@
 package graph.jena.examples;
 
 import graph.jena.datatypes.JenaGraphOrBindings;
-import graph.jena.operatorsimpl.r2r.jena.FullQueryBinaryJena;
-import graph.jena.operatorsimpl.r2r.jena.FullQueryUnaryJena;
 import graph.jena.operatorsimpl.r2r.jena.RSPQLstarQueryJena;
 import graph.jena.operatorsimpl.r2s.RelationToStreamOpImpl;
 import graph.jena.sds.SDSJena;
@@ -12,17 +10,16 @@ import graph.jena.stream.JenaStreamGenerator;
 import org.antlr.v4.runtime.misc.Utils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.compose.Union;
-import org.apache.jena.query.QueryFactory;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.graph.GraphFactory;
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
+import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;
 import org.streamreasoning.rsp4j.api.enums.Tick;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
-import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import shared.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVaryingFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
@@ -35,9 +32,7 @@ import shared.operatorsimpl.r2r.DAG.DAGImpl;
 import shared.operatorsimpl.s2r.CSPARQLStreamToRelationOpImpl;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,7 +64,7 @@ public class polyflowExample_RDFstar {
 
         TimeVaryingFactory<JenaGraphOrBindings> tvFactory = new TimeVaryingFactoryJena();
 
-        ContinuousProgram<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgram<>();
+        ContinuousProgramImpl<Graph, Graph, JenaGraphOrBindings, Binding> cp = new ContinuousProgramImpl<>();
 
         StreamToRelationOperator<Graph, Graph, JenaGraphOrBindings> s2rOp =
                 new CSPARQLStreamToRelationOpImpl<>(

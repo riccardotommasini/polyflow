@@ -6,12 +6,12 @@ import custom.customdatatypes.FruitDataStream;
 import custom.customoperators.CustomTumblingWindow;
 import custom.customoperators.FilterFruitByRipeOp;
 import custom.customoperators.RelationToStreamFruitOp;
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
+import shared.coordinators.ContinuousProgramImpl;
 import org.streamreasoning.rsp4j.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.rsp4j.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.querying.Task;
-import org.streamreasoning.rsp4j.api.querying.TaskImpl;
+import shared.querying.TaskImpl;
 import org.streamreasoning.rsp4j.api.secret.content.ContentFactory;
 import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.report.ReportImpl;
@@ -120,7 +120,7 @@ public class FruitStepByStepGuide {
         /*------------Continuous Program definition------------*/
 
         //Define the Continuous Program, which acts as the coordinator of the whole system
-        ContinuousProgram<Fruit, Fruit, FruitBasket, Fruit> cp = new ContinuousProgram<>();
+        ContinuousProgramImpl<Fruit, Fruit, FruitBasket, Fruit> cp = new ContinuousProgramImpl<>();
 
         List<DataStream<Fruit>> inputStreams = new ArrayList<>();
         inputStreams.add(inputStreamFruit);
