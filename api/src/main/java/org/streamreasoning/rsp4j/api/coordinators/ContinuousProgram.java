@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Interface that should be extended by a Continuous Program object, it manages a list of tasks, each of which represents a query
  */
-public interface ContinuousProgramInterface<I, W, R extends Iterable<?>, O> extends Consumer<I> {
+public interface ContinuousProgram<I, W, R extends Iterable<?>, O> extends Consumer<I> {
 
     /**
      * Passes the query that will be used to build the various components needed to answer it(tasks, operators etc..)

@@ -1,6 +1,6 @@
 package shared.coordinators;
 
-import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgramInterface;
+import org.streamreasoning.rsp4j.api.coordinators.ContinuousProgram;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.Consumer;
 import org.streamreasoning.rsp4j.api.querying.Task;
 import org.streamreasoning.rsp4j.api.stream.data.DataStream;
@@ -8,7 +8,7 @@ import org.streamreasoning.rsp4j.api.stream.data.DataStream;
 import java.util.*;
 
 
-public class ContinuousProgramImpl<I,W, R extends Iterable<?>, O> implements ContinuousProgramInterface<I, W, R, O>, Consumer<I> {
+public class ContinuousProgramImpl<I,W, R extends Iterable<?>, O> implements ContinuousProgram<I, W, R, O>, Consumer<I> {
 
     List<Task<I, W, R, O>> taskList;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
