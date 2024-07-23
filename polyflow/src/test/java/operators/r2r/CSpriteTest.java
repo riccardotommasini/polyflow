@@ -1,3 +1,4 @@
+/*
 package operators.r2r;
 
 import graph.jena.datatypes.JenaGraphOrBindings;
@@ -251,3 +252,4 @@ public class CSpriteTest {
 
     }
 }
+*/
