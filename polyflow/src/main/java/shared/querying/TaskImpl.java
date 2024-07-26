@@ -151,7 +151,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     public void elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
         if(registeredS2R.containsKey(inputStream)) {
             for (StreamToRelationOperator<I, W, R> s2r : registeredS2R.get(inputStream)) {
-                s2r.windowing(element, timestamp);
+                s2r.compute(element, timestamp);
             }
         }
 

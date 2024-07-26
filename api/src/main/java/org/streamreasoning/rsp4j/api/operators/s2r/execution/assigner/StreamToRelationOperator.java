@@ -43,7 +43,7 @@ public interface StreamToRelationOperator<I, W, R extends Iterable<?>> {
      * @param arg Element that arrives from the stream
      * @param ts Event time
      */
-    void windowing(I arg, long ts);
+    void compute(I arg, long ts);
 
     /**
      * Clears all the windows that expired

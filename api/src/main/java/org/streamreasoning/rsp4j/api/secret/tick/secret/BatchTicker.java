@@ -31,12 +31,13 @@ public class BatchTicker implements Ticker {
     }
 
     @Override
-    public void tick(long t_e, Window w) {
+    public boolean tick(long t_e) {
         curr++;
         if (curr == batch) {
-            time.setAppTime(t_e);
             curr = 0;
+            return true;
         }
+        return false;
     }
 
     public void setBatch(int batch) {

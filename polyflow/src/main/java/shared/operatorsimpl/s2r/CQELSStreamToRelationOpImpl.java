@@ -16,6 +16,7 @@ import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
+import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -136,16 +137,15 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
     }
 
     @Override
-    public void windowing(I arg, long ts) {
+    public void compute(I arg, long ts) {
         log.debug("Received element (" + arg + "," + ts + ")");
-        long t_e = ts;
 
-        if (time.getAppTime() > t_e) {
+        if (time.getAppTime() > ts) {
             log.error("OUT OF ORDER NOT HANDLED");
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
 
-        Window active = scope(t_e);
+        Window active = scope(ts);
         Content<I, W, R> content = active_windows.get(active);
 
         r_stream.entrySet().stream().filter(ee -> ee.getValue() < active.getO()).forEach(ee -> d_stream.put(ee.getKey(), ee.getValue()));
@@ -155,10 +155,13 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
         r_stream.put(arg, ts);
         content.add(arg);
 
-        if (report.report(active, content, t_e, System.currentTimeMillis())) {
-            ticker.tick(t_e, active);
-            reported_windows.add(active);
+        if(ticker.tick(ts)) {
+            if (report.report(active, content, ts, System.currentTimeMillis())) {
+                reported_windows.add(active);
+                time.addEvaluationTimeInstants(new TimeInstant(ts));
+            }
         }
+        time.setAppTime(ts);
 
 
         //REMOVE ALL THE WINDOWS THAT CONTAIN DSTREAM ELEMENTS

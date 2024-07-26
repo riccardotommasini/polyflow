@@ -92,7 +92,7 @@ This next section explores the various implementations of different operators (S
 #### Stream To Relation
 There are currently two S2R implementations, CQELS and CSPARQL. We will focus on the latter to give an example of how to implement the methods offered by the Stream To Relation interface.\
 Let's first make a clarification, the Stream To Relation operator represents a window over the input stream (for example, a window of size 10 seconds sliding every 2 seconds). Does that mean that, for every window over the same input stream, we have multiple Stream To Relation operators? No, not in our implementation. Inside our Stream To Relation operator you will find multiple "window" objects, which represent the various windows with an opening and closing time, each with its own content. The Stream To Relation operator gives the 'blueprint' of the window, then as the time passes, multiple window objects are created inside the S2R, representing the (possibly) multiple active windows. This is the reason why you will find a `Map<Window, Content<I, W, R>>` in our S2R implementation.
-- `Ticker ticker`: This object represents the Tick dimension as identified in the [SECRET Paper](https://www.researchgate.net/publication/220538262_SECRET_A_Model_for_Analysis_of_the_Execution_Semantics_of_Stream_Processing_Systems). The responsibility of a Ticker (for example, the Time Ticker) is to add to the Time object the time at which a computation must occurr.
+- `Ticker ticker`: This object represents the Tick dimension as identified in the [SECRET Paper](https://www.researchgate.net/publication/220538262_SECRET_A_Model_for_Analysis_of_the_Execution_Semantics_of_Stream_Processing_Systems). The responsibility of a Ticker (for example, the Time Ticker) is to check if a computation needs to occur.
 - `Tick tick`: This represents the type of Tick (time driven, batch driven or tuple driven).
 - `Time time`: The same type object instance that the Task object and its S2R operators share.
 - `String name`: Name of the operator (window name).
@@ -108,7 +108,7 @@ Let's first make a clarification, the Stream To Relation operator represents a w
 
 Concerning methods, the most important are:
 - `Content<I, W, R> content(long t_e)`: Returns the content of the last window closed
-- `void windowing(I arg, long ts)`: The core method of the S2R operator. After receiving an element and a timestamp associated to it, it opens all the windows that contain that element (if not already present) and adds the element to all of them. It then checks if some windows are ready to report, and if it's the case, it adds the timestamp at which the computation must occurr to the Time object. Finally, it schedules from eviction windows that should be removed after the computation.
+- `void compute(I arg, long ts)`: The core method of the S2R operator. After receiving an element and a timestamp associated to it, it opens all the windows that contain that element (if not already present) and adds the element to all of them. It then checks if some windows are ready to report, and if it's the case, it adds the timestamp at which the computation must occurr to the Time object. Finally, it schedules from eviction windows that should be removed after the computation.
 - `TimeVarying<R> get()`: Returns the Time Varying object associated to the S2R operator.
 
 #### Relation To Relation

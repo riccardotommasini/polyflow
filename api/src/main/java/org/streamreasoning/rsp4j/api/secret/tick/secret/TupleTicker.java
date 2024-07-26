@@ -27,8 +27,9 @@ public class TupleTicker implements Ticker {
     }
 
     @Override
-    public void tick(long t_e, Window w) {
-        time.setAppTime(t_e);
+    public boolean tick(long t_e) {
+        //each tuple makes the system react
+        return true;
     }
 }
 

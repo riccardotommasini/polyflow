@@ -116,7 +116,7 @@ public class CustomTumblingWindow<I, W, R extends Iterable<?>> implements Stream
     }
 
     @Override
-    public void windowing(I arg, long ts) {
+    public void compute(I arg, long ts) {
 
         if (time.getAppTime() > ts) {
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");

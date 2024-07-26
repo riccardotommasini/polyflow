@@ -84,11 +84,10 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     }
 
     @Override
-    public void windowing(I arg, long ts) {
+    public void compute(I arg, long ts) {
         log.debug("Received element (" + arg + "," + ts + ")");
-        long t_e = ts;
 
-        if (time.getAppTime() > t_e) {
+        if (time.getAppTime() > ts) {
             log.error("OUT OF ORDER NOT HANDLED");
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
@@ -101,10 +100,10 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
             active_content = cf.create();
             active_content.add(arg);
         }
-        toReport = report.report(active_window, active_content, t_e, System.currentTimeMillis());
+        toReport = report.report(active_window, active_content, ts, System.currentTimeMillis());
         if(toReport) {
-            time.addEvaluationTimeInstants(new TimeInstant(t_e));
-            active_window.setC(t_e); //If a frame needs to be reported, then it must also be closed
+            time.addEvaluationTimeInstants(new TimeInstant(ts));
+            active_window.setC(ts); //If a frame needs to be reported, then it must also be closed
             reported_window = active_window;
             reported_content = active_content;
             active_window = new WindowImpl(ts, -1);
@@ -112,7 +111,7 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
             active_content.add(arg);
         }
 
-        time.setAppTime(t_e);
+        time.setAppTime(ts);
     }
 
     @Override

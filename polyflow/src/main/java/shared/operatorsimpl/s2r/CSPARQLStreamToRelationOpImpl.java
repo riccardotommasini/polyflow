@@ -16,6 +16,7 @@ import org.streamreasoning.rsp4j.api.secret.report.Report;
 import org.streamreasoning.rsp4j.api.secret.tick.Ticker;
 import org.streamreasoning.rsp4j.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.rsp4j.api.secret.time.Time;
+import org.streamreasoning.rsp4j.api.secret.time.TimeInstant;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -149,38 +150,41 @@ public class CSPARQLStreamToRelationOpImpl<I, W, R extends Iterable<?>> implemen
 
 
     @Override
-    public void windowing(I arg, long ts) {
+    public void compute(I arg, long ts) {
 
         log.debug("Received element (" + arg + "," + ts + ")");
-        long t_e = ts;
 
-        if (time.getAppTime() > t_e) {
+        if (time.getAppTime() > ts) {
             log.error("OUT OF ORDER NOT HANDLED");
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
 
-        scope(t_e);
+        scope(ts);
 
         active_windows.keySet().forEach(
                 w -> {
                     log.debug("Processing Window [" + w.getO() + "," + w.getC() + ") for element (" + arg + "," + ts + ")");
-                    if (w.getO() <= t_e && t_e < w.getC()) {
+                    if (w.getO() <= ts && ts < w.getC()) {
                         log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + ")");
                         active_windows.get(w).add(arg);
-                    } else if (t_e > w.getC()) {
+                    } else if (ts > w.getC()) {
                         log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + ")");
                         schedule_for_eviction(w);
                     }
                 });
 
-        //TODO: here if no window matches the report clause, the app time does not advance since it's set in method tick -> compute
-        active_windows.keySet().stream()
-                .filter(w -> report.report(w, getWindowContent(w), t_e, System.currentTimeMillis()))
-                .max(Comparator.comparingLong(Window::getC))
-                .ifPresent(window ->{
-                    reported_windows.add(window);
-                    ticker.tick(t_e, window);
-                });
+
+        if(ticker.tick(ts)){
+            active_windows.keySet().stream()
+                    .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
+                    .max(Comparator.comparingLong(Window::getC))
+                    .ifPresent(window ->{
+                        reported_windows.add(window);
+                        time.addEvaluationTimeInstants(new TimeInstant(ts));
+                    });
+        }
+        time.setAppTime(ts);
+
     }
 
 

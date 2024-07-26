@@ -29,13 +29,8 @@ public class TimeTicker implements Ticker {
     }
 
     @Override
-    public void tick(long t_e, Window w) {
-
-        if (t_e > time.getAppTime()) {
-            //We add the evaluation time instant only if the computation is triggered
-            time.addEvaluationTimeInstants(new TimeInstant(t_e));
-            time.setAppTime(t_e);
-        }
+    public boolean tick(long t_e) {
+        return t_e > time.getAppTime();
     }
 
 }
