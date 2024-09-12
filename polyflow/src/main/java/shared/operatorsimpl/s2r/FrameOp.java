@@ -1,6 +1,6 @@
 package shared.operatorsimpl.s2r;
 
-import graph.jena.sds.TimeVaryingObject;
+import shared.sds.TimeVaryingObject;
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.enums.ReportGrain;

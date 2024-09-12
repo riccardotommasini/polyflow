@@ -1,15 +1,15 @@
-package relational.sds;
-
+package shared.sds;
+import org.apache.commons.rdf.api.IRI;
+import org.streamreasoning.rsp4j.api.RDFUtils;
 import org.streamreasoning.rsp4j.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.rsp4j.api.sds.timevarying.TimeVarying;
-
-public class TimeVaryingObjectjtablesaw<R extends Iterable<?>> implements TimeVarying<R> {
+public class TimeVaryingObject<R extends Iterable<?>> implements TimeVarying<R> {
 
     private final StreamToRelationOperator<?, ?, R> op;
-    private String name;
+    private IRI name;
     private R content;
 
-    public TimeVaryingObjectjtablesaw(StreamToRelationOperator<?, ?, R> op, String name) {
+    public TimeVaryingObject(StreamToRelationOperator<?, ?, R> op, IRI name) {
         this.op = op;
         this.name = name;
     }
@@ -31,12 +31,13 @@ public class TimeVaryingObjectjtablesaw<R extends Iterable<?>> implements TimeVa
 
     @Override
     public String iri() {
-        return name;
+        return name.getIRIString();
     }
 
     @Override
     public void setIri(String name) {
-        this.name = name;
+        this.name = RDFUtils.createIRI(name);
     }
+
 
 }
