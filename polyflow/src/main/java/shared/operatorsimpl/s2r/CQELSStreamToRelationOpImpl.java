@@ -1,5 +1,6 @@
 package shared.operatorsimpl.s2r;
 
+import org.apache.log4j.Level;
 import shared.sds.TimeVaryingObject;
 import org.apache.log4j.Logger;
 import org.streamreasoning.rsp4j.api.RDFUtils;
@@ -55,6 +56,8 @@ public class CQELSStreamToRelationOpImpl<I, W, R extends Iterable<?>> implements
         this.r_stream = new HashMap<>();
         this.d_stream = new HashMap<>();
         this.ticker = TickerFactory.tick(tick, this);
+        Logger.getRootLogger().setLevel(Level.OFF);
+
 
     }
 
