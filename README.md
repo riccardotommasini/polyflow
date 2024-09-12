@@ -4,8 +4,7 @@
 In this repository, the following projects are present:
 
 * [API](./api/Readme.md), which contains the interfaces and abstractions required to develop your stream processor engine.
-* [polyflow](./polyflow/README.md), which contains some reference implementations that aims at showing the API usage by providing examples (Currently a relational and a graph example)
-
+* [polyflow](./polyflow/README.md), which contains some generic implementations used in the [example](https://github.com/riccardotommasini/polyflow-examples/) repository.
 
 
 
