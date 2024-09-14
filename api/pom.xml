@@ -5,13 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>rsp4j-parent</artifactId>
-        <groupId>org.streamreasoning.rsp4j</groupId>
-        <version>1.0.0</version>
+        <groupId>org.streamreasoning.polyflow</groupId>
+        <artifactId>polyflow</artifactId>
+        <version>1.0.6</version>
     </parent>
 
     <artifactId>api</artifactId>
-    <version>${rsp4j.version}</version>
+    <version>${polyflow.version}</version>
 
     <build>
         <plugins>
@@ -39,24 +39,12 @@
         </plugins>
     </build>
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/commons-configuration/commons-configuration -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-rdf-simple</artifactId>
-            <version>0.5.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-configuration</groupId>
-                    <artifactId>commons-configuration</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>org.junit</groupId>
             <artifactId>junit-bom</artifactId>
             <version>5.10.2</version>
             <type>pom</type>
-            <scope>import</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -1,21 +1,21 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.streamreasoning.rsp4j</groupId>
-    <artifactId>rsp4j-parent</artifactId>
-    <version>1.0.0</version>
+    <groupId>org.streamreasoning.polyflow</groupId>
+    <artifactId>polyflow</artifactId>
+    <version>1.0.6</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <github.release>${project.version}</github.release>
-        <rsp4j.version>1.0.1</rsp4j.version>
+        <polyflow.version>1.0.6</polyflow.version>
     </properties>
 
     <packaging>pom</packaging>
     <modules>
         <module>api</module>
-        <module>polyflow</module>
+        <module>base</module>
     </modules>
 
     <dependencyManagement>
@@ -45,12 +45,6 @@
                 <artifactId>antlr4-runtime</artifactId>
                 <version>4.13.1</version>
             </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.20</version>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
@@ -100,11 +94,6 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>4.13.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-rdf-api</artifactId>
-            <version>0.5.0</version>
         </dependency>
     </dependencies>
 </project>
