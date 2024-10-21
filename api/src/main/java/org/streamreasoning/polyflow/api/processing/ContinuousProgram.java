@@ -25,4 +25,10 @@ public interface ContinuousProgram<I, W, R extends Iterable<?>, O> extends Consu
      */
     void buildView(Task<I, W, R, O> view, List<DataStream<I>> inputStreams);
 
+    /**
+     * Unregisters the task with the given task id, if it exists.
+     */
+    void unregisterTask(String taskId);
+
+
 }

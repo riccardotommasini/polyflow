@@ -27,9 +27,18 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     private DAG<R> dag;
 
     private SDS<R> sds;
+    private String taskId = "";
 
     public TaskImpl(){
 
+        this.s2rOperators = new ArrayList<>();
+        this.r2rOperators = new ArrayList<>();
+        this.registeredS2R = new HashMap<>();
+    }
+
+    public TaskImpl(String taskId){
+
+        this.taskId = taskId;
         this.s2rOperators = new ArrayList<>();
         this.r2rOperators = new ArrayList<>();
         this.registeredS2R = new HashMap<>();
@@ -110,6 +119,11 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     @Override
     public Time getTime() {
         return time;
+    }
+
+    @Override
+    public String getId(){
+        return this.taskId;
     }
 
     @Override

@@ -13,6 +13,9 @@ import java.util.List;
 
 public interface Task<I, W, R extends Iterable<?>, O> {
 
+    default String getId(){
+        return "";
+    }
     List<StreamToRelationOperator<I, W, R>> getS2Rs();
 
     List<RelationToRelationOperator<R>> getR2Rs();

@@ -10,13 +10,13 @@ import java.util.*;
 
 public class ContinuousProgramImpl<I,W, R extends Iterable<?>, O> implements ContinuousProgram<I, W, R, O>, Consumer<I> {
 
-    List<Task<I, W, R, O>> taskList;
+    Map<String, Task<I, W, R, O>> taskMap;
     Map<DataStream<I>, List<Task<I, W, R, O>>> registeredTasks;
     Map<Task<I, W, R, O>, List<DataStream<O>>> taskToOutMap;
 
 
     public ContinuousProgramImpl(){
-        this.taskList = new ArrayList<>();
+        this.taskMap = new HashMap<>();
         this.registeredTasks = new HashMap<>();
         this.taskToOutMap = new HashMap<>();
     }
@@ -28,14 +28,31 @@ public class ContinuousProgramImpl<I,W, R extends Iterable<?>, O> implements Con
 
     }
     public void buildTask(Task<I, W, R, O> task, List<DataStream<I>> inputStreams, List<DataStream<O>> outputStreams){
-        this.taskList.add(task);
+        if(this.taskMap.containsKey(task.getId())){
+            throw new RuntimeException("Task with ID "+task.getId()+" already exists!");
+        }
+        this.taskMap.put(task.getId(), task);
         inputStreams.forEach(input -> addInputStream(input, task));
         outputStreams.forEach(output -> addOutputStream(output, task));
     }
 
     public void buildView(Task<I, W, R, O> view, List<DataStream<I>> inputStreams){
-        this.taskList.add(view);
+        if(this.taskMap.containsKey(view.getId())){
+            throw new RuntimeException("Task with ID "+view.getId()+" already exists!");
+        }
+        this.taskMap.put(view.getId(), view);
         inputStreams.forEach(input->addInputStream(input, view));
+    }
+
+    @Override
+    public void unregisterTask(String taskId) {
+        Task<I, W, R, O> toRemove = taskMap.get(taskId);
+        if(toRemove == null){
+            return;
+        }
+        taskMap.remove(taskId);
+        registeredTasks.values().forEach(l->l.removeIf(t->t.getId().equals(taskId)));
+        taskToOutMap.remove(toRemove);
     }
 
 
@@ -98,7 +115,7 @@ public class ContinuousProgramImpl<I,W, R extends Iterable<?>, O> implements Con
         }
 
         //Evict the windows of the views for memory efficiency
-        for(Task<I, W, R, O> v : taskList){
+        for(Task<I, W, R, O> v : taskMap.values()){
             v.evictWindows();
         }
 
