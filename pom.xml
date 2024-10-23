@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.streamreasoning.polyflow</groupId>
     <artifactId>polyflow</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <github.release>${project.version}</github.release>
-        <polyflow.version>1.0.6</polyflow.version>
+        <polyflow.version>1.0.7</polyflow.version>
     </properties>
 
     <packaging>pom</packaging>

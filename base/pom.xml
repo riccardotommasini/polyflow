@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.streamreasoning.polyflow</groupId>
         <artifactId>polyflow</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </parent>
 
     <artifactId>base</artifactId>
@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.streamreasoning.polyflow</groupId>
             <artifactId>api</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.7</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
