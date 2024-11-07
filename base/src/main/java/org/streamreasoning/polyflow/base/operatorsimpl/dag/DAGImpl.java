@@ -1,11 +1,13 @@
 package org.streamreasoning.polyflow.base.operatorsimpl.dag;
 
-import org.streamreasoning.polyflow.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.polyflow.api.operators.dag.DAG;
 import org.streamreasoning.polyflow.api.operators.dag.DAGNode;
+import org.streamreasoning.polyflow.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
@@ -15,56 +17,56 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
     DAGNode<R> tail;
 
 
+    @Override
+    public void addToDAG(RelationToRelationOperator<R> op) {
 
-   @Override
-   public void addToDAG(RelationToRelationOperator<R> op) {
+        DAGNode<R> dagNode = switch (op.getTvgNames().size()) {
+            case 1 -> new UnaryDAGNodeImpl<>(op);
+            case 2 -> new BinaryDAGNodeImpl<>(op);
+            default -> new NaryDAGNodeImpl<>(op);
+        };
 
-       DAGNode<R> dagNode;
-       if(op.getTvgNames().size()>1) //Binary R2R
-            dagNode = new BinaryDAGNodeImpl<>(op);
+        root.put(op.getResName(), dagNode);
+        for (String prev : op.getTvgNames()) {
+            DAGNode<R> node = root.get(prev);
+            node.setNext(dagNode);
+            dagNode.addPrev(node);
+        }
 
-       else //Unary R2R
-            dagNode = new UnaryDAGNodeImpl<>(op);
+    }
 
-       root.put(op.getResName(), dagNode);
-       for(String prev : op.getTvgNames()){
-           DAGNode<R> node = root.get(prev);
-           node.setNext(dagNode);
-           dagNode.addPrev(node);
-       }
-
-   }
-
-    public void addTVGs(Collection<TimeVarying<R>> sds){
-        for(TimeVarying<R> tvg : sds){
+    public void addTVGs(Collection<TimeVarying<R>> sds) {
+        for (TimeVarying<R> tvg : sds) {
             root.put(tvg.iri(), new DAGRootNodeImpl<>(tvg));
         }
     }
 
     @Override
-    public void initialize(){
-        DAGNode<R> tmp  = root.values().stream().findFirst().get();
-        while(tmp.hasNext()){
+    public void initialize() {
+        DAGNode<R> tmp = root.values().stream().findFirst().get();
+        while (tmp.hasNext()) {
             tmp = tmp.getNext();
         }
         this.tail = tmp;
     }
 
     @Override
-    public R eval(long ts){
+    public R eval(long ts) {
         return this.tail.eval(ts);
     }
 
     @Override
-    public TimeVarying<R> apply(){ return this.tail.apply();}
-
-    @Override
-    public DAGNode<R> getTail(){
-       return this.tail;
+    public TimeVarying<R> apply() {
+        return this.tail.apply();
     }
 
     @Override
-    public void printDAG(){
+    public DAGNode<R> getTail() {
+        return this.tail;
+    }
+
+    @Override
+    public void printDAG() {
        /* Set<DAGNode<R>> printed = new HashSet<>();
         for(DAGNode<R> node : root.values()){
             while(node != null){
