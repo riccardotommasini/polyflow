@@ -9,10 +9,19 @@ public interface Content<I, W, R> {
 
     R coalesce();
 
+    default W get() {
+        return null;
+    }
+
+    ;
+
     /**
      * used in cases where the reporting strategy depends on a state of the content (received X elements, event happened etc..).
+     *
      * @return True if the content is ready to be reported
      */
-    default boolean toReport(){return false;}
+    default boolean toReport() {
+        return false;
+    }
 
 }

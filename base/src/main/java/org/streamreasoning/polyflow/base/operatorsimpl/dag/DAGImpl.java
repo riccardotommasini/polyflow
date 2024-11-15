@@ -9,12 +9,9 @@ import java.util.*;
 
 public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
-
     Map<String, DAGNode<R>> root = new HashMap<>();
 
     DAGNode<R> tail;
-
-
 
    @Override
    public void addToDAG(RelationToRelationOperator<R> op) {

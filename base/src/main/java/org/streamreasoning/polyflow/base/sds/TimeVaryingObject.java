@@ -2,14 +2,15 @@ package org.streamreasoning.polyflow.base.sds;
 
 import org.streamreasoning.polyflow.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
+import org.streamreasoning.polyflow.api.secret.content.Content;
 
-public class TimeVaryingObject<R extends Iterable<?>> implements TimeVarying<R> {
+public class TimeVaryingObject<I, W, R> implements TimeVarying<R> {
 
-    private final StreamToRelationOperator<?, ?, R> op;
+    private final StreamToRelationOperator<I, W> op;
     private final String name;
-    private R content;
+    private Content<I, W, R> content;
 
-    public TimeVaryingObject(StreamToRelationOperator<?, ?, R> op, String name) {
+    public TimeVaryingObject(StreamToRelationOperator<I, W> op, String name) {
         this.op = op;
         this.name = name;
     }
@@ -21,12 +22,12 @@ public class TimeVaryingObject<R extends Iterable<?>> implements TimeVarying<R> 
      **/
     @Override
     public void materialize(long ts) {
-        content = op.content(ts).coalesce();
+        content = op.content(ts);
     }
 
     @Override
     public R get() {
-        return content;
+        return content.coalesce();
     }
 
     @Override

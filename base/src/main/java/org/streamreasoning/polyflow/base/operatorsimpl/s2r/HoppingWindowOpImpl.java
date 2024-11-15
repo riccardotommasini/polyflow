@@ -7,7 +7,6 @@ import org.streamreasoning.polyflow.api.exceptions.OutOfOrderElementException;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.WindowImpl;
-import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.polyflow.api.secret.content.Content;
 import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
 import org.streamreasoning.polyflow.api.secret.report.Report;
@@ -15,28 +14,26 @@ import org.streamreasoning.polyflow.api.secret.tick.Ticker;
 import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
-import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
+public class HoppingWindowOpImpl<I, W> implements StreamToRelationOperator<I, W> {
 
     private static final Logger log = Logger.getLogger(HoppingWindowOpImpl.class);
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
     protected final String name;
-    protected final ContentFactory<I, W, R> cf;
+    protected final ContentFactory<I, W, ?> cf;
     protected Report report;
     private final long width, slide;
-    private Map<Window, Content<I, W, R>> active_windows;
+    private Map<Window, Content<I, W, ?>> active_windows;
     private List<Window> reported_windows;
     private Set<Window> to_evict;
     private long t0;
     private long toi;
 
-    public HoppingWindowOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, Report report,
+    public HoppingWindowOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, ?> cf, Report report,
                                long width, long slide) {
 
         this.tick = tick;
@@ -85,7 +82,7 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
      * Returns the content of the last window closed before time t_e. If no such window exists, returns an empty content
      */
     @Override
-    public Content<I, W, R> content(long t_e) {
+    public Content<I, W, ?> content(long t_e) {
         // If some windows matched the report clause, return the last one that did so
         if (!reported_windows.isEmpty()) {
             return reported_windows.stream()
@@ -103,21 +100,6 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
 
             return cf.createEmpty();
         }
-    }
-
-    /**
-     * Returns the content of all the windows closed before time t_e as a list of contents. If no such windows exist, returns an empty list of contents
-     */
-    @Override
-    public List<Content<I, W, R>> getContents(long t_e) {
-        if (!reported_windows.isEmpty()) {
-            return reported_windows.stream()
-                    .max(Comparator.comparingLong(Window::getC))
-                    .map(w -> Collections.singletonList(active_windows.get(w))).get();
-        } else
-            return active_windows.keySet().stream()
-                    .filter(w -> w.getO() < t_e && t_e < w.getC())
-                    .map(active_windows::get).collect(Collectors.toList());
     }
 
     /**
@@ -179,13 +161,7 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
     }
 
 
-    @Override
-    public TimeVarying<R> get() {
-        return new TimeVaryingObject<>(this, name);
-    }
-
-
-    private Content<I, W, R> getWindowContent(Window w) {
+    private Content<I, W, ?> getWindowContent(Window w) {
         return active_windows.containsKey(w) ? active_windows.get(w) : cf.createEmpty();
     }
 

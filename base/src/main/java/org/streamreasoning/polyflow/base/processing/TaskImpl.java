@@ -1,15 +1,16 @@
 package org.streamreasoning.polyflow.base.processing;
 
 import org.apache.log4j.Logger;
+import org.streamreasoning.polyflow.api.operators.dag.DAG;
 import org.streamreasoning.polyflow.api.operators.r2r.RelationToRelationOperator;
 import org.streamreasoning.polyflow.api.operators.r2s.RelationToStreamOperator;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.assigner.StreamToRelationOperator;
-import org.streamreasoning.polyflow.api.operators.dag.DAG;
 import org.streamreasoning.polyflow.api.processing.Task;
 import org.streamreasoning.polyflow.api.sds.SDS;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.stream.data.DataStream;
+import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,27 +19,36 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
 
     private static final Logger log = Logger.getLogger(TaskImpl.class);
-    private List<StreamToRelationOperator<I, W, R>> s2rOperators;
+    private List<StreamToRelationOperator<I, W>> s2rOperators;
     private List<RelationToRelationOperator<R>> r2rOperators;
     private RelationToStreamOperator<R, O> r2sOperator;
-    private Map<DataStream<I>, List<StreamToRelationOperator<I, W, R>>> registeredS2R;
+    private Map<DataStream<I>, List<StreamToRelationOperator<I, W>>> registeredS2R;
+    private Map<DataStream<I>, List<TimeVarying<R>>> tvgs;
+    private Map<DataStream<I>, List<TimeVarying<W>>> tvgsw;
     private Time time;
 
     private DAG<R> dag;
 
     private SDS<R> sds;
 
-    public TaskImpl(){
-
+    public TaskImpl() {
         this.s2rOperators = new ArrayList<>();
         this.r2rOperators = new ArrayList<>();
         this.registeredS2R = new HashMap<>();
+        this.tvgsw = new HashMap<>();
+        this.tvgs = new HashMap<>();
     }
 
     @Override
-    public List<StreamToRelationOperator<I, W, R>> getS2Rs() {
+    public List<StreamToRelationOperator<I, W>> getS2Rs() {
         return s2rOperators;
     }
+
+    @Override
+    public List<TimeVarying<W>> getTVs(DataStream<I> stream) {
+        return tvgsw.get(stream);
+    }
+
 
     @Override
     public List<RelationToRelationOperator<R>> getR2Rs() {
@@ -51,18 +61,22 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     }
 
     @Override
-    public Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W, R> s2rOperator, DataStream<I> inputStream) {
+    public Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W> s2rOperator, DataStream<I> inputStream) {
 
-        for(StreamToRelationOperator<I, W, R> op : s2rOperators){
-            if(op.getName().equals(s2rOperator.getName())){
+        List<TimeVarying<W>> orDefault = this.tvgsw.getOrDefault(inputStream, new ArrayList<>());
+        orDefault.add(new TimeVaryingObject<>(s2rOperator, s2rOperator.getName()));
+        this.tvgsw.put(inputStream, orDefault);
+
+        for (StreamToRelationOperator<I, W> op : s2rOperators) {
+            if (op.getName().equals(s2rOperator.getName())) {
                 throw new RuntimeException("S2R Operator with same name already present");
             }
         }
         this.s2rOperators.add(s2rOperator);
-        if(!registeredS2R.containsKey(inputStream)){
+        if (!registeredS2R.containsKey(inputStream)) {
             registeredS2R.put(inputStream, new ArrayList<>());
         }
-        if(registeredS2R.get(inputStream).contains(s2rOperator)){
+        if (registeredS2R.get(inputStream).contains(s2rOperator)) {
             throw new RuntimeException("S2R operator already registered on this input stream");
         }
         registeredS2R.get(inputStream).add(s2rOperator);
@@ -77,35 +91,37 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     @Override
     public Task<I, W, R, O> addR2SOperator(RelationToStreamOperator<R, O> r2sOperator) {
-        this.r2sOperator= r2sOperator;
+        this.r2sOperator = r2sOperator;
         return this;
     }
 
     @Override
-    public Task<I, W, R, O> addTime(Time time){
+    public Task<I, W, R, O> addTime(Time time) {
         this.time = time;
         return this;
     }
 
     @Override
-    public Task<I, W, R, O> addSDS(SDS<R> sds){
+    public Task<I, W, R, O> addSDS(SDS<R> sds) {
         this.sds = sds;
         return this;
     }
 
     @Override
-    public Task<I, W, R, O> addDAG(DAG<R> dag){
+    public Task<I, W, R, O> addDAG(DAG<R> dag) {
         this.dag = dag;
         return this;
     }
 
     @Override
-    public DAG<R> getDAG(){
+    public DAG<R> getDAG() {
         return this.dag;
     }
 
     @Override
-    public SDS<R> getSDS(){ return this.sds;}
+    public SDS<R> getSDS() {
+        return this.sds;
+    }
 
     @Override
     public Time getTime() {
@@ -113,58 +129,59 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     }
 
     @Override
-    public void initialize(){
-        for(StreamToRelationOperator<I, W, R> operator: s2rOperators){
-            TimeVarying<R> tvg = operator.get();
+    public void initialize() {
+        //Creation of the SDS is here
+        List<TimeVarying<R>> timeVaryingStream = tvgs.values().stream().flatMap(List::stream).toList();
+        for (TimeVarying<R> tvg : timeVaryingStream) {
             this.sds.add(tvg);
-            if(tvg.named()){
+            if (tvg.named()) {
                 this.sds.add(tvg.iri(), tvg);
             }
         }
 
+        dag.addTVGs(timeVaryingStream);
 
-        dag.addTVGs(sds.asTimeVaryingEs());
-        for (RelationToRelationOperator<R> op : r2rOperators){
+        for (RelationToRelationOperator<R> op : r2rOperators) {
             dag.addToDAG(op);
         }
-       dag.initialize();
 
+        dag.initialize();
     }
 
 
     @Override
     public void evictWindows() {
-        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+        for (StreamToRelationOperator<I, W> s2r : s2rOperators) {
             s2r.evict();
         }
     }
+
     @Override
-    public void evictWindows(long ts){
-        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+    public void evictWindows(long ts) {
+        for (StreamToRelationOperator<I, W> s2r : s2rOperators) {
             s2r.evict(ts);
         }
     }
 
 
-
     @Override
     public void elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
-        if(registeredS2R.containsKey(inputStream)) {
-            for (StreamToRelationOperator<I, W, R> s2r : registeredS2R.get(inputStream)) {
+        if (registeredS2R.containsKey(inputStream)) {
+            for (StreamToRelationOperator<I, W> s2r : registeredS2R.get(inputStream)) {
                 s2r.compute(element, timestamp);
             }
         }
 
     }
 
-    public Collection<Collection<O>> compute(){
+    public Collection<Collection<O>> compute() {
         Collection<Collection<O>> res = new ArrayList<>();
-        while(time.hasEvaluationInstant()){
+        while (time.hasEvaluationInstant()) {
             long t = time.getEvaluationTime().t;
-            System.out.println("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            System.out.println("Evaluation time instant found with t= " + t + ", R2R computation will begin");
             long begin_time = System.currentTimeMillis();
             R partialRes = eval(t);
-            System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
+            System.out.println("Total computation time: " + (System.currentTimeMillis() - begin_time) + " ms");
             res.add(r2sOperator.eval(partialRes, t).collect(Collectors.toList()));
             evictWindows(t);
         }
@@ -172,35 +189,33 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         return res;
     }
 
-    public Collection<O> computeLazy(long ts){
-        System.out.println("Evaluating computation explicitly requested at time t= "+ts+", R2R computation will begin");
+    public Collection<O> computeLazy(long ts) {
+        System.out.println("Evaluating computation explicitly requested at time t= " + ts + ", R2R computation will begin");
         long begin_time = System.currentTimeMillis();
         R result = eval(ts);
-        System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
+        System.out.println("Total computation time: " + (System.currentTimeMillis() - begin_time) + " ms");
         return r2sOperator.eval(result, ts).collect(Collectors.toList());
         //We do not evict windows since it was an on-demand query
 
     }
 
     @Override
-    public TimeVarying<R> apply(){
+    public TimeVarying<R> apply() {
         return this.dag.apply();
     }
 
-    private R eval(long ts){
+    private R eval(long ts) {
 
         R result = null;
 
         result = dag.eval(ts);
-        if(result == null){
+        if (result == null) {
             throw new RuntimeException("Result of DAG computation is null");
         }
         return result;
 
 
     }
-
-
 
 
 }

@@ -2,13 +2,21 @@ package org.streamreasoning.polyflow.base.contentimpl;
 
 import org.streamreasoning.polyflow.api.secret.content.Content;
 
-public class EmptyContent<I,W,R> implements Content<I, W, R> {
+public class EmptyContent<I, W, R> implements Content<I, W, R> {
 
-    long ts = System.currentTimeMillis();
-    private R o;
+    long ts;
+    private R r;
+    private W w;
+
 
     public EmptyContent(R o) {
-        this.o = o;
+        this.r = o;
+        ts = System.currentTimeMillis();
+    }
+
+    public EmptyContent(W o, long ts) {
+        this.w = o;
+        this.ts = ts;
     }
 
 
@@ -25,6 +33,6 @@ public class EmptyContent<I,W,R> implements Content<I, W, R> {
 
     @Override
     public R coalesce() {
-        return o;
+        return r;
     }
 }

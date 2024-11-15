@@ -13,30 +13,6 @@ public interface RelationToRelationOperator<R extends Iterable<?>> {
      */
     R eval(List<R> datasets);
 
-
-    /**
-     * Takes as input a Time varying and returns a time varying that can be later queried to compute the result of the operation
-     */
-    default TimeVarying<R> apply(TimeVarying<R> node) {
-        return new TimeVarying<R>() {
-            @Override
-            public void materialize(long ts) {
-                node.materialize(ts);
-            }
-
-            @Override
-            public R get() {
-                return eval(Collections.singletonList(node.get()));
-            }
-
-            @Override
-            public String iri() {
-                return node.iri() + this.iri();
-            }
-
-        };
-    }
-
     /**
      * Get the names of all the TVG on which this operator should be applied
      */

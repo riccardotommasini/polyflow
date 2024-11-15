@@ -16,10 +16,7 @@ import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
-import java.util.Collections;
-import java.util.List;
-
-public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
+public class FrameOp<I, W> implements StreamToRelationOperator<I, W> {
 
 
     private static final Logger log = Logger.getLogger(HoppingWindowOpImpl.class);
@@ -27,15 +24,15 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     protected Tick tick;
     protected final Time time;
     protected final String name;
-    protected final ContentFactory<I, W, R> cf;
+    protected final ContentFactory<I, W, ?> cf;
     protected Report report;
     private Window active_window;
-    private Content<I, W, R> active_content;
+    private Content<I, W, ?> active_content;
     private Window reported_window;
-    private Content<I, W, R> reported_content;
+    private Content<I, W, ?> reported_content;
     private boolean toReport;
 
-    public FrameOp(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, Report report) {
+    public FrameOp(Tick tick, Time time, String name, ContentFactory<I, W, ?> cf, Report report) {
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -61,17 +58,10 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
     }
 
     @Override
-    public Content<I, W, R> content(long t_e) {
+    public Content<I, W, ?> content(long t_e) {
         if (toReport)
             return reported_content;
         else return cf.createEmpty();
-    }
-
-    @Override
-    public List<Content<I, W, R>> getContents(long t_e) {
-        if (toReport)
-            return Collections.singletonList(reported_content);
-        else return Collections.singletonList(cf.createEmpty());
     }
 
     @Override
@@ -102,11 +92,6 @@ public class FrameOp<I, W, R extends Iterable<?>> implements StreamToRelationOpe
         }
 
         time.setAppTime(ts);
-    }
-
-    @Override
-    public TimeVarying<R> get() {
-        return new TimeVaryingObject<>(this, name);
     }
 
     @Override
