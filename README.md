@@ -1,6 +1,3 @@
-# Polyflow: A Framework to prototype Continuous Query Processors
-
-
 Polyflow is a framework developed to efficiently prototype Continuous Query Processors (i.e. DSMSs execution engines).
 It uses abstractions from both [CQL](https://dl.acm.org/doi/10.1007/s00778-004-0147-z) and [SECRET](https://dl.acm.org/doi/10.14778/1920841.1920874) to grant control over the process of Continuous Querying.
 
