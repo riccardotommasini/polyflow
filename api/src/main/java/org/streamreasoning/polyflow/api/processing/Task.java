@@ -16,7 +16,7 @@ public interface Task<I, W, R extends Iterable<?>, O> {
     default String getId(){
         return "";
     }
-    List<StreamToRelationOperator<I, W, R>> getS2Rs();
+    List<StreamToRelationOperator<I, R>> getS2Rs();
 
     List<RelationToRelationOperator<R>> getR2Rs();
 
@@ -27,7 +27,7 @@ public interface Task<I, W, R extends Iterable<?>, O> {
      * @param inputStream Stream which the operator inside the container is interested in
      * @return The task itself
      */
-    Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W, R> s2rOperator, DataStream<I> inputStream);
+    Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, R> s2rOperator, DataStream<I> inputStream);
 
     /**
      * Adds an R2R operator to the task

@@ -7,46 +7,51 @@ import org.streamreasoning.polyflow.api.exceptions.OutOfOrderElementException;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.assigner.StreamToRelationOperator;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.WindowImpl;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.MultiBufferState;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
-import org.streamreasoning.polyflow.api.secret.content.Content;
 import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
 import org.streamreasoning.polyflow.api.secret.report.Report;
 import org.streamreasoning.polyflow.api.secret.tick.Ticker;
 import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
+import org.streamreasoning.polyflow.base.operatorsimpl.s2r.state.MapMultiBufferState;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, W, R> {
+public class MBHoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
-    private static final Logger log = Logger.getLogger(HoppingWindowOpImpl.class);
+    private static final Logger log = Logger.getLogger(MBHoppingWindowOpImpl.class);
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
     protected final String name;
-    protected final ContentFactory<I, W, R> cf;
+    protected final MultiBufferState<I, R> state;
     protected Report report;
     private final long width, slide;
-    private Map<Window, Content<I, W, R>> active_windows;
     private List<Window> reported_windows;
     private Set<Window> to_evict;
     private long t0;
     private long toi;
 
-    public HoppingWindowOpImpl(Tick tick, Time time, String name, ContentFactory<I, W, R> cf, Report report,
-                               long width, long slide) {
+    public MBHoppingWindowOpImpl(Tick tick, Time time, String name, SegmentFactory<I, R> sf, Report report,
+                                 long width, long slide) {
+        this(tick, time, name, new MapMultiBufferState<>(sf), report, width, slide);
+    }
 
+    public MBHoppingWindowOpImpl(Tick tick, Time time, String name, MultiBufferState<I, R> state, Report report,
+                                 long width, long slide) {
         this.tick = tick;
         this.time = time;
         this.name = name;
-        this.cf = cf;
+        this.state = state;
         this.report = report;
         this.width = width;
         this.slide = slide;
-        this.active_windows = new HashMap<>();
         this.reported_windows = new ArrayList<>();
         this.to_evict = new HashSet<>();
         this.t0 = time.getScope();
@@ -85,23 +90,23 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
      * Returns the content of the last window closed before time t_e. If no such window exists, returns an empty content
      */
     @Override
-    public Content<I, W, R> content(long t_e) {
+    public Segment<I, R> content(long t_e) {
         // If some windows matched the report clause, return the last one that did so
         if (!reported_windows.isEmpty()) {
             return reported_windows.stream()
                     .max(Comparator.comparingLong(Window::getC))
-                    .map(w -> (active_windows.get(w))).get();
+                    .map(state::get).orElse(state.emptySegment());
         }
         //Else return the last window closed
         else {
-            Optional<Window> max = active_windows.keySet().stream()
+            Optional<Window> max = stream(state.windows())
                     .filter(w -> w.getO() < t_e && w.getC() < t_e)
                     .max(Comparator.comparingLong(Window::getC));
 
             if (max.isPresent())
-                return active_windows.get(max.get());
+                return state.get(max.get());
 
-            return cf.createEmpty();
+            return state.emptySegment();
         }
     }
 
@@ -109,15 +114,15 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
      * Returns the content of all the windows closed before time t_e as a list of contents. If no such windows exist, returns an empty list of contents
      */
     @Override
-    public List<Content<I, W, R>> getContents(long t_e) {
+    public List<Segment<I, R>> getContents(long t_e) {
         if (!reported_windows.isEmpty()) {
             return reported_windows.stream()
                     .max(Comparator.comparingLong(Window::getC))
-                    .map(w -> Collections.singletonList(active_windows.get(w))).get();
+                    .map(w -> Collections.singletonList(state.get(w))).orElseGet(Collections::emptyList);
         } else
-            return active_windows.keySet().stream()
+            return stream(state.windows())
                     .filter(w -> w.getO() < t_e && t_e < w.getC())
-                    .map(active_windows::get).collect(Collectors.toList());
+                    .map(state::get).collect(Collectors.toList());
     }
 
     /**
@@ -131,9 +136,7 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
 
         do {
             log.debug("Computing Window [" + o_i + "," + (o_i + width) + ") if absent");
-
-            active_windows
-                    .computeIfAbsent(new WindowImpl(o_i, o_i + width), x -> cf.create());
+            state.create(new WindowImpl(o_i, o_i + width));
             o_i += slide;
 
         } while (o_i <= t_e);
@@ -152,13 +155,14 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
 
         scope(ts);
 
-        active_windows.keySet().forEach(
+        stream(state.windows()).forEach(
                 w -> {
                     log.debug("Processing Window [" + w.getO() + "," + w.getC() + ") for element (" + arg + "," + ts + ")");
                     if (w.getO() <= ts && ts < w.getC()) {
                         log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + ")");
-                        active_windows.get(w).add(arg);
-                    } else if (ts > w.getC()) {
+                        state.get(w).add(arg);
+                    }
+                    if (ts >= w.getC()) {
                         log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + ")");
                         schedule_for_eviction(w);
                     }
@@ -166,7 +170,7 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
 
 
         if (ticker.tick(ts)) {
-            active_windows.keySet().stream()
+            stream(state.windows())
                     .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
                     .max(Comparator.comparingLong(Window::getC))
                     .ifPresent(window -> {
@@ -185,8 +189,9 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
     }
 
 
-    private Content<I, W, R> getWindowContent(Window w) {
-        return active_windows.containsKey(w) ? active_windows.get(w) : cf.createEmpty();
+    private Segment<I, R> getWindowContent(Window w) {
+        Segment<I, R> segment = state.get(w);
+        return segment != null ? segment : state.emptySegment();
     }
 
     private void schedule_for_eviction(Window w) {
@@ -197,7 +202,7 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
     public void evict() {
         to_evict.forEach(w -> {
             log.debug("Evicting [" + w.getO() + "," + w.getC() + ")");
-            active_windows.remove(w);
+            state.evict(w);
             if (toi < w.getC())
                 toi = w.getC() + slide;
         });
@@ -207,9 +212,12 @@ public class HoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamT
 
     @Override
     public void evict(long ts) {
-        active_windows.keySet().forEach(w -> {if (w.getC() < ts) to_evict.add(w);});
+        stream(state.windows()).forEach(w -> {if (w.getC() < ts) to_evict.add(w);});
         evict();
     }
 
+    private java.util.stream.Stream<Window> stream(Iterable<Window> windows) {
+        return java.util.stream.StreamSupport.stream(windows.spliterator(), false);
+    }
 
 }

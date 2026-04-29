@@ -18,10 +18,10 @@ import org.streamreasoning.polyflow.api.secret.time.Time;
 
 public class TimeTicker implements Ticker {
 
-    private final StreamToRelationOperator<?, ?, ?> wa;
+    private final StreamToRelationOperator<?, ?> wa;
     private final Time time;
 
-    public TimeTicker(StreamToRelationOperator<?, ?, ?> wa, Time time) {
+    public TimeTicker(StreamToRelationOperator<?, ?> wa, Time time) {
         this.wa = wa;
         this.time = time;
     }

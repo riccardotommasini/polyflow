@@ -1,18 +1,11 @@
 package org.streamreasoning.polyflow.api.secret.content;
 
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 
-public interface Content<I, W, R> {
-
-    int size();
-
-    void add(I e);
-
-    R coalesce();
-
-    /**
-     * used in cases where the reporting strategy depends on a state of the content (received X elements, event happened etc..).
-     * @return True if the content is ready to be reported
-     */
-    default boolean toReport(){return false;}
-
+/**
+ * @deprecated Use {@link Segment}. Content is kept as a legacy alias for
+ * existing implementations and downstream code.
+ */
+@Deprecated
+public interface Content<I, W, R> extends Segment<I, R> {
 }

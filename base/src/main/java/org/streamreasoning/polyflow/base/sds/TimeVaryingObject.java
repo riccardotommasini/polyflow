@@ -5,11 +5,11 @@ import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 
 public class TimeVaryingObject<R extends Iterable<?>> implements TimeVarying<R> {
 
-    private final StreamToRelationOperator<?, ?, R> op;
+    private final StreamToRelationOperator<?, R> op;
     private final String name;
     private R content;
 
-    public TimeVaryingObject(StreamToRelationOperator<?, ?, R> op, String name) {
+    public TimeVaryingObject(StreamToRelationOperator<?, R> op, String name) {
         this.op = op;
         this.name = name;
     }

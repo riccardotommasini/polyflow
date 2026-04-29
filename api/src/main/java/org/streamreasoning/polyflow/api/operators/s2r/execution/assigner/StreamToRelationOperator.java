@@ -2,8 +2,8 @@ package org.streamreasoning.polyflow.api.operators.s2r.execution.assigner;
 
 
 import org.streamreasoning.polyflow.api.enums.Tick;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
-import org.streamreasoning.polyflow.api.secret.content.Content;
 import org.streamreasoning.polyflow.api.secret.report.Report;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 
@@ -14,7 +14,7 @@ import java.util.List;
  * W represents the variable type of the maintained status, e.g., BAG of RDF Triple, RDF Graph (set) or RELATION
  * */
 
-public interface StreamToRelationOperator<I, W, R extends Iterable<?>> {
+public interface StreamToRelationOperator<I, R extends Iterable<?>> {
 
     Report report();
 
@@ -22,9 +22,9 @@ public interface StreamToRelationOperator<I, W, R extends Iterable<?>> {
 
     Time time();
 
-    Content<I, W, R> content(long t_e);
+    Segment<I, R> content(long t_e);
 
-    List<Content<I, W, R>> getContents(long t_e);
+    List<Segment<I, R>> getContents(long t_e);
 
     TimeVarying<R> get();
 

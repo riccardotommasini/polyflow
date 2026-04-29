@@ -36,12 +36,12 @@ public class ContainerContent<I, W, R, K> implements Content<I, W, R> {
     @Override
     public void add(I i) {
         K key = keyFromI.apply(i);
-        keyedContent.computeIfAbsent(key, k->internalContentFactory.create());
+        keyedContent.computeIfAbsent(key, k -> (Content<I, W, R>) internalContentFactory.create());
         keyedContent.get(key).add(i);
     }
 
     @Override
     public R coalesce() {
-        return keyedContent.values().stream().map(c->c.coalesce()).reduce(emptyContent, (r1, r2)->sumR.apply(r1,r2));
+        return keyedContent.values().stream().map(Content::coalesce).reduce(emptyContent, (r1, r2)->sumR.apply(r1,r2));
     }
 }

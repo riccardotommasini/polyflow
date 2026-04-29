@@ -18,10 +18,10 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
 
     private static final Logger log = Logger.getLogger(TaskImpl.class);
-    private List<StreamToRelationOperator<I, W, R>> s2rOperators;
+    private List<StreamToRelationOperator<I, R>> s2rOperators;
     private List<RelationToRelationOperator<R>> r2rOperators;
     private RelationToStreamOperator<R, O> r2sOperator;
-    private Map<DataStream<I>, List<StreamToRelationOperator<I, W, R>>> registeredS2R;
+    private Map<DataStream<I>, List<StreamToRelationOperator<I, R>>> registeredS2R;
     private Time time;
 
     private DAG<R> dag;
@@ -45,7 +45,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     }
 
     @Override
-    public List<StreamToRelationOperator<I, W, R>> getS2Rs() {
+    public List<StreamToRelationOperator<I, R>> getS2Rs() {
         return s2rOperators;
     }
 
@@ -60,9 +60,9 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     }
 
     @Override
-    public Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, W, R> s2rOperator, DataStream<I> inputStream) {
+    public Task<I, W, R, O> addS2ROperator(StreamToRelationOperator<I, R> s2rOperator, DataStream<I> inputStream) {
 
-        for(StreamToRelationOperator<I, W, R> op : s2rOperators){
+        for(StreamToRelationOperator<I, R> op : s2rOperators){
             if(op.getName().equals(s2rOperator.getName())){
                 throw new RuntimeException("S2R Operator with same name already present");
             }
@@ -128,7 +128,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     @Override
     public void initialize(){
-        for(StreamToRelationOperator<I, W, R> operator: s2rOperators){
+        for(StreamToRelationOperator<I, R> operator: s2rOperators){
             TimeVarying<R> tvg = operator.get();
             this.sds.add(tvg);
             if(tvg.named()){
@@ -148,13 +148,13 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
 
     @Override
     public void evictWindows() {
-        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+        for(StreamToRelationOperator<I, R> s2r : s2rOperators){
             s2r.evict();
         }
     }
     @Override
     public void evictWindows(long ts){
-        for(StreamToRelationOperator<I, W, R> s2r : s2rOperators){
+        for(StreamToRelationOperator<I, R> s2r : s2rOperators){
             s2r.evict(ts);
         }
     }
@@ -164,7 +164,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
     @Override
     public void elaborateElement(DataStream<I> inputStream, I element, long timestamp) {
         if(registeredS2R.containsKey(inputStream)) {
-            for (StreamToRelationOperator<I, W, R> s2r : registeredS2R.get(inputStream)) {
+            for (StreamToRelationOperator<I, R> s2r : registeredS2R.get(inputStream)) {
                 s2r.compute(element, timestamp);
             }
         }

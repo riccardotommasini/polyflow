@@ -2,7 +2,7 @@ package org.streamreasoning.polyflow.api.secret.report;
 
 
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
-import org.streamreasoning.polyflow.api.secret.content.Content;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 import org.streamreasoning.polyflow.api.secret.report.strategies.ReportingStrategy;
 
 /**
@@ -18,7 +18,7 @@ import org.streamreasoning.polyflow.api.secret.report.strategies.ReportingStrate
  **/
 public interface Report {
 
-    boolean report(Window w, Content<?, ?, ?> c, long tapp, long tsys);
+    boolean report(Window w, Segment<?, ?> c, long tapp, long tsys);
 
     void add(ReportingStrategy r);
 

@@ -17,10 +17,10 @@ import org.streamreasoning.polyflow.api.secret.time.Time;
  **/
 public class TupleTicker implements Ticker {
 
-    private final StreamToRelationOperator<?, ?, ?> wa;
+    private final StreamToRelationOperator<?, ?> wa;
     private Time time;
 
-    public TupleTicker(StreamToRelationOperator<?, ?, ?> wa, Time time) {
+    public TupleTicker(StreamToRelationOperator<?, ?> wa, Time time) {
         this.wa = wa;
         this.time = time;
     }
@@ -31,5 +31,4 @@ public class TupleTicker implements Ticker {
         return true;
     }
 }
-
 

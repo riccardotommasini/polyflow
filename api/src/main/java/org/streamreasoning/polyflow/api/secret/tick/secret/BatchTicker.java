@@ -18,13 +18,13 @@ import org.streamreasoning.polyflow.api.secret.time.Time;
 
 public class BatchTicker implements Ticker {
 
-    protected final StreamToRelationOperator<?, ?, ?> wa;
+    protected final StreamToRelationOperator<?, ?> wa;
     private int curr = 0;
     private int batch;
 
     private Time time;
 
-    public BatchTicker(StreamToRelationOperator<?, ?, ?> wa, Time time) {
+    public BatchTicker(StreamToRelationOperator<?, ?> wa, Time time) {
         this.wa = wa;
         this.time = time;
     }

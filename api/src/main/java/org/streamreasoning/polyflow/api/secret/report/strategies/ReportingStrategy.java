@@ -2,7 +2,7 @@ package org.streamreasoning.polyflow.api.secret.report.strategies;
 
 
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
-import org.streamreasoning.polyflow.api.secret.content.Content;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 
 /**
  * According to Botan et al.
@@ -10,8 +10,6 @@ import org.streamreasoning.polyflow.api.secret.content.Content;
  * strategies to define their reporting policy.
  **/
 public interface ReportingStrategy {
-    boolean match(Window w, Content c, long tapp, long tsys);
+    boolean match(Window w, Segment<?, ?> c, long tapp, long tsys);
 
 }
-
-
