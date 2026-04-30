@@ -50,7 +50,7 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     public SBSlidingWindowOpImpl(Tick tick, Time time, String name, ListSegmentFactory<I, R> segmentFactory,
                                  BiPredicate<I, Long> expiresBefore, Report report, long width) {
         this(tick, time, name,
-                new ListSingleBufferState<>(segmentFactory.create(), segmentFactory.createEmpty(), expiresBefore),
+                new ListSingleBufferState<>(segmentFactory, expiresBefore),
                 report,
                 width);
     }

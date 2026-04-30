@@ -3,6 +3,7 @@ package org.streamreasoning.polyflow.base.operatorsimpl.s2r.state;
 import org.apache.log4j.Logger;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SingleBufferState;
 
 import java.util.ArrayList;
@@ -19,9 +20,9 @@ public class ListSingleBufferState<I, R> implements SingleBufferState<I, R> {
     private final BiPredicate<I, Long> expiresBefore;
     private Window window = null;
 
-    public ListSingleBufferState(Segment<I, R> workingSegment, Segment<I, R> emptySegment, BiPredicate<I, Long> expiresBefore) {
-        this.workingSegment = workingSegment;
-        this.emptySegment = emptySegment;
+    public ListSingleBufferState(SegmentFactory<I, R> segmentFactory, BiPredicate<I, Long> expiresBefore) {
+        this.workingSegment = segmentFactory.create();
+        this.emptySegment = segmentFactory.createEmpty();
         this.expiresBefore = expiresBefore;
     }
 
