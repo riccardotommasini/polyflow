@@ -22,9 +22,9 @@ import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MBSlidingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
+public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
-    private static final Logger log = Logger.getLogger(MBHoppingWindowOpImpl.class);
+    private static final Logger log = Logger.getLogger(MBSlidingWindowOpImpl.class);
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
@@ -35,7 +35,6 @@ public class MBSlidingWindowOpImpl<I, W, R extends Iterable<?>> implements Strea
     private List<Window> reported_windows;
     private Set<Window> to_evict;
     private Map<I, Long> r_stream;
-    private Map<I, Long> d_stream;
 
     public MBSlidingWindowOpImpl(Tick tick, Time time, String name, SegmentFactory<I, R> sf, Report report,
                                  long width) {
@@ -53,7 +52,6 @@ public class MBSlidingWindowOpImpl<I, W, R extends Iterable<?>> implements Strea
         this.reported_windows = new ArrayList<>();
         this.to_evict = new HashSet<>();
         this.r_stream = new HashMap<>();
-        this.d_stream = new HashMap<>();
         this.ticker = TickerFactory.tick(tick, this);
         Logger.getRootLogger().setLevel(Level.OFF);
 
@@ -124,11 +122,7 @@ public class MBSlidingWindowOpImpl<I, W, R extends Iterable<?>> implements Strea
     private Window scope(long t_e) {
         long o_i = t_e - width;
         log.debug("Calculating the Windows to Open. First one opens at [" + o_i + "] and closes at [" + t_e + "]");
-        log.debug("Computing Window [" + o_i + "," + (o_i + width) + ") if absent");
-
-        WindowImpl active = new WindowImpl(o_i, t_e);
-        state.create(active);
-        return active;
+        return new WindowImpl(o_i, t_e);
     }
 
     @Override
@@ -142,35 +136,47 @@ public class MBSlidingWindowOpImpl<I, W, R extends Iterable<?>> implements Strea
 
         Window active = scope(ts);
         Segment<I, R> content = state.get(active);
+        boolean newWindow = content == null;
+        if (newWindow) {
+            log.debug("Computing Window [" + active.getO() + "," + active.getC() + "] if absent");
+            content = state.create(active);
+            r_stream.entrySet().stream()
+                    .filter(ee -> active.getO() <= ee.getValue() && ee.getValue() <= active.getC())
+                    .map(Map.Entry::getKey)
+                    .forEach(content::add);
+        }
 
-        r_stream.entrySet().stream().filter(ee -> ee.getValue() < active.getO()).forEach(ee -> d_stream.put(ee.getKey(), ee.getValue()));
-
-        r_stream.entrySet().stream().filter(ee -> ee.getValue() >= active.getO()).map(Map.Entry::getKey).forEach(content::add);
-
+        r_stream.entrySet().removeIf(ee -> ee.getValue() < active.getO());
         r_stream.put(arg, ts);
-        content.add(arg);
+
+        stream(state.windows()).forEach(w -> {
+            if (w.getO() <= ts && ts <= w.getC()) {
+                log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + "]");
+                state.get(w).add(arg);
+            }
+            if (w.getC() < ts) {
+                log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + "]");
+                schedule_for_eviction(w);
+            }
+        });
 
         if (ticker.tick(ts)) {
-            if (report.report(active, content, ts, System.currentTimeMillis())) {
-                reported_windows.add(active);
-                time.addEvaluationTimeInstants(new TimeInstant(ts));
-            }
+            stream(state.windows())
+                    .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
+                    .max(Comparator.comparingLong(Window::getC))
+                    .ifPresent(window -> {
+                        reported_windows.add(window);
+                        time.addEvaluationTimeInstants(new TimeInstant(ts));
+                    });
         }
         time.setAppTime(ts);
 
 
-        //REMOVE ALL THE WINDOWS THAT CONTAIN DSTREAM ELEMENTS
-        //Theoretically active window has always size 1
-        d_stream.entrySet().forEach(ee -> {
-            log.debug("Evicting [" + ee + "]");
+    }
 
-            stream(state.windows()).forEach(window -> {
-                if (window.getO() <= ee.getValue() && window.getC() < ee.getValue())
-                    schedule_for_eviction(window);
-            });
-            r_stream.remove(ee);
-        });
-
+    private Segment<I, R> getWindowContent(Window w) {
+        Segment<I, R> segment = state.get(w);
+        return segment != null ? segment : state.emptySegment();
     }
 
     private void schedule_for_eviction(Window w) {

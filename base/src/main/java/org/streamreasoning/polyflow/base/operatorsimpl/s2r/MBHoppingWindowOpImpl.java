@@ -23,7 +23,7 @@ import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MBHoppingWindowOpImpl<I, W, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
+public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
     private static final Logger log = Logger.getLogger(MBHoppingWindowOpImpl.class);
     protected final Ticker ticker;
