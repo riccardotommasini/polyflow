@@ -8,7 +8,7 @@ public interface SingleBufferState<I, R> {
 
     Window getWindow();
 
-    Segment<I, R> segment();
+    Segment<I, R> segment(Window w);
 
     void append(I e);
 

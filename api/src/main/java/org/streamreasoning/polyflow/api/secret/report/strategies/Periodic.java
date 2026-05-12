@@ -5,21 +5,28 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 
 /**
  * Periodic (Rpr): reporting is done for t only
- * if it is a multiple of x, where x denotes the reporting frequency.
+ * when the reporting frequency has elapsed.
  **/
-
-//TODO returns true independently from w, but it
-// communicates directly with the system clock to decide
-// whether it is time to report
 public class Periodic implements ReportingStrategy {
     private long period;
+    private long nextReportTime;
+
+    public Periodic(long period) {
+        this.period = period;
+        this.nextReportTime = period;
+    }
 
     @Override
     public boolean match(Window w, Segment<?, ?> c, long tapp, long tsys) {
-        return tapp % period == 0;
-    }
+        if (period <= 0) {
+            throw new IllegalStateException("Periodic report period must be greater than zero");
+        }
 
-    public void setPeriod(long period) {
-        this.period = period;
+        if (tapp < nextReportTime) {
+            return false;
+        }
+
+        nextReportTime = ((tapp / period) + 1) * period;
+        return true;
     }
 }

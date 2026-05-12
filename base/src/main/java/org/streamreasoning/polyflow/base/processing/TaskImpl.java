@@ -175,10 +175,10 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         Collection<Collection<O>> res = new ArrayList<>();
         while(time.hasEvaluationInstant()){
             long t = time.getEvaluationTime().t;
-            System.out.println("Evaluation time instant found with t= "+t+", R2R computation will begin");
+            // System.out.println("Evaluation time instant found with t= "+t+", R2R computation will begin");
             long begin_time = System.currentTimeMillis();
             R partialRes = eval(t);
-            System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
+            // System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
             res.add(r2sOperator.eval(partialRes, t).collect(Collectors.toList()));
             evictWindows(t);
         }
@@ -190,7 +190,7 @@ public class TaskImpl<I, W, R extends Iterable<?>, O> implements Task<I, W, R, O
         System.out.println("Evaluating computation explicitly requested at time t= "+ts+", R2R computation will begin");
         long begin_time = System.currentTimeMillis();
         R result = eval(ts);
-        System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
+        // System.out.println("Total computation time: "+(System.currentTimeMillis()-begin_time) + " ms");
         return r2sOperator.eval(result, ts).collect(Collectors.toList());
         //We do not evict windows since it was an on-demand query
 

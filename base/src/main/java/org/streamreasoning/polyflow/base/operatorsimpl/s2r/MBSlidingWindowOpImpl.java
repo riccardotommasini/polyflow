@@ -16,9 +16,11 @@ import org.streamreasoning.polyflow.api.secret.tick.Ticker;
 import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
+import org.streamreasoning.polyflow.base.benchmark.Benchmark;
 import org.streamreasoning.polyflow.base.operatorsimpl.s2r.state.MapMultiBufferState;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,13 +38,9 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     private Set<Window> to_evict;
     private Map<I, Long> r_stream;
 
-    public MBSlidingWindowOpImpl(Tick tick, Time time, String name, SegmentFactory<I, R> sf, Report report,
-                                 long width) {
-        this(tick, time, name, new MapMultiBufferState<>(sf), report, width);
-    }
+    private final Benchmark bench;
 
-    public MBSlidingWindowOpImpl(Tick tick, Time time, String name, MultiBufferState<I, R> state, Report report,
-                                 long width) {
+    public MBSlidingWindowOpImpl(Tick tick, Time time, String name, MultiBufferState<I, R> state, Report report, long width) {
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -54,8 +52,10 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         this.r_stream = new HashMap<>();
         this.ticker = TickerFactory.tick(tick, this);
         Logger.getRootLogger().setLevel(Level.OFF);
-
-
+        bench = new Benchmark(Path.of(System.getProperty(
+                "polyflow.bench.csv",
+                "target/bench/window-measurements-MBSlidingWindow-"+width+".csv"
+        )));
     }
 
     @Override
@@ -120,9 +120,8 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
 
     private Window scope(long t_e) {
-        long o_i = t_e - width;
-        log.debug("Calculating the Windows to Open. First one opens at [" + o_i + "] and closes at [" + t_e + "]");
-        return new WindowImpl(o_i, t_e);
+        log.debug("Calculating the Windows to Open. First one opens at [" + t_e + "] and closes at [" + (t_e+width) + "]");
+        return new WindowImpl(t_e, t_e + width);
     }
 
     @Override
@@ -135,31 +134,35 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         }
 
         Window active = scope(ts);
-        Segment<I, R> content = state.get(active);
-        boolean newWindow = content == null;
-        if (newWindow) {
-            log.debug("Computing Window [" + active.getO() + "," + active.getC() + "] if absent");
-            content = state.create(active);
-            r_stream.entrySet().stream()
-                    .filter(ee -> active.getO() <= ee.getValue() && ee.getValue() <= active.getC())
-                    .map(Map.Entry::getKey)
-                    .forEach(content::add);
-        }
 
-        r_stream.entrySet().removeIf(ee -> ee.getValue() < active.getO());
-        r_stream.put(arg, ts);
+        benchmark("add", ts, () -> {
+            Segment<I, R> content = state.get(active);
+            boolean newWindow = content == null;
+            if (newWindow) {
+                log.debug("Computing Window [" + active.getO() + "," + active.getC() + "] if absent");
+                content = state.create(active);
+                r_stream.entrySet().stream()
+                        .filter(ee -> active.getO() <= ee.getValue() && ee.getValue() <= active.getC())
+                        .map(Map.Entry::getKey)
+                        .forEach(content::add);
+            }
 
-        stream(state.windows()).forEach(w -> {
-            if (w.getO() <= ts && ts <= w.getC()) {
-                log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + "]");
-                state.get(w).add(arg);
-            }
-            if (w.getC() < ts) {
-                log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + "]");
-                schedule_for_eviction(w);
-            }
+            r_stream.entrySet().removeIf(ee -> ee.getValue() < active.getO());
+            r_stream.put(arg, ts);
+
+            stream(state.windows()).forEach(w -> {
+                if (w.getO() <= ts && ts <= w.getC()) {
+                    log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + "]");
+                    state.get(w).add(arg);
+                }
+                if (w.getC() < ts) {
+                    log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + "]");
+                    to_evict.add(w);
+                }
+            });
         });
 
+        benchmark("report", ts, () -> {
         if (ticker.tick(ts)) {
             stream(state.windows())
                     .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
@@ -168,19 +171,13 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                         reported_windows.add(window);
                         time.addEvaluationTimeInstants(new TimeInstant(ts));
                     });
-        }
+        }});
         time.setAppTime(ts);
-
-
     }
 
     private Segment<I, R> getWindowContent(Window w) {
         Segment<I, R> segment = state.get(w);
         return segment != null ? segment : state.emptySegment();
-    }
-
-    private void schedule_for_eviction(Window w) {
-        to_evict.add(w);
     }
 
     @Override
@@ -192,8 +189,16 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict(long ts) {
-        stream(state.windows()).forEach(w -> {if (w.getC() < ts) to_evict.add(w);});
-        evict();
+        benchmark("evict", ts, () -> {
+            stream(state.windows()).forEach(w -> {
+                if (w.getC() < ts) to_evict.add(w);
+            });
+            evict();
+        });
+    }
+
+    private void benchmark(String operation, long ts, Runnable runnable) {
+        bench.measure(operation, "MBSlidingWindow", state.toString(), state.getSegmentName(), ts, runnable);
     }
 
     private java.util.stream.Stream<Window> stream(Iterable<Window> windows) {

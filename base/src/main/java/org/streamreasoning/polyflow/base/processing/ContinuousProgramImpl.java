@@ -115,9 +115,9 @@ public class ContinuousProgramImpl<I,W, R extends Iterable<?>, O> implements Con
         }
 
         //Evict the windows of the views for memory efficiency
-        for(Task<I, W, R, O> v : taskMap.values()){
-            v.evictWindows();
-        }
+//        for(Task<I, W, R, O> v : taskMap.values()){
+//            v.evictWindows(timestamp);
+//        }
 
 
     }
