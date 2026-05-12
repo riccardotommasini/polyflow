@@ -13,10 +13,12 @@ public class MapMultiBufferState<I, R> implements MultiBufferState<I, R> {
     private final Map<Window, Segment<I, R>> windowSegments = new LinkedHashMap<>();
     private final SegmentFactory<I, R> segmentFactory;
     private final Segment<I, R> emptySegment;
+    public String segmentName;
 
     public MapMultiBufferState(SegmentFactory<I, R> segmentFactory) {
         this.segmentFactory = segmentFactory;
         this.emptySegment = segmentFactory.createEmpty();
+        segmentName = segmentFactory.getClass().getSimpleName();
     }
 
     @Override
@@ -52,5 +54,14 @@ public class MapMultiBufferState<I, R> implements MultiBufferState<I, R> {
     @Override
     public boolean isEmpty() {
         return windowSegments.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "MapMultiBuffer";
+    }
+
+    public String getSegmentName() {
+        return segmentName;
     }
 }

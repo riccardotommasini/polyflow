@@ -4,6 +4,8 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 
 public interface MultiBufferState<I, R> {
 
+    String getSegmentName();
+
     Segment<I, R> create(Window w);
 
     Segment<I, R> get(Window w);

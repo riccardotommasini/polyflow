@@ -65,21 +65,21 @@ public class DAGImpl<R extends Iterable<?>> implements DAG<R> {
 
     @Override
     public void printDAG(){
-       /* Set<DAGNode<R>> printed = new HashSet<>();
+       Set<DAGNode<R>> printed = new HashSet<>();
         for(DAGNode<R> node : root.values()){
             while(node != null){
                 if(!printed.contains(node)) {
                     printed.add(node);
-                    System.out.print("[T:" + node.getOperandsNames() + " O:" + node.getOpName() + "]->");
+                    System.out.print("[T:" + node.getOperandsNames() + " O:" + node.getOperandsNames() + "]->");
                     node = node.getNext();
                 }
-                else if(printed.contains(node) && node.isBinary()){
-                    System.out.print("[T:" + node.getOperandsNames() + " O:" + node.getOpName() + "]->");
+                else if(printed.contains(node) && node.hasNext()){
+                    System.out.print("[T:" + node.getOperandsNames() + " O:" + node.getOperandsNames() + "]->");
                     break;
                 }
             }
             System.out.print("\n");
 
-        }*/
+        }
     }
 }

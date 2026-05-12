@@ -36,13 +36,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     private Set<Window> to_evict;
     private Map<I, Long> r_stream;
 
-    public MBSlidingWindowOpImpl(Tick tick, Time time, String name, SegmentFactory<I, R> sf, Report report,
-                                 long width) {
-        this(tick, time, name, new MapMultiBufferState<>(sf), report, width);
-    }
-
-    public MBSlidingWindowOpImpl(Tick tick, Time time, String name, MultiBufferState<I, R> state, Report report,
-                                 long width) {
+    public MBSlidingWindowOpImpl(Tick tick, Time time, String name, MultiBufferState<I, R> state, Report report, long width) {
         this.tick = tick;
         this.time = time;
         this.name = name;
@@ -54,8 +48,6 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         this.r_stream = new HashMap<>();
         this.ticker = TickerFactory.tick(tick, this);
         Logger.getRootLogger().setLevel(Level.OFF);
-
-
     }
 
     @Override
@@ -120,9 +112,8 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
 
     private Window scope(long t_e) {
-        long o_i = t_e - width;
-        log.debug("Calculating the Windows to Open. First one opens at [" + o_i + "] and closes at [" + t_e + "]");
-        return new WindowImpl(o_i, t_e);
+        log.debug("Calculating the Windows to Open. First one opens at [" + t_e + "] and closes at [" + (t_e+width) + "]");
+        return new WindowImpl(t_e, t_e + width);
     }
 
     @Override
@@ -135,6 +126,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         }
 
         Window active = scope(ts);
+
         Segment<I, R> content = state.get(active);
         boolean newWindow = content == null;
         if (newWindow) {
@@ -156,7 +148,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             }
             if (w.getC() < ts) {
                 log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + "]");
-                schedule_for_eviction(w);
+                to_evict.add(w);
             }
         });
 
@@ -170,17 +162,11 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                     });
         }
         time.setAppTime(ts);
-
-
     }
 
     private Segment<I, R> getWindowContent(Window w) {
         Segment<I, R> segment = state.get(w);
         return segment != null ? segment : state.emptySegment();
-    }
-
-    private void schedule_for_eviction(Window w) {
-        to_evict.add(w);
     }
 
     @Override
@@ -192,7 +178,9 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict(long ts) {
-        stream(state.windows()).forEach(w -> {if (w.getC() < ts) to_evict.add(w);});
+        stream(state.windows()).forEach(w -> {
+            if (w.getC() < ts) to_evict.add(w);
+        });
         evict();
     }
 

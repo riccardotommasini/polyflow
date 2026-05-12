@@ -17,14 +17,12 @@ import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
-import java.util.ArrayDeque;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.List;
 
-public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
+public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
-    private static final Logger log = Logger.getLogger(SBSlidingWindowOpImpl.class);
+    private static final Logger log = Logger.getLogger(SBHoppingWindowOpImpl.class);
 
     protected final Ticker ticker;
     protected Tick tick;
@@ -33,18 +31,20 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     protected final SingleBufferState<I, R> state;
     protected Report report;
     private final long width;
+    private final long slide;
     private Window reportedWindow;
-    private final Deque<Window> activeWindows = new ArrayDeque<>();
-    private long evictionTs = Long.MIN_VALUE;
+    private final long t0;
 
-    public SBSlidingWindowOpImpl(Tick tick, Time time, String name, SingleBufferState<I, R> state, Report report, long width) {
+    public SBHoppingWindowOpImpl(Tick tick, Time time, String name, SingleBufferState<I, R> state, Report report, long width, long slide) {
         this.tick = tick;
         this.time = time;
         this.name = name;
         this.state = state;
         this.report = report;
         this.width = width;
+        this.slide = slide;
         this.ticker = TickerFactory.tick(tick, this);
+        this.t0 = time.getScope();
         Logger.getRootLogger().setLevel(Level.OFF);
     }
 
@@ -88,10 +88,12 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         return !name.isEmpty();
     }
 
-    private void scope(long ts) {
-        Window w = new WindowImpl(ts, ts + width);
-        activeWindows.addLast(w);
-        state.setWindow(w);
+    private Window scope(long t_e){
+        long c_sup = (long) Math.ceil(((double) Math.abs(t_e - t0) / (double) slide)) * slide;
+        long o_i = c_sup - width;
+        log.debug("Calculating the Window to Open. Opens at [" + o_i + "] and closes at [" + (o_i + width) +"]");
+        state.setWindow(new WindowImpl(o_i, o_i + width));
+        return new WindowImpl(o_i, o_i + width);
     }
 
     @Override
@@ -106,26 +108,13 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         state.append(arg);
 
         if (ticker.tick(ts)) {
-            scope(ts);
-            Window oldestStillActive = activeWindows.peekFirst();
-            if (oldestStillActive!=null && report.report(oldestStillActive, state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
-                reportedWindow = oldestStillActive;
+            Window win = scope(ts);
+            if (report.report(win, state.segment(win), ts, System.currentTimeMillis())) {
+                reportedWindow = win;
                 time.addEvaluationTimeInstants(new TimeInstant(ts));
             }
         }
         time.setAppTime(ts);
-    }
-
-    private void updateActiveWindow(long ts) {
-        while (!activeWindows.isEmpty() && activeWindows.peekFirst().getC() < ts) {
-            activeWindows.removeFirst();
-        }
-
-        if (!activeWindows.isEmpty()) {
-            evictionTs = activeWindows.peekFirst().getO();
-        } else {
-            evictionTs = ts;
-        }
     }
 
     @Override
@@ -135,8 +124,7 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict(long ts) {
-        updateActiveWindow(ts);
-        state.evict(evictionTs);
+        state.evict(state.getWindow().getO());
         evict();
     }
 }

@@ -4,26 +4,31 @@ import org.apache.log4j.Logger;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
-import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SingleBufferState;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-public class ListSingleBufferState<I, R> implements SingleBufferState<I, R> {
+public class SingleBufferState<I, R> implements org.streamreasoning.polyflow.api.operators.s2r.execution.state.SingleBufferState<I, R> {
 
-    private static final Logger log = Logger.getLogger(ListSingleBufferState.class);
+    private static final Logger log = Logger.getLogger(SingleBufferState.class);
 
+    private final SegmentFactory<I, R> segmentFactory;
     private final Segment<I, R> emptySegment;
     private final Segment<I, R> workingSegment;
     private final BiPredicate<I, Long> expiresBefore;
+    private final BiPredicate<I, Long> arrivedAfter;
     private Window window = null;
+    private final String segmentName;
 
-    public ListSingleBufferState(SegmentFactory<I, R> segmentFactory, BiPredicate<I, Long> expiresBefore) {
+    public SingleBufferState(SegmentFactory<I, R> segmentFactory, BiPredicate<I, Long> expiresBefore, BiPredicate<I, Long> arrivedAfter) {
+        this.segmentFactory = segmentFactory;
         this.workingSegment = segmentFactory.create();
         this.emptySegment = segmentFactory.createEmpty();
         this.expiresBefore = expiresBefore;
+        this.arrivedAfter = arrivedAfter;
+        this.segmentName = segmentFactory.create().getClass().getSimpleName();
     }
 
     @Override
@@ -37,8 +42,19 @@ public class ListSingleBufferState<I, R> implements SingleBufferState<I, R> {
     }
 
     @Override
+    public Segment<I, R> segment(Window w) {
+        Segment<I, R> reportSegment = segmentFactory.create();
+        workingSegment.iterator().forEachRemaining(e -> {
+            if (arrivedAfter.test(e, w.getO()) && expiresBefore.test(e, w.getC())) {
+                reportSegment.add(e);
+            }
+        });
+        return reportSegment == null ? emptySegment : reportSegment;
+    }
+
+    // return the whole current segment, to be used in case of non-overlapping windows
     public Segment<I, R> segment() {
-        return window == null ? emptySegment : workingSegment;
+        return workingSegment == null ? emptySegment : workingSegment;
     }
 
     @Override
@@ -89,5 +105,10 @@ public class ListSingleBufferState<I, R> implements SingleBufferState<I, R> {
     @Override
     public boolean isEmpty() {
         return size() == 0;
+    }
+
+    @Override
+    public String toString() {
+        return segmentName;
     }
 }

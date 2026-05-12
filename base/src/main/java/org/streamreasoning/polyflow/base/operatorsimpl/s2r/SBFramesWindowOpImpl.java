@@ -204,6 +204,7 @@ public class SBFramesWindowOpImpl<I, R extends Iterable<?>> implements StreamToR
     @Override
     public void evict() {
         reportedContent = null;
+        state.clear(); // frames are non-overlapping
     }
 
     @Override
@@ -311,11 +312,10 @@ public class SBFramesWindowOpImpl<I, R extends Iterable<?>> implements StreamToR
             return;
         }
         current.setC(ts);
-        reportedContent = state.segment();
+        reportedContent = state.segment(current);
         if (ticker.tick(ts)) {
             time.addEvaluationTimeInstants(new TimeInstant(ts));
         }
-        state.clear();
     }
 
     private void validateConfig() {

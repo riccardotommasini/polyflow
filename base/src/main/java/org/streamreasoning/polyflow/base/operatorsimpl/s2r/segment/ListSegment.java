@@ -45,4 +45,9 @@ public class ListSegment<I, R> implements Segment<I, R> {
     public R coalesce() {
         return content.stream().map(lift).reduce(emptyContent, sumR::apply);
     }
+
+    @Override
+    public String toString() {
+        return "List";
+    }
 }

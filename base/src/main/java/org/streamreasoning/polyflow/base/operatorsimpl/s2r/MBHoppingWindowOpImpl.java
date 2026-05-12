@@ -9,15 +9,12 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.MultiBufferState;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
-import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
-import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
 import org.streamreasoning.polyflow.api.secret.report.Report;
 import org.streamreasoning.polyflow.api.secret.tick.Ticker;
 import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
-import org.streamreasoning.polyflow.base.operatorsimpl.s2r.state.MapMultiBufferState;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
 import java.util.*;
@@ -25,23 +22,23 @@ import java.util.stream.Collectors;
 
 public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
+    protected final String name;
     private static final Logger log = Logger.getLogger(MBHoppingWindowOpImpl.class);
+
     protected final Ticker ticker;
     protected Tick tick;
     protected final Time time;
-    protected final String name;
-    protected final MultiBufferState<I, R> state;
-    protected Report report;
-    private final long width, slide;
-    private List<Window> reported_windows;
-    private Set<Window> to_evict;
-    private long t0;
-    private long toi;
 
-    public MBHoppingWindowOpImpl(Tick tick, Time time, String name, SegmentFactory<I, R> sf, Report report,
-                                 long width, long slide) {
-        this(tick, time, name, new MapMultiBufferState<>(sf), report, width, slide);
-    }
+    protected final MultiBufferState<I, R> state;
+    private long t0;
+    private final long width, slide;
+
+    protected Report report;
+    private Window to_report;
+    private List<Window> reported_windows;
+
+    private Set<Window> to_evict;
+    private long toi;
 
     public MBHoppingWindowOpImpl(Tick tick, Time time, String name, MultiBufferState<I, R> state, Report report,
                                  long width, long slide) {
@@ -97,7 +94,8 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                     .max(Comparator.comparingLong(Window::getC))
                     .map(state::get).orElse(state.emptySegment());
         }
-        //Else return the last window closed
+        // return state.emptySegment();
+        // Else return the last window closed
         else {
             Optional<Window> max = stream(state.windows())
                     .filter(w -> w.getO() < t_e && w.getC() < t_e)
@@ -129,7 +127,6 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
      * Creates all the windows that can possibly contain the given timestamp
      */
     private void scope(long t_e) {
-
         long c_sup = (long) Math.ceil(((double) Math.abs(t_e - t0) / (double) slide)) * slide;
         long o_i = c_sup - width;
         log.debug("Calculating the Windows to Open. First one opens at [" + o_i + "] and closes at [" + c_sup + "]");
@@ -164,10 +161,9 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                     }
                     if (ts >= w.getC()) {
                         log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + ")");
-                        schedule_for_eviction(w);
+                        to_evict.add(w);
                     }
                 });
-
 
         if (ticker.tick(ts)) {
             stream(state.windows())
@@ -179,23 +175,16 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                     });
         }
         time.setAppTime(ts);
-
     }
-
 
     @Override
     public TimeVarying<R> get() {
         return new TimeVaryingObject<>(this, name);
     }
 
-
     private Segment<I, R> getWindowContent(Window w) {
         Segment<I, R> segment = state.get(w);
         return segment != null ? segment : state.emptySegment();
-    }
-
-    private void schedule_for_eviction(Window w) {
-        to_evict.add(w);
     }
 
     @Override
