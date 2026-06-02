@@ -1,43 +1,66 @@
 package org.streamreasoning.polyflow.base.contentimpl.factories;
 
-import org.streamreasoning.polyflow.api.secret.content.Content;
-import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
-import org.streamreasoning.polyflow.base.contentimpl.EmptyContent;
-import org.streamreasoning.polyflow.base.contentimpl.content.ContainerContent;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
+import org.streamreasoning.polyflow.base.operatorsimpl.s2r.segment.EmptySegment;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class ContainerContentFactory<I, W, R, K> implements ContentFactory<I, W, R> {
+public class ContainerContentFactory<I, W, R, K> implements SegmentFactory<I, R> {
 
-    private Function<I, K> keyFromI;
-    private Function<W, K> keyFromW;
-    private Function<R, K> keyFromR;
-    private BiFunction<R, R, R> sumR;
-    private Map<K, Content<I, W, R>> keyedContent = new HashMap<>();
-    private R emptyContent;
+    private final Function<I, K> inputKeyExtractor;
+    private final BiFunction<R, R, R> merger;
+    private final R emptyContent;
+    private final SegmentFactory<I, R> internalSegmentFactory;
 
-    private ContentFactory<I, W, R> internalContentFactory;
-
-    public ContainerContentFactory(Function<I, K> keyFromI ,Function<W, K> keyFromW, Function<R, K> keyFromR,
-                                   BiFunction<R, R, R> sumR, R emptyContent, ContentFactory<I, W, R> internalContentFactory ){
-        this.keyFromI = keyFromI;
-        this.keyFromW = keyFromW;
-        this.keyFromR = keyFromR;
-        this.sumR = sumR;
+    public ContainerContentFactory(Function<I, K> inputKeyExtractor, Function<W, K> windowKeyExtractor,
+                                   Function<R, K> resultKeyExtractor, BiFunction<R, R, R> merger,
+                                   R emptyContent, SegmentFactory<I, R> internalSegmentFactory) {
+        this.inputKeyExtractor = inputKeyExtractor;
+        this.merger = merger;
         this.emptyContent = emptyContent;
-        this.internalContentFactory = internalContentFactory;
+        this.internalSegmentFactory = internalSegmentFactory;
     }
 
     @Override
-    public Content<I, W, R> createEmpty() {
-        return new EmptyContent<>(emptyContent);
+    public Segment<I, R> createEmpty() {
+        return new EmptySegment<>(emptyContent);
     }
 
     @Override
-    public Content<I, W, R> create() {
-        return new ContainerContent<>(keyFromI, keyFromW, keyFromR, sumR, emptyContent, internalContentFactory);
+    public Segment<I, R> create() {
+        return new Segment<>() {
+            private final Map<K, Segment<I, R>> segments = new LinkedHashMap<>();
+            private int size;
+
+            @Override
+            public int size() {
+                return size;
+            }
+
+            @Override
+            public void add(I item) {
+                K key = inputKeyExtractor.apply(item);
+                segments.computeIfAbsent(key, ignored -> internalSegmentFactory.create()).add(item);
+                size++;
+            }
+
+            @Override
+            public R coalesce() {
+                R result = emptyContent;
+                for (Segment<I, R> segment : segments.values()) {
+                    result = merger.apply(result, segment.coalesce());
+                }
+                return result;
+            }
+
+            @Override
+            public boolean toReport() {
+                return segments.values().stream().anyMatch(Segment::toReport);
+            }
+        };
     }
 }

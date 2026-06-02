@@ -1,30 +1,51 @@
 package org.streamreasoning.polyflow.base.contentimpl.factories;
 
-import org.streamreasoning.polyflow.api.secret.content.Content;
-import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
-import org.streamreasoning.polyflow.base.contentimpl.content.FirstContent;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
+import org.streamreasoning.polyflow.base.operatorsimpl.s2r.segment.EmptySegment;
 
 import java.util.function.Function;
 
-public class FirstContentFactory<I, W, R> implements ContentFactory<I, W, R> {
+public class FirstContentFactory<I, W, R> implements SegmentFactory<I, R> {
 
-    Function<I, W> f1;
-    Function<W, R> f2;
-    R emptyContent;
+    private final Function<I, W> inputMapper;
+    private final Function<W, R> resultMapper;
+    private final R emptyContent;
 
-    public FirstContentFactory(Function<I, W> f1, Function<W, R> f2,  R emptyContent){
-        this.f1 = f1;
-        this.f2 = f2;
+    public FirstContentFactory(Function<I, W> inputMapper, Function<W, R> resultMapper, R emptyContent) {
+        this.inputMapper = inputMapper;
+        this.resultMapper = resultMapper;
         this.emptyContent = emptyContent;
     }
 
     @Override
-    public Content<I, W, R> createEmpty() {
-        throw new RuntimeException("why does this still exist?");
+    public Segment<I, R> createEmpty() {
+        return new EmptySegment<>(emptyContent);
     }
 
     @Override
-    public Content<I, W, R> create() {
-        return new FirstContent<>(f1, f2, emptyContent);
+    public Segment<I, R> create() {
+        return new Segment<>() {
+            private W first;
+            private int size;
+
+            @Override
+            public int size() {
+                return size;
+            }
+
+            @Override
+            public void add(I item) {
+                if (size == 0) {
+                    first = inputMapper.apply(item);
+                }
+                size++;
+            }
+
+            @Override
+            public R coalesce() {
+                return size == 0 ? emptyContent : resultMapper.apply(first);
+            }
+        };
     }
 }

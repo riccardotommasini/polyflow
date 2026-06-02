@@ -1,51 +1,67 @@
 package org.streamreasoning.polyflow.base.contentimpl.factories;
 
-import org.streamreasoning.polyflow.base.contentimpl.EmptyContent;
-import org.streamreasoning.polyflow.api.secret.content.Content;
-import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
-import org.streamreasoning.polyflow.base.contentimpl.content.StatefulContent;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
+import org.streamreasoning.polyflow.base.operatorsimpl.s2r.segment.EmptySegment;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class StatefulContentFactory<I, W, R> implements ContentFactory<I, W, R> {
+public class StatefulContentFactory<I, W, R> implements SegmentFactory<I, R> {
 
+    private final Supplier<Object> initialState;
+    private final BiFunction<W, Object, Object> stateUpdater;
+    private final Function<Object, Boolean> reportPredicate;
+    private final Function<I, W> inputMapper;
+    private final Function<W, R> resultMapper;
+    private final BiFunction<R, R, R> merger;
+    private final R emptyContent;
 
-    private Function<I, W> f1;
-    private Function<W, R> f2;
-    private BiFunction<R, R, R> sumR;
-    private R emptyContent;
-    /**
-     * Function to create the state object
-     */
-    private Supplier<Object> stateCreator;
-    /**
-     * Function to update the state given the new received element
-     */
-    private BiFunction<W, Object, Object> stateUpdater;
-    /**
-     * Function to check if a condition on the state is met
-     */
-    private Function<Object, Boolean> conditionChecker;
-
-    public StatefulContentFactory(Supplier<Object> stateCreator, BiFunction<W, Object, Object> stateUpdater, Function<Object, Boolean> conditionChecker, Function<I, W> f1,
-                                  Function<W, R> f2, BiFunction<R, R, R> sumR, R emptyContent){
-        this.stateCreator = stateCreator;
+    public StatefulContentFactory(Supplier<Object> initialState, BiFunction<W, Object, Object> stateUpdater,
+                                  Function<Object, Boolean> reportPredicate, Function<I, W> inputMapper,
+                                  Function<W, R> resultMapper, BiFunction<R, R, R> merger, R emptyContent) {
+        this.initialState = initialState;
         this.stateUpdater = stateUpdater;
-        this.conditionChecker = conditionChecker;
-        this.f1 = f1;
-        this.f2 = f2;
-        this.sumR = sumR;
+        this.reportPredicate = reportPredicate;
+        this.inputMapper = inputMapper;
+        this.resultMapper = resultMapper;
+        this.merger = merger;
         this.emptyContent = emptyContent;
     }
+
     @Override
-    public Content<I, W, R> createEmpty() {
-        return new EmptyContent<>(emptyContent);
+    public Segment<I, R> createEmpty() {
+        return new EmptySegment<>(emptyContent);
     }
 
     @Override
-    public Content<I, W, R> create() {
-        return new StatefulContent<>(stateCreator, stateUpdater, conditionChecker, f1, f2, sumR, emptyContent);
+    public Segment<I, R> create() {
+        return new Segment<>() {
+            private final Segment<I, R> delegate = new AccumulatorContentFactory.AccumulatorSegment<>(inputMapper, resultMapper, merger, emptyContent);
+            private Object state = initialState.get();
+
+            @Override
+            public int size() {
+                return delegate.size();
+            }
+
+            @Override
+            public void add(I item) {
+                W mapped = inputMapper.apply(item);
+                state = stateUpdater.apply(mapped, state);
+                delegate.add(item);
+            }
+
+            @Override
+            public R coalesce() {
+                return delegate.coalesce();
+            }
+
+            @Override
+            public boolean toReport() {
+                return reportPredicate.apply(state);
+            }
+        };
     }
 }

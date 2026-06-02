@@ -1,29 +1,49 @@
 package org.streamreasoning.polyflow.base.contentimpl.factories;
 
-import org.streamreasoning.polyflow.api.secret.content.Content;
-import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
-import org.streamreasoning.polyflow.base.contentimpl.content.LastContent;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
+import org.streamreasoning.polyflow.base.operatorsimpl.s2r.segment.EmptySegment;
 
 import java.util.function.Function;
 
-public class LastContentFactory<I, W, R> implements ContentFactory<I, W, R> {
+public class LastContentFactory<I, W, R> implements SegmentFactory<I, R> {
 
-    Function<I, W> f1;
-    Function<W, R> f2;
-    R emptyContent;
+    private final Function<I, W> inputMapper;
+    private final Function<W, R> resultMapper;
+    private final R emptyContent;
 
-    public LastContentFactory(Function<I, W> f1, Function<W, R> f2, R emptyContent){
-        this.f1 = f1;
-        this.f2 = f2;
+    public LastContentFactory(Function<I, W> inputMapper, Function<W, R> resultMapper, R emptyContent) {
+        this.inputMapper = inputMapper;
+        this.resultMapper = resultMapper;
         this.emptyContent = emptyContent;
     }
+
     @Override
-    public Content<I, W, R> createEmpty() {
-        throw new RuntimeException("why does this still exist?");
+    public Segment<I, R> createEmpty() {
+        return new EmptySegment<>(emptyContent);
     }
 
     @Override
-    public Content<I, W, R> create() {
-        return new LastContent<>(f1, f2, emptyContent);
+    public Segment<I, R> create() {
+        return new Segment<>() {
+            private W last;
+            private int size;
+
+            @Override
+            public int size() {
+                return size;
+            }
+
+            @Override
+            public void add(I item) {
+                last = inputMapper.apply(item);
+                size++;
+            }
+
+            @Override
+            public R coalesce() {
+                return size == 0 ? emptyContent : resultMapper.apply(last);
+            }
+        };
     }
 }

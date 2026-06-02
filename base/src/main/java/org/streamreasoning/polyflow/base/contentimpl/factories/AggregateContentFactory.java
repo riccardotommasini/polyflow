@@ -1,38 +1,54 @@
 package org.streamreasoning.polyflow.base.contentimpl.factories;
 
-import org.streamreasoning.polyflow.api.secret.content.Content;
-import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
-import org.streamreasoning.polyflow.base.contentimpl.EmptyContent;
-import org.streamreasoning.polyflow.base.contentimpl.content.AggregateContent;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
+import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
+import org.streamreasoning.polyflow.base.operatorsimpl.s2r.segment.EmptySegment;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class AggregateContentFactory<I, W, R> implements ContentFactory<I, W, R> {
 
-    private Function<I, W> f1;
-    private Function<W, R> f2;
-    private BiFunction<R, R, R> sumR;
-    private Function<R, R> aggregate;
-    private R emptyContent;
 
-    public AggregateContentFactory(Function<I, W> f1, Function<W, R> f2, BiFunction<R, R, R> sumR,
-                                   Function<R, R> aggregate, R emptyContent) {
-        this.f1 = f1;
-        this.f2 = f2;
-        this.sumR = sumR;
-        this.aggregate = aggregate;
+public class AggregateContentFactory<I, W, R> implements SegmentFactory<I, R> {
+
+    private final Function<I, W> inputMapper;
+    private final Function<W, R> resultMapper;
+    private final BiFunction<R, R, R> merger;
+    private final Function<R, R> aggregator;
+    private final R emptyContent;
+
+    public AggregateContentFactory(Function<I, W> inputMapper, Function<W, R> resultMapper,
+                                   BiFunction<R, R, R> merger, Function<R, R> aggregator, R emptyContent) {
+        this.inputMapper = inputMapper;
+        this.resultMapper = resultMapper;
+        this.merger = merger;
+        this.aggregator = aggregator;
         this.emptyContent = emptyContent;
     }
 
-
     @Override
-    public Content<I, W, R> createEmpty() {
-        return new EmptyContent<>(emptyContent);
+    public Segment<I, R> createEmpty() {
+        return new EmptySegment<>(emptyContent);
     }
 
     @Override
-    public Content<I, W, R> create() {
-        return new AggregateContent<>(f1, f2, sumR, aggregate, emptyContent);
+    public Segment<I, R> create() {
+        Segment<I, R> delegate = new AccumulatorContentFactory.AccumulatorSegment<>(inputMapper, resultMapper, merger, emptyContent);
+        return new Segment<>() {
+            @Override
+            public int size() {
+                return delegate.size();
+            }
+
+            @Override
+            public void add(I item) {
+                delegate.add(item);
+            }
+
+            @Override
+            public R coalesce() {
+                return aggregator.apply(delegate.coalesce());
+            }
+        };
     }
 }
