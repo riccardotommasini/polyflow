@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
+@Deprecated
 public class ContainerContent<I, W, R, K> implements Content<I, W, R> {
 
     private Function<I, K> keyFromI;

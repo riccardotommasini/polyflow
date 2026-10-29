@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
+@Deprecated
 public class AccumulatorContent<I, W, R> implements Content<I, W, R> {
 
     List<W> content = new ArrayList<>();

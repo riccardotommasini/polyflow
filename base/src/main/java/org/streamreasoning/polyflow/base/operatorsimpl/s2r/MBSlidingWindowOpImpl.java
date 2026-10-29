@@ -81,7 +81,13 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public TimeVarying<R> get() {
-        return new TimeVaryingObject<>(this, name);
+        return new TimeVaryingObject<>(this, name) {
+            @Override
+            public void materialize(long ts) {
+                // Retrieve the maintained window segment and include coalesce() in extraction.
+                benchmark("extract", ts, () -> super.materialize(ts));
+            }
+        };
     }
 
 
@@ -135,7 +141,8 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
         Window active = scope(ts);
 
-        benchmark("add", ts, () -> {
+        // Charge maintenance of the per-window segments to insertion.
+        benchmark("insert", ts, () -> {
             Segment<I, R> content = state.get(active);
             boolean newWindow = content == null;
             if (newWindow) {
@@ -162,7 +169,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             });
         });
 
-        benchmark("report", ts, () -> {
+        // Reporting decides when to evaluate; extraction is measured during materialization.
         if (ticker.tick(ts)) {
             stream(state.windows())
                     .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
@@ -171,7 +178,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                         reported_windows.add(window);
                         time.addEvaluationTimeInstants(new TimeInstant(ts));
                     });
-        }});
+        }
         time.setAppTime(ts);
     }
 
@@ -182,6 +189,11 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict() {
+        // Time direct eviction too, without nesting timers in evict(timestamp).
+        benchmark("evict", time.getAppTime(), this::evictWindows);
+    }
+
+    private void evictWindows() {
         to_evict.forEach(state::evict);
         to_evict.clear();
         reported_windows = new ArrayList<>();
@@ -193,7 +205,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             stream(state.windows()).forEach(w -> {
                 if (w.getC() < ts) to_evict.add(w);
             });
-            evict();
+            evictWindows();
         });
     }
 

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
+@Deprecated
 public class AggregateContent<I, W, R> implements Content<I, W, R> {
 
     private Function<I, W> f1;

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
+@Deprecated
 public class FilterContent <I, W, R> implements Content<I, W, R> {
 
     List<W> content = new ArrayList<>();

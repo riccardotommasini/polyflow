@@ -8,7 +8,7 @@ import org.streamreasoning.polyflow.base.contentimpl.content.StatefulContent;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
+@Deprecated
 public class StatefulContentFactory<I, W, R> implements ContentFactory<I, W, R> {
 
 

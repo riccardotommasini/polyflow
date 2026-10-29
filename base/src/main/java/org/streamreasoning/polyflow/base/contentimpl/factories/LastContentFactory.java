@@ -5,7 +5,7 @@ import org.streamreasoning.polyflow.api.secret.content.ContentFactory;
 import org.streamreasoning.polyflow.base.contentimpl.content.LastContent;
 
 import java.util.function.Function;
-
+@Deprecated
 public class LastContentFactory<I, W, R> implements ContentFactory<I, W, R> {
 
     Function<I, W> f1;

@@ -8,7 +8,7 @@ import org.streamreasoning.polyflow.base.contentimpl.content.FilterContent;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
+@Deprecated
 public class FilterContentFactory<I, W, R>  implements ContentFactory<I, W, R> {
 
     Function<I, W> f1;

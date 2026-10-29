@@ -72,17 +72,24 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public Segment<I, R> content(long t_e) {
-        return state.segment(reportedWindow);
+        // A policy may not have selected a window yet, or eviction may have cleared it.
+        return reportedWindow != null ? state.segment(reportedWindow) : state.emptySegment();
     }
 
     @Override
     public List<Segment<I, R>> getContents(long t_e) {
-        return state.getWindow() != null ? Collections.singletonList(state.segment(reportedWindow)) : Collections.singletonList(state.emptySegment());
+        return Collections.singletonList(content(t_e));
     }
 
     @Override
     public TimeVarying<R> get() {
-        return new TimeVaryingObject<>(this, name);
+        return new TimeVaryingObject<>(this, name) {
+            @Override
+            public void materialize(long ts) {
+                // Include shared-buffer selection, segment construction, and coalesce().
+                benchmark("extract", ts, () -> super.materialize(ts));
+            }
+        };
     }
 
     @Override
@@ -110,18 +117,18 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
 
-        benchmark("add", ts, () -> state.append(arg));
+        // Insertion stores the element in the shared buffer; retrieval selects its window.
+        benchmark("insert", ts, () -> state.append(arg));
 
-        benchmark("report", ts, () -> {
-                    if (ticker.tick(ts)) {
-                        scope(ts);
-                        Window oldestStillActive = activeWindows.peekFirst();
-                        if (oldestStillActive!=null && report.report(oldestStillActive, state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
-                            reportedWindow = oldestStillActive;
-                            time.addEvaluationTimeInstants(new TimeInstant(ts));
-                        }
-                    }
-        });
+        // Reporting decides when to evaluate; extraction is measured during materialization.
+        if (ticker.tick(ts)) {
+            scope(ts);
+            Window oldestStillActive = activeWindows.peekFirst();
+            if (oldestStillActive != null && report.report(oldestStillActive, state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
+                reportedWindow = oldestStillActive;
+                time.addEvaluationTimeInstants(new TimeInstant(ts));
+            }
+        }
         time.setAppTime(ts);
     }
 

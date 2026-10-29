@@ -25,7 +25,7 @@ public class AggregateContentFactory<I, W, R> implements ContentFactory<I, W, R>
         this.emptyContent = emptyContent;
     }
 
-
+@Deprecated
     @Override
     public Content<I, W, R> createEmpty() {
         return new EmptyContent<>(emptyContent);

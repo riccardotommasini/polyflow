@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
+@Deprecated
 public class ContainerContentFactory<I, W, R, K> implements ContentFactory<I, W, R> {
 
     private Function<I, K> keyFromI;

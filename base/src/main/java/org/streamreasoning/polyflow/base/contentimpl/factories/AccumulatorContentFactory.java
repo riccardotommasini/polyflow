@@ -7,7 +7,7 @@ import org.streamreasoning.polyflow.base.contentimpl.content.AccumulatorContent;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
+@Deprecated
 public class AccumulatorContentFactory<I, W, R> implements ContentFactory<I, W, R> {
 
     Function<I, W> f1;

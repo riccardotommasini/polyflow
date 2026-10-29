@@ -19,9 +19,14 @@ import org.streamreasoning.polyflow.base.benchmark.Benchmark;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 
+/**
+ * Reporting, reads and eviction select their scope from the evaluation timestamp so
+ * independently arriving inputs can share an evaluation clock without a prior report.
+ */
 public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
     private static final Logger log = Logger.getLogger(SBHoppingWindowOpImpl.class);
@@ -34,16 +39,19 @@ public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     protected Report report;
     private final long width;
     private final long slide;
-    private Window reportedWindow;
     private final long t0;
     private final Benchmark bench;
 
+    /** Reject invalid scopes and missing collaborators before initializing the operator. */
     public SBHoppingWindowOpImpl(Tick tick, Time time, String name, SingleBufferState<I, R> state, Report report, long width, long slide) {
-        this.tick = tick;
-        this.time = time;
-        this.name = name;
-        this.state = state;
-        this.report = report;
+        if (width <= 0 || slide <= 0) {
+            throw new IllegalArgumentException("Window width and slide must be positive");
+        }
+        this.tick = Objects.requireNonNull(tick, "tick");
+        this.time = Objects.requireNonNull(time, "time");
+        this.name = Objects.requireNonNull(name, "name");
+        this.state = Objects.requireNonNull(state, "state");
+        this.report = Objects.requireNonNull(report, "report");
         this.width = width;
         this.slide = slide;
         this.ticker = TickerFactory.tick(tick, this);
@@ -72,17 +80,24 @@ public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public Segment<I, R> content(long t_e) {
-        return state.segment(reportedWindow);
+        // A read selects its own scope rather than depending on this input having reported.
+        return state.segment(scope(t_e));
     }
 
     @Override
     public List<Segment<I, R>> getContents(long t_e) {
-        return state.getWindow() != null ? Collections.singletonList(state.segment(reportedWindow)) : Collections.singletonList(state.emptySegment());
+        return List.of(content(t_e));
     }
 
     @Override
     public TimeVarying<R> get() {
-        return new TimeVaryingObject<>(this, name);
+        return new TimeVaryingObject<>(this, name) {
+            @Override
+            public void materialize(long ts) {
+                // Include shared-buffer selection, segment construction, and coalesce().
+                benchmark("extract", ts, () -> super.materialize(ts));
+            }
+        };
     }
 
     @Override
@@ -95,12 +110,19 @@ public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         return !name.isEmpty();
     }
 
-    private Window scope(long t_e){
-        long c_sup = (long) Math.ceil(((double) Math.abs(t_e - t0) / (double) slide)) * slide;
-        long o_i = c_sup - width;
-        log.debug("Calculating the Window to Open. Opens at [" + o_i + "] and closes at [" + (o_i + width) +"]");
-        state.setWindow(new WindowImpl(o_i, o_i + width));
-        return new WindowImpl(o_i, o_i + width);
+    /**
+     * Select [close-width, close) and make it the state's current window.
+     * Integer arithmetic preserves the ceiling calculation for epoch millisecond timestamps.
+     */
+    private Window scope(long t_e) {
+        long offset = Math.abs(Math.subtractExact(t_e, t0));
+        long periods = offset / slide + (offset % slide == 0 ? 0 : 1);
+        long close = Math.multiplyExact(periods, slide);
+        Window window = new WindowImpl(Math.subtractExact(close, width), close);
+        log.debug("Calculating the Window to Open. Opens at [" + window.getO()
+                + "] and closes at [" + window.getC() + "]");
+        state.setWindow(window);
+        return window;
     }
 
     @Override
@@ -112,30 +134,30 @@ public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
 
-        benchmark("add", ts, () -> state.append(arg));
+        // Insertion stores the element in the shared buffer; retrieval selects its window.
+        benchmark("insert", ts, () -> state.append(arg));
 
-        benchmark("report", ts, () -> {
+        // Reporting decides when to evaluate; extraction is measured during materialization.
         if (ticker.tick(ts)) {
             Window win = scope(ts);
             if (report.report(win, state.segment(win), ts, System.currentTimeMillis())) {
-                reportedWindow = win;
                 time.addEvaluationTimeInstants(new TimeInstant(ts));
             }
-        }});
+        }
         time.setAppTime(ts);
     }
 
     @Override
     public void evict() {
-        reportedWindow = null;
+        // Calls without an explicit evaluation time use the shared application clock.
+        evict(time.getAppTime());
     }
 
     @Override
-    public void evict(long ts) {
-        benchmark("evict", ts, () -> {
-            state.evict(state.getWindow().getO());
-            evict();
-        });
+    public void evict(long timestamp) {
+        // Idle inputs expire at the requested evaluation scope, even with no previous report.
+        Window window = scope(timestamp);
+        benchmark("evict", timestamp, () -> state.evict(window.getO()));
     }
 
     private void benchmark(String operation, long ts, Runnable runnable) {

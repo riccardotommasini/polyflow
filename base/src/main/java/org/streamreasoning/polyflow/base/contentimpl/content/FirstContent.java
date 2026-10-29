@@ -3,7 +3,7 @@ package org.streamreasoning.polyflow.base.contentimpl.content;
 import org.streamreasoning.polyflow.api.secret.content.Content;
 
 import java.util.function.Function;
-
+@Deprecated
 public class FirstContent<I, W, R> implements Content<I, W, R> {
 
     W content;

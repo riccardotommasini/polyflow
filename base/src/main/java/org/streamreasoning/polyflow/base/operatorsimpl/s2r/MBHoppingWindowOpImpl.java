@@ -159,39 +159,45 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             throw new OutOfOrderElementException("(" + arg + "," + ts + ")");
         }
 
-        scope(ts);
-
-        benchmark("add", ts, () ->
-                stream(state.windows()).forEach(
-                        w -> {
-                            log.debug("Processing Window [" + w.getO() + "," + w.getC() + ") for element (" + arg + "," + ts + ")");
-                            if (w.getO() <= ts && ts < w.getC()) {
-                                log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + ")");
-                                state.get(w).add(arg);
-                            }
-                            if (ts >= w.getC()) {
-                                log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + ")");
-                                to_evict.add(w);
-                            }
-                        }));
-
-        benchmark("report", ts, () -> {
-            if (ticker.tick(ts)) {
-                stream(state.windows())
-                        .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
-                        .max(Comparator.comparingLong(Window::getC))
-                        .ifPresent(window -> {
-                            reported_windows.add(window);
-                            time.addEvaluationTimeInstants(new TimeInstant(ts));
-                        });
-            }
+        // Charge maintenance of the per-window segments to insertion.
+        benchmark("insert", ts, () -> {
+            // Creating the buffers is part of preparing windows for this element.
+            scope(ts);
+            stream(state.windows()).forEach(w -> {
+                log.debug("Processing Window [" + w.getO() + "," + w.getC() + ") for element (" + arg + "," + ts + ")");
+                if (w.getO() <= ts && ts < w.getC()) {
+                    log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + ")");
+                    state.get(w).add(arg);
+                }
+                if (ts >= w.getC()) {
+                    log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + ")");
+                    to_evict.add(w);
+                }
+            });
         });
+
+        // Reporting decides when to evaluate; extraction is measured during materialization.
+        if (ticker.tick(ts)) {
+            stream(state.windows())
+                    .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
+                    .max(Comparator.comparingLong(Window::getC))
+                    .ifPresent(window -> {
+                        reported_windows.add(window);
+                        time.addEvaluationTimeInstants(new TimeInstant(ts));
+                    });
+        }
         time.setAppTime(ts);
     }
 
     @Override
     public TimeVarying<R> get() {
-        return new TimeVaryingObject<>(this, name);
+        return new TimeVaryingObject<>(this, name) {
+            @Override
+            public void materialize(long ts) {
+                // Retrieve the maintained window segment and include coalesce() in extraction.
+                benchmark("extract", ts, () -> super.materialize(ts));
+            }
+        };
     }
 
     private Segment<I, R> getWindowContent(Window w) {
@@ -201,6 +207,11 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict() {
+        // Time direct eviction too, without nesting timers in evict(timestamp).
+        benchmark("evict", time.getAppTime(), this::evictWindows);
+    }
+
+    private void evictWindows() {
         to_evict.forEach(w -> {
             log.debug("Evicting [" + w.getO() + "," + w.getC() + ")");
             state.evict(w);
@@ -215,7 +226,7 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     public void evict(long ts) {
         benchmark("evict", ts, () -> {
             stream(state.windows()).forEach(w -> {if (w.getC() < ts) to_evict.add(w);});
-            evict();
+            evictWindows();
         });
     }
 
