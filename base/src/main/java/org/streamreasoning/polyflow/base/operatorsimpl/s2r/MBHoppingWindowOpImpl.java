@@ -231,7 +231,8 @@ public class MBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     }
 
     private void benchmark(String operation, long ts, Runnable runnable) {
-        bench.measure(operation, "MBHoppingWindow", state.toString(), state.getSegmentName(), ts, runnable);
+        // Snapshot the incrementally maintained count before the operation timer starts.
+        bench.measure(operation, "MBHoppingWindow", state.toString(), state.getSegmentName(), ts, -1, state.size(), runnable);
     }
 
     private java.util.stream.Stream<Window> stream(Iterable<Window> windows) {

@@ -161,6 +161,7 @@ public class SBHoppingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     }
 
     private void benchmark(String operation, long ts, Runnable runnable) {
-        bench.measure(operation, "SBHoppingWindow", "SingleBuffer", state.toString(), ts, runnable);
+        // Snapshot the incrementally maintained count before the operation timer starts.
+        bench.measure(operation, "SBHoppingWindow", "SingleBuffer", state.toString(), ts, state.size(), -1, runnable);
     }
 }

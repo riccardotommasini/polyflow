@@ -19,6 +19,8 @@ public class SingleBufferState<I, R> implements org.streamreasoning.polyflow.api
     private final Segment<I, R> workingSegment;
     private final BiPredicate<I, Long> expiresBefore;
     private final BiPredicate<I, Long> arrivedAfter;
+    // Maintain cardinality during existing mutations so benchmark reads never scan the segment.
+    private int elementCount;
     private Window window = null;
     private final String segmentName;
 
@@ -60,6 +62,7 @@ public class SingleBufferState<I, R> implements org.streamreasoning.polyflow.api
     @Override
     public void append(I e) {
         workingSegment.add(e);
+        elementCount++;
     }
 
     @Override
@@ -72,6 +75,7 @@ public class SingleBufferState<I, R> implements org.streamreasoning.polyflow.api
                 if (expiresBefore.test(next, ts)) {
                     try {
                         it.remove();
+                        elementCount--;
                     } catch (UnsupportedOperationException e) {
                         toRemove.add(next);
                     }
@@ -83,6 +87,7 @@ public class SingleBufferState<I, R> implements org.streamreasoning.polyflow.api
 
         for (I e : toRemove) {
             workingSegment.remove(e);
+            elementCount--;
         }
     }
 
@@ -99,7 +104,7 @@ public class SingleBufferState<I, R> implements org.streamreasoning.polyflow.api
 
     @Override
     public int size() {
-        return window == null ? 0 : workingSegment.size();
+        return window == null ? 0 : elementCount;
     }
 
     @Override

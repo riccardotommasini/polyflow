@@ -26,7 +26,7 @@ public final class Benchmark implements AutoCloseable {
             );
 
             if (writeHeader) {
-                writer.write("operation,s2r_type,state_type,segment_type,element_ts,duration_ns\n");
+                writer.write("operation,s2r_type,state_type,segment_type,element_ts,duration_ns,buffer_elements,maintained_windows\n");
                 writer.flush();
             }
         } catch (IOException e) {
@@ -43,6 +43,20 @@ public final class Benchmark implements AutoCloseable {
             long elementTs,
             long durationNs
     ) {
+        row(operation, s2rType, stateType, segmentType, elementTs, durationNs, -1, -1);
+    }
+
+    /** Writes pre-operation counts; a negative count leaves the inapplicable column empty. */
+    public void row(
+            String operation,
+            String s2rType,
+            String stateType,
+            String segmentType,
+            long elementTs,
+            long durationNs,
+            int bufferElements,
+            int maintainedWindows
+    ) {
         if (out == null) {
             return;
         }
@@ -58,6 +72,14 @@ public final class Benchmark implements AutoCloseable {
             out.write(Long.toString(elementTs));
             out.write(',');
             out.write(Long.toString(durationNs));
+            out.write(',');
+            if (bufferElements >= 0) {
+                out.write(Integer.toString(bufferElements));
+            }
+            out.write(',');
+            if (maintainedWindows >= 0) {
+                out.write(Integer.toString(maintainedWindows));
+            }
             out.write('\n');
             out.flush();
         } catch (IOException e) {
@@ -70,14 +92,28 @@ public final class Benchmark implements AutoCloseable {
             String s2rType,
             String stateType,
             String segmentType,
-        long elementTs,
-        Runnable runnable
+            long elementTs,
+            Runnable runnable
+    ) {
+        measure(operation, s2rType, stateType, segmentType, elementTs, -1, -1, runnable);
+    }
+
+    /** Counts are captured by the caller before timing starts, without scanning state. */
+    public void measure(
+            String operation,
+            String s2rType,
+            String stateType,
+            String segmentType,
+            long elementTs,
+            int bufferElements,
+            int maintainedWindows,
+            Runnable runnable
     ) {
         long start = System.nanoTime();
         try {
             runnable.run();
         } finally {
-            row(operation, s2rType, stateType, segmentType, elementTs, System.nanoTime() - start);
+            row(operation, s2rType, stateType, segmentType, elementTs, System.nanoTime() - start, bufferElements, maintainedWindows);
         }
     }
 
@@ -89,11 +125,25 @@ public final class Benchmark implements AutoCloseable {
             long elementTs,
             Supplier<T> supplier
     ) {
+        return measure(operation, s2rType, stateType, segmentType, elementTs, -1, -1, supplier);
+    }
+
+    /** Supplier measurements use the same pre-operation snapshot as runnable measurements. */
+    public <T> T measure(
+            String operation,
+            String s2rType,
+            String stateType,
+            String segmentType,
+            long elementTs,
+            int bufferElements,
+            int maintainedWindows,
+            Supplier<T> supplier
+    ) {
         long start = System.nanoTime();
         try {
             return supplier.get();
         } finally {
-            row(operation, s2rType, stateType, segmentType, elementTs, System.nanoTime() - start);
+            row(operation, s2rType, stateType, segmentType, elementTs, System.nanoTime() - start, bufferElements, maintainedWindows);
         }
     }
 

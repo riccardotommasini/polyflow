@@ -48,6 +48,7 @@ public class MapMultiBufferState<I, R> implements MultiBufferState<I, R> {
 
     @Override
     public int size() {
+        // LinkedHashMap maintains this counter on insertion/removal; no window traversal is needed.
         return windowSegments.size();
     }
 
