@@ -169,10 +169,11 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             });
         });
 
-        // Reporting decides when to evaluate; extraction is measured during materialization.
+        // Time-only reporting skips segment construction; content-based checks request it lazily.
+        // Extraction remains measured during materialization.
         if (ticker.tick(ts)) {
             stream(state.windows())
-                    .filter(w -> report.report(w, getWindowContent(w), ts, System.currentTimeMillis()))
+                    .filter(w -> report.reportLazy(w, () -> getWindowContent(w), ts, System.currentTimeMillis()))
                     .max(Comparator.comparingLong(Window::getC))
                     .ifPresent(window -> {
                         reported_windows.add(window);

@@ -120,11 +120,12 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         // Insertion stores the element in the shared buffer; retrieval selects its window.
         benchmark("insert", ts, () -> state.append(arg));
 
-        // Reporting decides when to evaluate; extraction is measured during materialization.
+        // Time-only reporting skips segment construction; content-based checks request it lazily.
+        // Extraction remains measured during materialization.
         if (ticker.tick(ts)) {
             scope(ts);
             Window oldestStillActive = activeWindows.peekFirst();
-            if (oldestStillActive != null && report.report(oldestStillActive, state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
+            if (oldestStillActive != null && report.reportLazy(oldestStillActive, () -> state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
                 reportedWindow = oldestStillActive;
                 time.addEvaluationTimeInstants(new TimeInstant(ts));
             }

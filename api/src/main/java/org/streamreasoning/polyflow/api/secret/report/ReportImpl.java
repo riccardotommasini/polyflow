@@ -8,6 +8,7 @@ import org.streamreasoning.polyflow.api.secret.report.strategies.ReportingStrate
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ReportImpl implements Report {
 
@@ -16,6 +17,28 @@ public class ReportImpl implements Report {
     @Override
     public boolean report(Window w, Segment<?, ?> c, long tapp, long tsys) {
         return strategies.stream().allMatch(strategy -> strategy.match(w, c, tapp, tsys));
+    }
+
+    /** Evaluate in the original order, constructing content at most once per check. */
+    @Override
+    public boolean reportLazy(Window w, Supplier<? extends Segment<?, ?>> content, long tapp, long tsys) {
+        // A legacy subclass may override report(); preserve that custom decision path.
+        if (getClass() != ReportImpl.class) {
+            return Report.super.reportLazy(w, content, tapp, tsys);
+        }
+        Segment<?, ?> segment = null;
+        boolean materialized = false;
+        for (ReportingStrategy strategy : strategies) {
+            if (strategy.requiresContent() && !materialized) {
+                segment = content.get();
+                materialized = true;
+            }
+            // Preserve short-circuiting: time strategies can update their internal clocks.
+            if (!strategy.match(w, segment, tapp, tsys)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

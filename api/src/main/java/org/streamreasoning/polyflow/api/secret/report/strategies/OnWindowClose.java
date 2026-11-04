@@ -9,6 +9,12 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
  **/
 public class OnWindowClose implements ReportingStrategy {
 
+    /** Time-based reporting needs no materialized window contents. */
+    @Override
+    public boolean requiresContent() {
+        return false;
+    }
+
     @Override
     public boolean match(Window w, Segment<?, ?> c, long tapp, long tsys) {
         return w.getC() < tapp;

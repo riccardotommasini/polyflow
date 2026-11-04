@@ -16,6 +16,12 @@ public class Periodic implements ReportingStrategy {
         this.nextReportTime = period;
     }
 
+    /** Time-based reporting needs no materialized window contents. */
+    @Override
+    public boolean requiresContent() {
+        return false;
+    }
+
     @Override
     public boolean match(Window w, Segment<?, ?> c, long tapp, long tsys) {
         if (period <= 0) {
