@@ -11,6 +11,7 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SingleBufferState;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.polyflow.api.secret.report.Report;
+import org.streamreasoning.polyflow.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.polyflow.api.secret.tick.Ticker;
 import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
@@ -35,6 +36,9 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     protected final SingleBufferState<I, R> state;
     protected Report report;
     private final long width;
+    // A close-triggered evaluation reads its completed scope until the task evicts it.
+    private Window completedReportWindow;
+    private long completedReportTime;
     private final Benchmark bench;
     private final Deque<Window> activeWindows = new ArrayDeque<>();
     private long evictionTs = Long.MIN_VALUE;
@@ -73,7 +77,8 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     public Segment<I, R> content(long t_e) {
         // Every input must be readable when another input triggers a shared-clock evaluation.
         // Reads select an arrival-created scope without changing the clock or scheduling reports.
-        Window selected = oldestActiveWindow(t_e);
+        Window selected = completedReportWindow != null && completedReportTime == t_e
+                ? completedReportWindow : oldestActiveWindow(t_e);
         return selected != null ? state.segment(selected) : state.emptySegment();
     }
 
@@ -103,6 +108,11 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         return !name.isEmpty();
     }
 
+    /** A conjunction containing OnWindowClose must inspect completed scopes. */
+    private boolean reportsOnClose() {
+        return java.util.Arrays.stream(report.strategies()).anyMatch(OnWindowClose.class::isInstance);
+    }
+
     private void scope(long ts) {
         Window w = new WindowImpl(ts, ts + width);
         activeWindows.addLast(w);
@@ -125,10 +135,19 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         // Extraction remains measured during materialization.
         if (ticker.tick(ts)) {
             scope(ts);
-            // Prune expired descriptors before reporting; closing boundaries are exclusive.
-            updateActiveWindow(ts);
-            Window oldestStillActive = oldestActiveWindow(ts);
-            if (oldestStillActive != null && report.reportLazy(oldestStillActive, () -> state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
+            boolean onClose = reportsOnClose();
+            // Periodic reads active windows; close reports must retain completed scopes
+            // until evaluation. OnWindowClose itself preserves its strict close < ts rule.
+            if (!onClose) updateActiveWindow(ts);
+            Window oldest = activeWindows.peekFirst();
+            Window candidate = onClose
+                    ? (oldest != null && oldest.getC() < ts ? oldest : null)
+                    : oldestActiveWindow(ts);
+            if (candidate != null && report.reportLazy(candidate, () -> state.segment(candidate), ts, System.currentTimeMillis())) {
+                if (onClose) {
+                    completedReportWindow = candidate;
+                    completedReportTime = ts;
+                }
                 time.addEvaluationTimeInstants(new TimeInstant(ts));
             }
         }
@@ -167,6 +186,7 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         benchmark("evict", ts, () -> {
             updateActiveWindow(ts);
             state.evict(evictionTs);
+            completedReportWindow = null;
             // Remaining descriptors keep valid buffered data readable after evaluation.
         });
     }

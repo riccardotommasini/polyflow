@@ -11,6 +11,7 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.state.MultiBuffe
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.polyflow.api.secret.report.Report;
+import org.streamreasoning.polyflow.api.secret.report.strategies.OnWindowClose;
 import org.streamreasoning.polyflow.api.secret.tick.Ticker;
 import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
@@ -31,6 +32,9 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     protected final MultiBufferState<I, R> state;
     protected Report report;
     private final long width;
+    // A close-triggered evaluation reads its completed scope until the task evicts it.
+    private Window completedReportWindow;
+    private long completedReportTime;
     private Set<Window> to_evict;
     private Map<I, Long> r_stream;
 
@@ -96,6 +100,9 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     @Override
     public Segment<I, R> content(long ts) {
         // Reading an idle input must not depend on whether it triggered the report.
+        if (completedReportWindow != null && completedReportTime == ts) {
+            return getWindowContent(completedReportWindow);
+        }
         return oldestActiveWindow(ts).map(this::getWindowContent).orElseGet(state::emptySegment);
     }
 
@@ -105,6 +112,11 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         return Collections.singletonList(content(ts));
     }
 
+
+    /** A conjunction containing OnWindowClose must inspect completed scopes. */
+    private boolean reportsOnClose() {
+        return java.util.Arrays.stream(report.strategies()).anyMatch(OnWindowClose.class::isInstance);
+    }
 
     private Window scope(long t_e) {
         log.debug("Calculating the Windows to Open. First one opens at [" + t_e + "] and closes at [" + (t_e+width) + "]");
@@ -156,8 +168,18 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         if (ticker.tick(ts)) {
             // Select first: Periodic mutates its deadline, so probing every window
             // makes reporting depend on state iteration order and can consume a stale report.
-            oldestActiveWindow(ts).ifPresent(window -> {
+            boolean onClose = reportsOnClose();
+            // Preserve closed windows for close-triggered evaluations, not ordinary reads.
+            Optional<Window> candidate = onClose
+                    ? stream(state.windows()).filter(w -> w.getC() < ts)
+                        .min(Comparator.comparingLong(Window::getO))
+                    : oldestActiveWindow(ts);
+            candidate.ifPresent(window -> {
                 if (report.reportLazy(window, () -> getWindowContent(window), ts, System.currentTimeMillis())) {
+                    if (onClose) {
+                        completedReportWindow = window;
+                        completedReportTime = ts;
+                    }
                     time.addEvaluationTimeInstants(new TimeInstant(ts));
                 }
             });
@@ -179,6 +201,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     private void evictWindows() {
         to_evict.forEach(state::evict);
         to_evict.clear();
+        completedReportWindow = null;
     }
 
     @Override
