@@ -35,7 +35,6 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     protected final SingleBufferState<I, R> state;
     protected Report report;
     private final long width;
-    private Window reportedWindow;
     private final Benchmark bench;
     private final Deque<Window> activeWindows = new ArrayDeque<>();
     private long evictionTs = Long.MIN_VALUE;
@@ -72,8 +71,10 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public Segment<I, R> content(long t_e) {
-        // A policy may not have selected a window yet, or eviction may have cleared it.
-        return reportedWindow != null ? state.segment(reportedWindow) : state.emptySegment();
+        // Every input must be readable when another input triggers a shared-clock evaluation.
+        // Reads select an arrival-created scope without changing the clock or scheduling reports.
+        Window selected = oldestActiveWindow(t_e);
+        return selected != null ? state.segment(selected) : state.emptySegment();
     }
 
     @Override
@@ -124,17 +125,27 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         // Extraction remains measured during materialization.
         if (ticker.tick(ts)) {
             scope(ts);
-            Window oldestStillActive = activeWindows.peekFirst();
+            // Prune expired descriptors before reporting; closing boundaries are exclusive.
+            updateActiveWindow(ts);
+            Window oldestStillActive = oldestActiveWindow(ts);
             if (oldestStillActive != null && report.reportLazy(oldestStillActive, () -> state.segment(oldestStillActive), ts, System.currentTimeMillis())) {
-                reportedWindow = oldestStillActive;
                 time.addEvaluationTimeInstants(new TimeInstant(ts));
             }
         }
         time.setAppTime(ts);
     }
 
+    /** Select the oldest retained arrival-created window containing the requested time. */
+    private Window oldestActiveWindow(long ts) {
+        for (Window window : activeWindows) {
+            if (window.getO() > ts) return null;
+            if (ts < window.getC()) return window;
+        }
+        return null;
+    }
+
     private void updateActiveWindow(long ts) {
-        while (!activeWindows.isEmpty() && activeWindows.peekFirst().getC() < ts) {
+        while (!activeWindows.isEmpty() && activeWindows.peekFirst().getC() <= ts) {
             activeWindows.removeFirst();
         }
 
@@ -147,7 +158,8 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict() {
-        reportedWindow = null;
+        // An idle input expires against the shared clock, not its last local report.
+        evict(time.getAppTime());
     }
 
     @Override
@@ -155,7 +167,7 @@ public class SBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         benchmark("evict", ts, () -> {
             updateActiveWindow(ts);
             state.evict(evictionTs);
-            evict();
+            // Remaining descriptors keep valid buffered data readable after evaluation.
         });
     }
 

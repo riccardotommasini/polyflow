@@ -9,7 +9,6 @@ import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.Window;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.instance.WindowImpl;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.MultiBufferState;
 import org.streamreasoning.polyflow.api.operators.s2r.execution.state.Segment;
-import org.streamreasoning.polyflow.api.operators.s2r.execution.state.SegmentFactory;
 import org.streamreasoning.polyflow.api.sds.timevarying.TimeVarying;
 import org.streamreasoning.polyflow.api.secret.report.Report;
 import org.streamreasoning.polyflow.api.secret.tick.Ticker;
@@ -17,12 +16,10 @@ import org.streamreasoning.polyflow.api.secret.tick.secret.TickerFactory;
 import org.streamreasoning.polyflow.api.secret.time.Time;
 import org.streamreasoning.polyflow.api.secret.time.TimeInstant;
 import org.streamreasoning.polyflow.base.benchmark.Benchmark;
-import org.streamreasoning.polyflow.base.operatorsimpl.s2r.state.MapMultiBufferState;
 import org.streamreasoning.polyflow.base.sds.TimeVaryingObject;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamToRelationOperator<I, R> {
 
@@ -34,7 +31,6 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     protected final MultiBufferState<I, R> state;
     protected Report report;
     private final long width;
-    private List<Window> reported_windows;
     private Set<Window> to_evict;
     private Map<I, Long> r_stream;
 
@@ -47,7 +43,6 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         this.state = state;
         this.report = report;
         this.width = width;
-        this.reported_windows = new ArrayList<>();
         this.to_evict = new HashSet<>();
         this.r_stream = new HashMap<>();
         this.ticker = TickerFactory.tick(tick, this);
@@ -91,37 +86,23 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
     }
 
 
-    @Override
-    public Segment<I, R> content(long t_e) {
-        // If some windows matched the report clause, return the last one that did so
-        if (!reported_windows.isEmpty()) {
-            return reported_windows.stream()
-                    .max(Comparator.comparingLong(Window::getC))
-                    .map(state::get).orElse(state.emptySegment());
-        }
-        //Else return the last window closed
-        else {
-            Optional<Window> max = stream(state.windows())
-                    .filter(w -> w.getO() < t_e && w.getC() < t_e)
-                    .max(Comparator.comparingLong(Window::getC));
-
-            if (max.isPresent())
-                return state.get(max.get());
-
-            return state.emptySegment();
-        }
+    /** Select the same arrival-created, half-open scope as single-buffer sliding. */
+    private Optional<Window> oldestActiveWindow(long ts) {
+        return stream(state.windows())
+                .filter(w -> w.getO() <= ts && ts < w.getC())
+                .min(Comparator.comparingLong(Window::getO));
     }
 
     @Override
-    public List<Segment<I, R>> getContents(long t_e) {
-        if (!reported_windows.isEmpty()) {
-            return reported_windows.stream()
-                    .max(Comparator.comparingLong(Window::getC))
-                    .map(w -> Collections.singletonList(state.get(w))).orElseGet(Collections::emptyList);
-        } else
-            return stream(state.windows())
-                    .filter(w -> w.getO() < t_e && t_e < w.getC())
-                    .map(state::get).collect(Collectors.toList());
+    public Segment<I, R> content(long ts) {
+        // Reading an idle input must not depend on whether it triggered the report.
+        return oldestActiveWindow(ts).map(this::getWindowContent).orElseGet(state::emptySegment);
+    }
+
+    @Override
+    public List<Segment<I, R>> getContents(long ts) {
+        // Both read APIs expose one identical relation, including the empty case.
+        return Collections.singletonList(content(ts));
     }
 
 
@@ -149,7 +130,7 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
                 log.debug("Computing Window [" + active.getO() + "," + active.getC() + "] if absent");
                 content = state.create(active);
                 r_stream.entrySet().stream()
-                        .filter(ee -> active.getO() <= ee.getValue() && ee.getValue() <= active.getC())
+                        .filter(ee -> active.getO() <= ee.getValue() && ee.getValue() < active.getC())
                         .map(Map.Entry::getKey)
                         .forEach(content::add);
             }
@@ -157,12 +138,13 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
             r_stream.entrySet().removeIf(ee -> ee.getValue() < active.getO());
             r_stream.put(arg, ts);
 
+            // Use inclusive-open/exclusive-close membership, matching SB extraction.
             stream(state.windows()).forEach(w -> {
-                if (w.getO() <= ts && ts <= w.getC()) {
+                if (w.getO() <= ts && ts < w.getC()) {
                     log.debug("Adding element [" + arg + "] to Window [" + w.getO() + "," + w.getC() + "]");
                     state.get(w).add(arg);
                 }
-                if (w.getC() < ts) {
+                if (w.getC() <= ts) {
                     log.debug("Scheduling for Eviction [" + w.getO() + "," + w.getC() + "]");
                     to_evict.add(w);
                 }
@@ -172,13 +154,13 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
         // Time-only reporting skips segment construction; content-based checks request it lazily.
         // Extraction remains measured during materialization.
         if (ticker.tick(ts)) {
-            stream(state.windows())
-                    .filter(w -> report.reportLazy(w, () -> getWindowContent(w), ts, System.currentTimeMillis()))
-                    .max(Comparator.comparingLong(Window::getC))
-                    .ifPresent(window -> {
-                        reported_windows.add(window);
-                        time.addEvaluationTimeInstants(new TimeInstant(ts));
-                    });
+            // Select first: Periodic mutates its deadline, so probing every window
+            // makes reporting depend on state iteration order and can consume a stale report.
+            oldestActiveWindow(ts).ifPresent(window -> {
+                if (report.reportLazy(window, () -> getWindowContent(window), ts, System.currentTimeMillis())) {
+                    time.addEvaluationTimeInstants(new TimeInstant(ts));
+                }
+            });
         }
         time.setAppTime(ts);
     }
@@ -190,21 +172,20 @@ public class MBSlidingWindowOpImpl<I, R extends Iterable<?>> implements StreamTo
 
     @Override
     public void evict() {
-        // Time direct eviction too, without nesting timers in evict(timestamp).
-        benchmark("evict", time.getAppTime(), this::evictWindows);
+        // Another input can advance the shared clock while this input has no arrivals.
+        evict(time.getAppTime());
     }
 
     private void evictWindows() {
         to_evict.forEach(state::evict);
         to_evict.clear();
-        reported_windows = new ArrayList<>();
     }
 
     @Override
     public void evict(long ts) {
         benchmark("evict", ts, () -> {
             stream(state.windows()).forEach(w -> {
-                if (w.getC() < ts) to_evict.add(w);
+                if (w.getC() <= ts) to_evict.add(w);
             });
             evictWindows();
         });
