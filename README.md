@@ -1,4 +1,4 @@
-# Stream Processing Library for Java (RSP4J)
+# Stream Processing Library for Jav
 
 
 In this repository, the following projects are present:
